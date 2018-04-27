@@ -4,6 +4,8 @@ import pandas as pd
 
 
 def KS(score, target, bucket = 10):
+    """calculate ks value
+    """
     df = pd.DataFrame({
         'score': score,
         'bad': target,
@@ -27,6 +29,37 @@ def KS(score, target, bucket = 10):
 
     return agg2
 
+
+def feature_splits(dataframe, feature, target):
+    """find posibility spilt points
+    """
+    df = dataframe.sort_values(by = feature).reset_index()
+
+    splits_values = []
+    for i in range(1, len(df)):
+        if df.loc[i, target] != df.loc[i-1, target]:
+            v = (df.loc[i, feature] + df.loc[i-1, feature]) / 2.0
+            splits_values.append(v)
+
+    return splits_values
+
+
+def iter_df(dataframe, feature, target, splits):
+    """iterate dataframe by split points
+    """
+    df = pd.DataFrame()
+    df['source'] = dataframe[feature]
+    df[target] = dataframe[target]
+    for v in splits:
+        df[feature] = 0
+        df.loc[df['source'] < v, feature] = 1
+        yield df
+
+
+def is_continuous(series):
+    return series.nunique() / series.size > 0.5
+
+
 def gini(target):
     """get gini index of a feature
     """
@@ -34,8 +67,8 @@ def gini(target):
 
     return 1 - ((target.value_counts() / target.size) ** 2).sum()
 
-def gini_cond(dataframe, feature = "feature", target = "target"):
-    """get conditional gini index of a feature
+def _gini_cond(dataframe, feature, target):
+    """private conditional gini function
     """
     size = dataframe[feature].size
 
@@ -46,6 +79,20 @@ def gini_cond(dataframe, feature = "feature", target = "target"):
 
     return value
 
+def gini_cond(dataframe, feature = "feature", target = "target"):
+    """get conditional gini index of a feature
+    """
+    if not is_continuous(dataframe[feature]):
+        return _gini_cond(dataframe, feature, target)
+
+    # find best split for continuous data
+    splits = feature_splits(dataframe, feature, target)
+    best = 999
+    for df in iter_df(dataframe, feature, target, splits):
+        v = _gini_cond(df, feature, target)
+        if v < best:
+            best = v
+    return best
 
 def entropy(target):
     """get infomation entropy of a feature
@@ -106,14 +153,12 @@ def quality(dataframe, target = 'target'):
     for column in dataframe:
         c = dataframe[column].nunique()
 
-        if c / dataframe[column].size > 0.5:
-            print(column + ': --')
-            continue
+        iv = g = e = '--'
 
-        iv = IV(dataframe, feature = column, target = target)
-        g = gini_cond(dataframe, feature = column, target = target)
-        e = entropy_cond(dataframe, feature = column, target = target)
-
+        if not is_continuous(dataframe[column]):
+            iv = IV(dataframe, feature = column, target = target)
+            g = gini_cond(dataframe, feature = column, target = target)
+            e = entropy_cond(dataframe, feature = column, target = target)
 
         row = pd.Series(
             index = ['iv', 'gini', 'entropy', 'unique'],
