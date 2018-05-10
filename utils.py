@@ -55,7 +55,7 @@ def iter_df(dataframe, feature, target, splits):
     df['source'] = dataframe[feature]
     df[target] = dataframe[target]
     df[feature] = 0
-    
+
     for v in splits:
         df.loc[df['source'] < v, feature] = 1
         yield df
@@ -107,8 +107,8 @@ def entropy(target):
     entropy = stats.entropy(prob)
     return entropy
 
-def entropy_cond(dataframe, feature = "feature", target = "target"):
-    """get conditional entropy of a feature
+def _entropy_cond(dataframe, feature, target):
+    """private conditional entropy func
     """
     size = dataframe[feature].size
 
@@ -118,6 +118,22 @@ def entropy_cond(dataframe, feature = "feature", target = "target"):
         value += c/size * entropy(target_series)
 
     return value
+
+def entropy_cond(dataframe, feature = "feature", target = "target"):
+    """get conditional entropy of a feature
+    """
+    if not is_continuous(dataframe[feature]):
+        return _entropy_cond(dataframe, feature, target)
+
+    # find best split for continuous data
+    splits = feature_splits(dataframe, feature, target)
+    best = 0
+    for df in iter_df(dataframe, feature, target, splits):
+        v = _entropy_cond(df, feature, target)
+        if v > best:
+            best = v
+    return best
+
 
 def WOE(y_prob, n_prob):
     """get WOE of a group
