@@ -46,12 +46,17 @@ def feature_splits(dataframe, feature, target):
 
 def iter_df(dataframe, feature, target, splits):
     """iterate dataframe by split points
+
+    Returns:
+        iterator
     """
+    splits.sort()
     df = pd.DataFrame()
     df['source'] = dataframe[feature]
     df[target] = dataframe[target]
+    df[feature] = 0
+    
     for v in splits:
-        df[feature] = 0
         df.loc[df['source'] < v, feature] = 1
         yield df
 
