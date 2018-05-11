@@ -63,11 +63,13 @@ def countBlank(series, blanks = [None]):
         number: number of blanks
         str: the percentage of blank values
     """
-    n = 0
-    counts = series.value_counts()
-    for blank in blanks:
-        if blank in counts.keys():
-            n += counts[blank]
+    # n = 0
+    # counts = series.value_counts()
+    # for blank in blanks:
+    #     if blank in counts.keys():
+    #         n += counts[blank]
+
+    n = series.isnull().sum()
 
     return (n, "{0:.2%}".format(n / series.size))
 
