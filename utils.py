@@ -2,9 +2,25 @@ from scipy import stats
 import numpy as np
 import pandas as pd
 
+FEATURE_THRESHOLD = 1e-7
 
-def KS(score, target, bucket = 10):
+def KS(score, target):
     """calculate ks value
+    """
+    df = pd.DataFrame({
+        'score': score,
+        'target': target,
+    })
+    df = df.sort_values(by='score', ascending=False)
+    df['good'] = 1 - df['target']
+    df['bad_rate'] = df['target'].cumsum() / df['target'].sum()
+    df['good_rate'] = df['good'].cumsum() / df['good'].sum()
+    df['ks'] = df['bad_rate'] - df['good_rate']
+    return max(abs(df['ks']))
+
+
+def KS_bucket(score, target, bucket = 10):
+    """calculate ks value by bucket
     """
     df = pd.DataFrame({
         'score': score,
@@ -29,26 +45,35 @@ def KS(score, target, bucket = 10):
 
     return agg2
 
+def KS_by_col(df, by='feature', score='score', target='target'):
+    """
+    """
+
+    pass
+
 
 def feature_splits(dataframe, feature, target):
     """find posibility spilt points
     """
-    df = dataframe.sort_values(by = feature).reset_index()
+    df = dataframe.dropna(subset=[feature]).sort_values(by = feature).reset_index()
 
     splits_values = []
     for i in range(1, len(df)):
+        if df.loc[i, feature] <= df.loc[i-1, feature] + FEATURE_THRESHOLD:
+            continue
+
         if df.loc[i, target] != df.loc[i-1, target]:
             v = (df.loc[i, feature] + df.loc[i-1, feature]) / 2.0
             splits_values.append(v)
 
-    return splits_values
+    return np.unique(splits_values)
 
 
 def iter_df(dataframe, feature, target, splits):
     """iterate dataframe by split points
 
     Returns:
-        iterator
+        iterator (df, splitter)
     """
     splits.sort()
     df = pd.DataFrame()
@@ -58,7 +83,7 @@ def iter_df(dataframe, feature, target, splits):
 
     for v in splits:
         df.loc[df['source'] < v, feature] = 1
-        yield df
+        yield df, v
 
 
 def is_continuous(series):
@@ -93,7 +118,7 @@ def gini_cond(dataframe, feature = "feature", target = "target"):
     # find best split for continuous data
     splits = feature_splits(dataframe, feature, target)
     best = 999
-    for df in iter_df(dataframe, feature, target, splits):
+    for df, _ in iter_df(dataframe, feature, target, splits):
         v = _gini_cond(df, feature, target)
         if v < best:
             best = v
@@ -128,7 +153,7 @@ def entropy_cond(dataframe, feature = "feature", target = "target"):
     # find best split for continuous data
     splits = feature_splits(dataframe, feature, target)
     best = 0
-    for df in iter_df(dataframe, feature, target, splits):
+    for df, _ in iter_df(dataframe, feature, target, splits):
         v = _entropy_cond(df, feature, target)
         if v > best:
             best = v
