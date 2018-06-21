@@ -1,6 +1,9 @@
-from scipy import stats
 import numpy as np
 import pandas as pd
+
+from scipy import stats
+from sklearn.metrics import f1_score
+from merge import merge
 
 FEATURE_THRESHOLD = 1e-7
 
@@ -87,7 +90,12 @@ def iter_df(dataframe, feature, target, splits):
 
 
 def is_continuous(series):
-    return series.nunique() / series.size > 0.5
+    if not np.issubdtype(series.dtype, np.number):
+        return False
+
+    n = series.nunique()
+    return n > 20 or n / series.size > 0.5
+    # return n / series.size > 0.5
 
 
 def gini(target):
@@ -170,10 +178,8 @@ def WOE(y_prob, n_prob):
     return np.log(y_prob / n_prob)
 
 
-
-
-def IV(dataframe, feature = "feature", target = "target"):
-    """get IV of a feature
+def _IV(dataframe, feature = "feature", target = "target"):
+    """
     """
     t_counts = dataframe[target].value_counts()
 
@@ -187,6 +193,52 @@ def IV(dataframe, feature = "feature", target = "target"):
         value += (y_prob - n_prob) * WOE(y_prob, n_prob)
 
     return value
+
+
+def IV(dataframe, feature = 'feature', target = 'target'):
+    """get IV of a feature
+    """
+    if not is_continuous(dataframe[feature]):
+        return _IV(dataframe, feature, target)
+
+    # df = pd.DataFrame({
+    #     feature: pd.cut(dataframe[feature], 20),
+    #     target: dataframe[target],
+    # })
+
+    df = pd.DataFrame({
+        feature: merge(dataframe[feature], dataframe[target], method = 'dt', min_samples = 0.05),
+        target: dataframe[target],
+    })
+
+    return _IV(dataframe, feature, target)
+
+
+
+def F1(score, target):
+    """
+
+    Returns:
+        float: best f1 score
+        float: best spliter
+    """
+    dataframe = pd.DataFrame({
+        'score': score,
+        'target': target,
+    })
+
+    # find best split for score
+    splits = feature_splits(dataframe, 'score', 'target')
+    best = 0
+    split = None
+    for df, pointer in iter_df(dataframe, 'score', 'target', splits):
+        v = f1_score(df['target'], df['score'])
+
+        if v > best:
+            best = v
+            split = pointer
+
+    return best, split
 
 
 def quality(dataframe, target = 'target'):
