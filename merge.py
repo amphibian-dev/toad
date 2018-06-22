@@ -89,11 +89,11 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
         # drop binned groups
         grouped = grouped.drop(index = grouped.index[min_ix + 1])
 
-        # break loop
+        # break loop when reach n_bins
         if n_bins and len(grouped) <= n_bins:
             break
 
-        # break loop if min counts of groups greater than threshold
+        # break loop if min samples of groups is greater than threshold
         if min_samples and np.sum(grouped.values, axis = 1).min() > min_samples:
             break
 
