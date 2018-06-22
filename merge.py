@@ -34,12 +34,15 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     return np.sort(thresholds)
 
 
-def ChiMerge(feature, target, n_bins = 2, min_threshold = np.inf, nan = -1):
+def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold = None, nan = -1):
     """Chi-Merge
 
     Returns:
         array: array of split points
     """
+    if min_samples and min_samples < 1:
+        min_samples = len(feature) * min_samples
+
     feature = _fillna(feature, by = nan)
 
     df = pd.DataFrame({
@@ -71,12 +74,12 @@ def ChiMerge(feature, target, n_bins = 2, min_threshold = np.inf, nan = -1):
         chi_min = chi_list.min()
 
         # break loop when the minimun chi greater the threshold
-        if chi_min > min_threshold:
+        if min_threshold and chi_min > min_threshold:
             break
 
         # get indexes of the groups who has the minimun chi
         min_ix = np.where(chi_list == chi_min)[0]
-        mask = min_ix - np.arange(min.size)
+        mask = min_ix - np.arange(min_ix.size)
 
         # bin groups by indexes
         for n in np.unique(mask):
@@ -87,8 +90,13 @@ def ChiMerge(feature, target, n_bins = 2, min_threshold = np.inf, nan = -1):
         grouped = grouped.drop(index = grouped.index[min_ix + 1])
 
         # break loop
-        if len(grouped) <= n_bins:
+        if n_bins and len(grouped) <= n_bins:
             break
+
+        # break loop if min counts of groups greater than threshold
+        if min_samples and np.sum(grouped.values, axis = 1).min() > min_samples:
+            break
+
 
     return grouped.index.values[1:]
 
