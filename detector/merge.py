@@ -37,9 +37,21 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
 def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold = None, nan = -1):
     """Chi-Merge
 
+    Args:
+        feature (array-like): feature to be merged
+        target (array-like): a array of target classes
+        n_bins (int): n bins will be merged into
+        min_samples (number): min sample in each group, if float, it will be the percentage of samples
+        min_threshold (number): min threshold of chi-square
+
     Returns:
         array: array of split points
     """
+
+    # set default break condition
+    if n_bins is None and min_samples is None and min_threshold is None:
+        n_bins = 20
+
     if min_samples and min_samples < 1:
         min_samples = len(feature) * min_samples
 
@@ -117,4 +129,5 @@ def merge(feature, target, method = 'dt', **kwargs):
     elif method is 'chi':
         splits = ChiMerge(feature, target, **kwargs)
 
+    print(splits)
     return _bin(feature, splits)

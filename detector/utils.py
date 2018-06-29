@@ -3,7 +3,7 @@ import pandas as pd
 
 from scipy import stats
 from sklearn.metrics import f1_score
-from merge import merge
+from detector.merge import merge
 
 FEATURE_THRESHOLD = 1e-7
 
@@ -184,7 +184,10 @@ def _IV(dataframe, feature = "feature", target = "target"):
     t_counts = dataframe[target].value_counts()
 
     value = 0
-    for v, c in dataframe[feature].value_counts().iteritems():
+    for v, c in dataframe[feature].value_counts(dropna = False).iteritems():
+        if np.isnan(v):
+            v = np.nan
+
         f_counts = dataframe[dataframe[feature] == v][target].value_counts()
 
         y_prob = f_counts.get(1, default = 1) / t_counts[1]
@@ -195,7 +198,7 @@ def _IV(dataframe, feature = "feature", target = "target"):
     return value
 
 
-def IV(dataframe, feature = 'feature', target = 'target'):
+def IV(dataframe, feature = 'feature', target = 'target', **kwargs):
     """get IV of a feature
     """
     if not is_continuous(dataframe[feature]):
@@ -207,7 +210,7 @@ def IV(dataframe, feature = 'feature', target = 'target'):
     # })
 
     df = pd.DataFrame({
-        feature: merge(dataframe[feature], dataframe[target], method = 'dt', min_samples = 0.05),
+        feature: merge(dataframe[feature], dataframe[target], **kwargs),
         target: dataframe[target],
     })
 
@@ -251,12 +254,25 @@ def quality(dataframe, target = 'target'):
     for column in dataframe:
         c = dataframe[column].nunique()
 
+        print(column)
+
         iv = g = e = '--'
 
-        if not is_continuous(dataframe[column]):
+        if not is_continuous(dataframe[column]) and \
+            dataframe[column].nunique() / dataframe[column].size > 0.5:
+            pass
+        else:
             iv = IV(dataframe, feature = column, target = target)
             g = gini_cond(dataframe, feature = column, target = target)
             e = entropy_cond(dataframe, feature = column, target = target)
+
+
+        # if not is_continuous(dataframe[column]):
+        #     iv = IV(dataframe, feature = column, target = target)
+        #     g = gini_cond(dataframe, feature = column, target = target)
+        #     e = entropy_cond(dataframe, feature = column, target = target)
+
+
 
         row = pd.Series(
             index = ['iv', 'gini', 'entropy', 'unique'],
