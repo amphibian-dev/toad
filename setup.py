@@ -1,4 +1,5 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
+# from distutils.core import setup
 
 setup(
     name='detector',
@@ -6,8 +7,8 @@ setup(
     description='python utils for detect data',
     author='Secbone',
     author_email='secbone@gmail.com',
-    packages = ['detector'],
-    requires = [
+    packages = find_packages(exclude = ['tests']),
+    install_requires = [
         'numpy',
         'pandas',
         'scipy',

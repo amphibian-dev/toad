@@ -3,7 +3,7 @@ import pandas as pd
 
 from scipy import stats
 from sklearn.metrics import f1_score
-from detector.merge import merge
+from .merge import merge
 
 FEATURE_THRESHOLD = 1e-7
 

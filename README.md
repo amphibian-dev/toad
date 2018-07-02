@@ -5,6 +5,10 @@ ESC Team 数据探查工具合集
 ## Install
 
 ```
+make install
+```
+or
+```
 python setup.py install
 ```
 
