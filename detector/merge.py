@@ -129,5 +129,5 @@ def merge(feature, target, method = 'dt', **kwargs):
     elif method is 'chi':
         splits = ChiMerge(feature, target, **kwargs)
 
-    print(splits)
+    # print(splits)
     return _bin(feature, splits)
