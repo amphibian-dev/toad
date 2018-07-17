@@ -185,7 +185,7 @@ def _IV(dataframe, feature = "feature", target = "target"):
 
     value = 0
     for v, c in dataframe[feature].value_counts(dropna = False).iteritems():
-        if np.isnan(v):
+        if str(v).lower() == 'nan':
             v = np.nan
 
         f_counts = dataframe[dataframe[feature] == v][target].value_counts()
@@ -254,7 +254,7 @@ def quality(dataframe, target = 'target'):
     for column in dataframe:
         c = dataframe[column].nunique()
 
-        print(column)
+        # print(column)
 
         iv = g = e = '--'
 
