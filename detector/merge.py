@@ -21,13 +21,17 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     Returns:
         array: array of split points
     """
+    if isinstance(feature, pd.Series):
+        feature = feature.values
+
     feature = _fillna(feature, by = nan)
 
     tree = DecisionTreeClassifier(
         min_samples_leaf = min_samples,
         max_leaf_nodes = n_bins,
     )
-    tree.fit(np.reshape(feature, (-1, 1)), target)
+
+    tree.fit(feature.reshape((-1, 1)), target)
 
     thresholds = tree.tree_.threshold
     thresholds = thresholds[thresholds != _tree.TREE_UNDEFINED]
