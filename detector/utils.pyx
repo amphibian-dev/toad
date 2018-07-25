@@ -110,7 +110,7 @@ def _gini_cond(dataframe, feature, target):
     """
     size = dataframe[feature].size
 
-    value = 0
+    cdef double value = 0
     for v, c in dataframe[feature].value_counts().iteritems():
         target_series = dataframe[dataframe[feature] == v][target]
         value += c / size * gini(target_series)
@@ -125,7 +125,8 @@ def gini_cond(dataframe, feature = "feature", target = "target"):
 
     # find best split for continuous data
     splits = feature_splits(dataframe, feature, target)
-    best = 999
+    cdef double best = 999
+    cdef double v
     for df, _ in iter_df(dataframe, feature, target, splits):
         v = _gini_cond(df, feature, target)
         if v < best:
@@ -137,7 +138,7 @@ def entropy(target):
     """
     target = pd.Series(target)
     prob = target.value_counts() / target.size
-    entropy = stats.entropy(prob)
+    cdef double entropy = stats.entropy(prob)
     return entropy
 
 def _entropy_cond(dataframe, feature, target):
