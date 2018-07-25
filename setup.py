@@ -1,5 +1,12 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
+from Cython.Build import cythonize
 # from distutils.core import setup
+
+
+extensions = [
+    Extension('detector.merge', ['detector/merge.pyx']),
+    Extension('detector.utils', ['detector/utils.pyx']),
+]
 
 setup(
     name='detector',
@@ -8,7 +15,9 @@ setup(
     author='Secbone',
     author_email='secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
+    ext_modules = cythonize(extensions),
     install_requires = [
+        'cython',
         'numpy',
         'pandas',
         'scipy',

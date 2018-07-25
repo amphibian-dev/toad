@@ -5,7 +5,7 @@ from scipy import stats
 from sklearn.metrics import f1_score
 from .merge import merge
 
-FEATURE_THRESHOLD = 1e-7
+cdef double FEATURE_THRESHOLD = 1e-7
 
 def KS(score, target):
     """calculate ks value
@@ -22,7 +22,7 @@ def KS(score, target):
     return max(abs(df['ks']))
 
 
-def KS_bucket(score, target, bucket = 10):
+def KS_bucket(score, target, int bucket = 10):
     """calculate ks value by bucket
     """
     df = pd.DataFrame({
@@ -183,7 +183,7 @@ def _IV(dataframe, feature = "feature", target = "target"):
     """
     t_counts = dataframe[target].value_counts()
 
-    value = 0
+    cdef double value = 0
     for v, c in dataframe[feature].value_counts(dropna = False).iteritems():
         if str(v).lower() == 'nan':
             v = np.nan
