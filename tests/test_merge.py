@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-# import pyximport
-# pyximport.install()
+import pyximport
+pyximport.install()
 
 from detector import ChiMerge
 

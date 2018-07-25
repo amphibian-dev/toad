@@ -4,7 +4,7 @@ import pandas as pd
 import pyximport
 pyximport.install()
 
-from detector import IV, WOE
+from detector import IV, WOE, gini
 from detector.utils import _IV
 
 np.random.seed(1)
@@ -31,6 +31,10 @@ class TestUtils(unittest.TestCase):
     def test_iv(self):
         value = IV(df['feature'], df['target'])
         self.assertEqual(value, 1.3752313490741406)
+
+    def test_gini(self):
+        value = gini(df['target'])
+        self.assertEqual(value, 0.499352)
 
     def test_get_unknow_value(self):
         # unknow = self.config.get('unknow')

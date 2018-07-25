@@ -120,9 +120,10 @@ def is_continuous(series):
 def gini(target):
     """get gini index of a feature
     """
-    target = pd.Series(target)
+    target = _to_ndarray(target)
+    v, c = np.unique(target, return_counts = True)
 
-    return 1 - ((target.value_counts() / target.size) ** 2).sum()
+    return 1 - ((c / target.size) ** 2).sum()
 
 def _gini_cond(dataframe, feature, target):
     """private conditional gini function
