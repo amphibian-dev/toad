@@ -5,7 +5,26 @@ from scipy import stats
 from sklearn.metrics import f1_score
 from .merge import merge
 
+cimport cython
+
 cdef double FEATURE_THRESHOLD = 1e-7
+
+def _count(arr, value, default = None):
+    c = (arr == value).sum()
+
+    if default is not None and c == 0:
+        return default
+
+    return c
+
+def _to_ndarray(s):
+    if isinstance(s, np.ndarray):
+        return s
+
+    if isinstance(s, pd.core.base.PandasObject):
+        return s.values
+
+    return s
 
 def KS(score, target):
     """calculate ks value
@@ -179,43 +198,45 @@ def WOE(y_prob, n_prob):
     return np.log(y_prob / n_prob)
 
 
-def _IV(dataframe, feature = "feature", target = "target"):
+def _IV(feature, target):
     """
     """
-    t_counts = dataframe[target].value_counts()
+    feature = _to_ndarray(feature)
+    target = _to_ndarray(target)
+
+    cdef double t_counts_0 = _count(target, 0, default = 1)
+    cdef double t_counts_1 = _count(target, 1, default = 1)
 
     cdef double value = 0
-    for v, c in dataframe[feature].value_counts(dropna = False).iteritems():
-        if str(v).lower() == 'nan':
-            v = np.nan
 
-        f_counts = dataframe[dataframe[feature] == v][target].value_counts()
+    for v in np.unique(feature):
+        sub_target = target[feature == v]
 
-        y_prob = f_counts.get(1, default = 1) / t_counts[1]
-        n_prob = f_counts.get(0, default = 1) / t_counts[0]
+        sub_0 = _count(sub_target, 0, default = 1)
+        sub_1 = _count(sub_target, 1, default = 1)
+
+        y_prob = sub_1 / t_counts_1
+        n_prob = sub_0 / t_counts_0
 
         value += (y_prob - n_prob) * WOE(y_prob, n_prob)
 
     return value
 
 
-def IV(dataframe, feature = 'feature', target = 'target', **kwargs):
+def IV(feature, target, **kwargs):
     """get IV of a feature
     """
-    if not is_continuous(dataframe[feature]):
-        return _IV(dataframe, feature, target)
+    if not is_continuous(feature):
+        return _IV(feature, target)
 
     # df = pd.DataFrame({
     #     feature: pd.cut(dataframe[feature], 20),
     #     target: dataframe[target],
     # })
 
-    df = pd.DataFrame({
-        feature: merge(dataframe[feature], dataframe[target], **kwargs),
-        target: dataframe[target],
-    })
+    feature = merge(feature, target, **kwargs)
 
-    return _IV(dataframe, feature, target)
+    return _IV(feature, target)
 
 
 
