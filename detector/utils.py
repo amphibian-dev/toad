@@ -214,7 +214,7 @@ def IV(dataframe, feature = 'feature', target = 'target', **kwargs):
         target: dataframe[target],
     })
 
-    return _IV(dataframe, feature, target)
+    return _IV(df, feature, target)
 
 
 
