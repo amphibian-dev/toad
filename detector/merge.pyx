@@ -22,6 +22,9 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     Returns:
         array: array of split points
     """
+    if n_bins is None and min_samples == 1:
+        n_bins = 20
+    
     if isinstance(feature, pd.Series):
         feature = feature.values
 
