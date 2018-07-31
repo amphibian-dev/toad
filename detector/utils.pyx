@@ -285,7 +285,7 @@ def quality(dataframe, target = 'target'):
             dataframe[column].nunique() / dataframe[column].size > 0.5:
             pass
         else:
-            iv = IV(dataframe, feature = column, target = target)
+            iv = IV(dataframe[column], dataframe[target])
             g = gini_cond(dataframe, feature = column, target = target)
             e = entropy_cond(dataframe, feature = column, target = target)
 
