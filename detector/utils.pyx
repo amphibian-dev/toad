@@ -301,35 +301,6 @@ def quality(dataframe, target = 'target'):
         r = pool.apply_async(column_quality, args = (dataframe, column, target))
         res.append(r)
 
-        # c = dataframe[column].nunique()
-        #
-        # # print(column)
-        #
-        # iv = g = e = '--'
-        #
-        # if not is_continuous(dataframe[column]) and \
-        #     dataframe[column].nunique() / dataframe[column].size > 0.5:
-        #     pass
-        # else:
-        #     iv = IV(dataframe[column], dataframe[target])
-        #     g = gini_cond(dataframe, feature = column, target = target)
-        #     e = entropy_cond(dataframe, feature = column, target = target)
-        #
-        #
-        # # if not is_continuous(dataframe[column]):
-        # #     iv = IV(dataframe, feature = column, target = target)
-        # #     g = gini_cond(dataframe, feature = column, target = target)
-        # #     e = entropy_cond(dataframe, feature = column, target = target)
-        #
-        #
-        #
-        # row = pd.Series(
-        #     index = ['iv', 'gini', 'entropy', 'unique'],
-        #     data = [iv, g, e, c],
-        # )
-        #
-        # row.name = column
-        # rows.append(row)
     pool.close()
     pool.join()
 
