@@ -75,18 +75,24 @@ def KS_by_col(df, by='feature', score='score', target='target'):
     pass
 
 
-def feature_splits(dataframe, feature, target):
+def feature_splits(feature, target):
     """find posibility spilt points
     """
-    df = dataframe.dropna(subset=[feature]).sort_values(by = feature).reset_index()
+    feature = _to_ndarray(feature)
+    target = _to_ndarray(target)
+
+    matrix = np.vstack([feature, target])
+    matrix = matrix[:, matrix[0,:].argsort()]
 
     splits_values = []
-    for i in range(1, len(df)):
-        if df.loc[i, feature] <= df.loc[i-1, feature] + FEATURE_THRESHOLD:
+    for i in range(1, len(matrix[0])):
+        # if feature value is almost same, then skip
+        if matrix[0,i] <= matrix[0, i-1] + FEATURE_THRESHOLD:
             continue
 
-        if df.loc[i, target] != df.loc[i-1, target]:
-            v = (df.loc[i, feature] + df.loc[i-1, feature]) / 2.0
+        # if target value is not same, calculate split
+        if matrix[1, i] != matrix[1, i-1]:
+            v = (matrix[0, i] + matrix[0, i-1]) / 2.0
             splits_values.append(v)
 
     return np.unique(splits_values)
@@ -108,12 +114,21 @@ def iter_df(dataframe, feature, target, splits):
         df.loc[df['source'] < v, feature] = 1
         yield df, v
 
+def inter_feature(feature, splits):
+    splits.sort()
+    bin = np.zeros(len(feature))
+
+    for v in splits:
+        bin[feature < v] = 1
+        yield bin
+
 
 def is_continuous(series):
+    series = _to_ndarray(series)
     if not np.issubdtype(series.dtype, np.number):
         return False
 
-    n = series.nunique()
+    n = len(np.unique(series))
     return n > 20 or n / series.size > 0.5
     # return n / series.size > 0.5
 
@@ -126,30 +141,32 @@ def gini(target):
 
     return 1 - ((c / target.size) ** 2).sum()
 
-def _gini_cond(dataframe, feature, target):
+def _gini_cond(feature, target):
     """private conditional gini function
     """
-    size = dataframe[feature].size
+    size = feature.size
+    matrix = np.vstack([feature, target])
 
     cdef double value = 0
-    for v, c in dataframe[feature].value_counts().iteritems():
-        target_series = dataframe[dataframe[feature] == v][target]
+    for v, c in zip(*np.unique(feature, return_counts = True)):
+        target_series = matrix[:, matrix[0,:] == v][1,:]
         value += c / size * gini(target_series)
 
     return value
 
-def gini_cond(dataframe, feature = "feature", target = "target"):
+def gini_cond(feature, target):
     """get conditional gini index of a feature
     """
-    if not is_continuous(dataframe[feature]):
-        return _gini_cond(dataframe, feature, target)
+    if not is_continuous(feature):
+        return _gini_cond(feature, target)
 
     # find best split for continuous data
-    splits = feature_splits(dataframe, feature, target)
+    splits = feature_splits(feature, target)
     cdef double best = 999
     cdef double v
-    for df, _ in iter_df(dataframe, feature, target, splits):
-        v = _gini_cond(df, feature, target)
+
+    for f in inter_feature(feature, splits):
+        v = _gini_cond(f, target)
         if v < best:
             best = v
     return best
@@ -157,34 +174,38 @@ def gini_cond(dataframe, feature = "feature", target = "target"):
 def entropy(target):
     """get infomation entropy of a feature
     """
-    target = pd.Series(target)
-    prob = target.value_counts() / target.size
+    target = _to_ndarray(target)
+    uni, counts = np.unique(target, return_counts = True)
+    prob = counts / len(target)
     cdef double entropy = stats.entropy(prob)
     return entropy
 
-def _entropy_cond(dataframe, feature, target):
+def _entropy_cond(feature, target):
     """private conditional entropy func
     """
-    size = dataframe[feature].size
+    size = len(feature)
 
     value = 0
-    for v, c in dataframe[feature].value_counts().iteritems():
-        target_series = dataframe[dataframe[feature] == v][target]
+    for v, c in zip(*np.unique(feature, return_counts = True)):
+        target_series = target[feature == v]
         value += c/size * entropy(target_series)
 
     return value
 
-def entropy_cond(dataframe, feature = "feature", target = "target"):
+def entropy_cond(feature, target):
     """get conditional entropy of a feature
     """
-    if not is_continuous(dataframe[feature]):
-        return _entropy_cond(dataframe, feature, target)
+    feature = _to_ndarray(feature)
+    target = _to_ndarray(target)
+
+    if not is_continuous(feature):
+        return _entropy_cond(feature, target)
 
     # find best split for continuous data
-    splits = feature_splits(dataframe, feature, target)
+    splits = feature_splits(feature, target)
     best = 0
-    for df, _ in iter_df(dataframe, feature, target, splits):
-        v = _entropy_cond(df, feature, target)
+    for f in inter_feature(feature, splits):
+        v = _entropy_cond(f, target)
         if v > best:
             best = v
     return best
@@ -255,7 +276,7 @@ def F1(score, target):
     })
 
     # find best split for score
-    splits = feature_splits(dataframe, 'score', 'target')
+    splits = feature_splits(dataframe['score'], dataframe['target'])
     best = 0
     split = None
     for df, pointer in iter_df(dataframe, 'score', 'target', splits):
@@ -268,23 +289,22 @@ def F1(score, target):
     return best, split
 
 
-def column_quality(dataframe, feature, target):
-    c = dataframe[feature].nunique()
+def column_quality(feature, target, name = 'feature'):
+    c = len(np.unique(feature))
     iv = g = e = '--'
 
     # skip when unique is too much
-    if is_continuous(dataframe[feature]) or c / dataframe[feature].size < 0.5:
-        iv = IV(dataframe[feature], dataframe[target])
-        g = gini_cond(dataframe, feature = feature, target = target)
-        e = entropy_cond(dataframe, feature = feature, target = target)
+    if is_continuous(feature) or c / len(feature) < 0.5:
+        iv = IV(feature, target)
+        g = gini_cond(feature, target)
+        e = entropy_cond(feature, target)
 
     row = pd.Series(
         index = ['iv', 'gini', 'entropy', 'unique'],
         data = [iv, g, e, c],
     )
 
-    row.name = feature
-    print(row)
+    row.name = name
     return row
 
 
@@ -297,8 +317,7 @@ def quality(dataframe, target = 'target'):
     res = []
     pool = Pool(cpu_count())
     for column in dataframe:
-
-        r = pool.apply_async(column_quality, args = (dataframe, column, target))
+        r = pool.apply_async(column_quality, args = (dataframe[column].values, dataframe[target].values, column))
         res.append(r)
 
     pool.close()
