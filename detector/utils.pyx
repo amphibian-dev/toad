@@ -1,3 +1,4 @@
+from multiprocessing import Pool, cpu_count
 import numpy as np
 import pandas as pd
 
@@ -267,42 +268,71 @@ def F1(score, target):
     return best, split
 
 
+def column_quality(dataframe, feature, target):
+    c = dataframe[feature].nunique()
+    iv = g = e = '--'
+
+    # skip when unique is too much
+    if is_continuous(dataframe[feature]) or c / dataframe[feature].size < 0.5:
+        iv = IV(dataframe[feature], dataframe[target])
+        g = gini_cond(dataframe, feature = feature, target = target)
+        e = entropy_cond(dataframe, feature = feature, target = target)
+
+    row = pd.Series(
+        index = ['iv', 'gini', 'entropy', 'unique'],
+        data = [iv, g, e, c],
+    )
+
+    row.name = feature
+    print(row)
+    return row
+
+
 def quality(dataframe, target = 'target'):
     """get quality of features in data
 
     Returns:
         dataframe
     """
-    rows = []
+    res = []
+    pool = Pool(cpu_count())
     for column in dataframe:
-        c = dataframe[column].nunique()
 
-        # print(column)
+        r = pool.apply_async(column_quality, args = (dataframe, column, target))
+        res.append(r)
 
-        iv = g = e = '--'
-
-        if not is_continuous(dataframe[column]) and \
-            dataframe[column].nunique() / dataframe[column].size > 0.5:
-            pass
-        else:
-            iv = IV(dataframe[column], dataframe[target])
-            g = gini_cond(dataframe, feature = column, target = target)
-            e = entropy_cond(dataframe, feature = column, target = target)
-
-
-        # if not is_continuous(dataframe[column]):
-        #     iv = IV(dataframe, feature = column, target = target)
+        # c = dataframe[column].nunique()
+        #
+        # # print(column)
+        #
+        # iv = g = e = '--'
+        #
+        # if not is_continuous(dataframe[column]) and \
+        #     dataframe[column].nunique() / dataframe[column].size > 0.5:
+        #     pass
+        # else:
+        #     iv = IV(dataframe[column], dataframe[target])
         #     g = gini_cond(dataframe, feature = column, target = target)
         #     e = entropy_cond(dataframe, feature = column, target = target)
+        #
+        #
+        # # if not is_continuous(dataframe[column]):
+        # #     iv = IV(dataframe, feature = column, target = target)
+        # #     g = gini_cond(dataframe, feature = column, target = target)
+        # #     e = entropy_cond(dataframe, feature = column, target = target)
+        #
+        #
+        #
+        # row = pd.Series(
+        #     index = ['iv', 'gini', 'entropy', 'unique'],
+        #     data = [iv, g, e, c],
+        # )
+        #
+        # row.name = column
+        # rows.append(row)
+    pool.close()
+    pool.join()
 
-
-
-        row = pd.Series(
-            index = ['iv', 'gini', 'entropy', 'unique'],
-            data = [iv, g, e, c],
-        )
-
-        row.name = column
-        rows.append(row)
+    rows = [r.get() for r in res]
 
     return pd.DataFrame(rows)
