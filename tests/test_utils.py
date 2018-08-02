@@ -59,6 +59,10 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(result.loc['B', 'entropy'], 0.6924956879070063)
         self.assertEqual(result.loc['feature', 'unique'], 500)
 
+    def test_quality_iv_only(self):
+        result = quality(df, 'target', iv_only = True)
+        self.assertEqual(result.loc['feature', 'gini'], '--')
+
     def test_get_unknow_value(self):
         # unknow = self.config.get('unknow')
         # self.assertEqual(unknow, None)
