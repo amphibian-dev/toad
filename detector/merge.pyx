@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from cython.parallel import prange
 
 from sklearn.tree import DecisionTreeClassifier, _tree
 
@@ -23,7 +24,7 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     """
     if n_bins is None and min_samples == 1:
         n_bins = 20
-
+    
     if isinstance(feature, pd.Series):
         feature = feature.values
 
@@ -33,7 +34,6 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
         min_samples_leaf = min_samples,
         max_leaf_nodes = n_bins,
     )
-
     tree.fit(feature.reshape((-1, 1)), target)
 
     thresholds = tree.tree_.threshold
@@ -72,10 +72,19 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
     df = pd.get_dummies(df, columns = ['target'])
     grouped = df.groupby('feature').sum()
 
+    # cdef int l
+    # cdef Py_ssize_t i
+    # cdef double couple[2][2]
+    # cdef double total[2]
+    # cdef double cols[2]
+    # cdef double rows[2]
+    # cdef double e[2][2]
+
     while(True):
         # Calc chi square for each group
         chi_list = []
-        for i in range(len(grouped) - 1):
+        l = len(grouped) - 1
+        for i in range(l):
             couple = grouped.values[i:i+2,:]
             total = np.sum(couple)
             cols = np.sum(couple, axis = 0)
@@ -131,6 +140,7 @@ def merge(feature, target, method = 'dt', **kwargs):
     Returns:
         array: a array of merged label with the same size of feature
     """
+    cdef double[:] splits
     if method is 'dt':
         splits = DTMerge(feature, target, **kwargs)
     elif method is 'chi':
