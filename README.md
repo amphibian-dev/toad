@@ -22,9 +22,9 @@ data = pd.read_csv('test.csv')
 
 detector.detect(data)
 
-detect.quality(data, target = 'TARGET')
+detect.quality(data, target = 'TARGET', iv_only = True)
 
-detect.IV(data, feature = 'feature_name', target = 'TARGET', method = 'dt', min_samples = 0.1)
+detect.IV(feature, target, method = 'dt', min_samples = 0.1)
 ```
 
 ## Documents
