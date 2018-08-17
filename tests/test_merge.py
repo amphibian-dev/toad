@@ -6,15 +6,14 @@ pyximport.install()
 from detector import ChiMerge
 
 np.random.seed(1)
-
+feature = np.random.rand(500)
+target = np.random.randint(2, size = 500)
 
 class TestMerge(unittest.TestCase):
     def setUp(self):
         pass
 
     def test_chimerge(self):
-        feature = np.random.rand(500)
-        target = np.random.randint(2, size = 500)
         splits = ChiMerge(feature, target, n_bins = 10)
         self.assertEqual(len(splits), 9)
 

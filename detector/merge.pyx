@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from cython.parallel import prange
 
+# from numpy import int32
+# from numpy cimport int32_t
+
 from sklearn.tree import DecisionTreeClassifier, _tree
 
 
@@ -24,7 +27,7 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     """
     if n_bins is None and min_samples == 1:
         n_bins = 20
-    
+
     if isinstance(feature, pd.Series):
         feature = feature.values
 
@@ -39,6 +42,7 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     thresholds = tree.tree_.threshold
     thresholds = thresholds[thresholds != _tree.TREE_UNDEFINED]
     return np.sort(thresholds)
+
 
 
 def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold = None, nan = -1):
@@ -64,58 +68,60 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
 
     feature = _fillna(feature, by = nan)
 
-    df = pd.DataFrame({
-        'feature': feature,
-        'target': target,
-    })
+    target_unique = np.unique(target)
+    feature_unique = np.unique(feature)
+    cdef int len_f = len(feature_unique)
+    cdef int len_t = len(target_unique)
+    grouped = np.zeros((len_f, len_t))
+    # grouped[:,1] = feature_unique
+    for i in range(len_f):
+        tmp = target[feature == feature_unique[i]]
+        for j in range(len_t):
+            grouped[i,j] = (tmp == target_unique[j]).sum()
 
-    df = pd.get_dummies(df, columns = ['target'])
-    grouped = df.groupby('feature').sum()
-
-    # cdef int l
-    # cdef Py_ssize_t i
-    # cdef double couple[2][2]
-    # cdef double total[2]
-    # cdef double cols[2]
-    # cdef double rows[2]
-    # cdef double e[2][2]
 
     while(True):
         # Calc chi square for each group
-        chi_list = []
         l = len(grouped) - 1
+        chi_list = np.zeros(l)
+        chi_min = np.inf
+        chi_ix = []
         for i in range(l):
-            couple = grouped.values[i:i+2,:]
+            couple = grouped[i:i+2,:]
             total = np.sum(couple)
             cols = np.sum(couple, axis = 0)
             rows = np.sum(couple, axis = 1)
 
             e = np.zeros(couple.shape)
-            for i in range(couple.shape[0]):
-                for j in range(couple.shape[1]):
-                    e[i,j] = rows[i] * cols[j] / total
+            for j in range(couple.shape[0]):
+                for k in range(couple.shape[1]):
+                    e[j,k] = rows[j] * cols[k] / total
 
             chi = np.sum(np.nan_to_num((couple - e) ** 2 / e))
-            chi_list.append(chi)
+            chi_list[i] = chi
 
-        chi_list = np.array(chi_list)
-        chi_min = chi_list.min()
+            if chi == chi_min:
+                chi_ix.append(i)
+                continue
+
+            if chi < chi_min:
+                chi_min = chi
+                chi_ix = [i]
 
         # break loop when the minimun chi greater the threshold
         if min_threshold and chi_min > min_threshold:
             break
 
         # get indexes of the groups who has the minimun chi
-        min_ix = np.where(chi_list == chi_min)[0]
-        mask = min_ix - np.arange(min_ix.size)
+        min_ix = np.array(chi_ix)
 
         # bin groups by indexes
-        for n in np.unique(mask):
-            ix = min_ix[np.where(mask == n)]
-            grouped.iloc[ix[0]] = np.sum(grouped.iloc[ix[0] : ix[0]+1+ix.size], axis = 0)
+        drop_ix = min_ix + 1
+        grouped[min_ix] = grouped[min_ix] + grouped[drop_ix]
 
         # drop binned groups
-        grouped = grouped.drop(index = grouped.index[min_ix + 1])
+        grouped = np.delete(grouped, drop_ix, axis = 0)
+        feature_unique = np.delete(feature_unique, drop_ix)
 
         # break loop when reach n_bins
         if n_bins and len(grouped) <= n_bins:
@@ -125,8 +131,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
         if min_samples and np.sum(grouped.values, axis = 1).min() > min_samples:
             break
 
-
-    return grouped.index.values[1:]
+    return feature_unique[1:]
 
 
 def merge(feature, target, method = 'dt', **kwargs):
