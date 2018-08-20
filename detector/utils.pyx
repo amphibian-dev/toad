@@ -290,6 +290,9 @@ def F1(score, target):
 
 
 def column_quality(feature, target, name = 'feature', iv_only = False):
+    if not np.issubdtype(feature.dtype, np.number):
+        feature = feature.astype(str)
+
     c = len(np.unique(feature))
     iv = g = e = '--'
 
