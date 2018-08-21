@@ -63,7 +63,13 @@ class TestUtils(unittest.TestCase):
         result = quality(df, 'target', iv_only = True)
         self.assertEqual(result.loc['feature', 'gini'], '--')
 
-    def test_get_unknow_value(self):
-        # unknow = self.config.get('unknow')
-        # self.assertEqual(unknow, None)
-        pass
+    def test_quality_object_type_array_with_nan(self):
+        mask = np.random.randint(8, size = 500)
+        feature = np.array([np.nan, 'A', 'B', 'C', 'D', 'E', 'F', 'G'], dtype = 'O')[mask]
+
+        df = pd.DataFrame({
+            'feature': feature,
+            'target': target,
+        })
+        result = quality(df)
+        self.assertEqual(result.loc['feature', 'iv'], 0.01637933818053033)
