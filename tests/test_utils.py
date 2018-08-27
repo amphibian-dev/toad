@@ -72,4 +72,4 @@ class TestUtils(unittest.TestCase):
             'target': target,
         })
         result = quality(df)
-        self.assertEqual(result.loc['feature', 'iv'], 0.01637933818053033)
+        self.assertEqual(result.loc['feature', 'iv'], 0.03443287832743326)
