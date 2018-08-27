@@ -289,7 +289,7 @@ def F1(score, target):
     return best, split
 
 
-def column_quality(feature, target, name = 'feature', iv_only = False):
+def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs):
     if not np.issubdtype(feature.dtype, np.number):
         feature = feature.astype(str)
 
@@ -298,7 +298,7 @@ def column_quality(feature, target, name = 'feature', iv_only = False):
 
     # skip when unique is too much
     if is_continuous(feature) or c / len(feature) < 0.5:
-        iv = IV(feature, target)
+        iv = IV(feature, target, **kwargs)
         if not iv_only:
             g = gini_cond(feature, target)
             e = entropy_cond(feature, target)
@@ -312,7 +312,7 @@ def column_quality(feature, target, name = 'feature', iv_only = False):
     return row
 
 
-def quality(dataframe, target = 'target', iv_only = False):
+def quality(dataframe, target = 'target', iv_only = False, **kwargs):
     """get quality of features in data
 
     Returns:
@@ -320,8 +320,9 @@ def quality(dataframe, target = 'target', iv_only = False):
     """
     res = []
     pool = Pool(cpu_count())
+
     for column in dataframe:
-        r = pool.apply_async(column_quality, args = (dataframe[column].values, dataframe[target].values), kwds = {'name': column, 'iv_only': iv_only})
+        r = pool.apply_async(column_quality, args = (dataframe[column].values, dataframe[target].values), kwds = {'name': column, 'iv_only': iv_only, **kwargs})
         res.append(r)
 
     pool.close()
