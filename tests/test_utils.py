@@ -4,8 +4,8 @@ import pandas as pd
 import pyximport
 pyximport.install()
 
-from detector import IV, WOE, gini, gini_cond, entropy_cond, quality
-from detector.utils import _IV, feature_splits
+from toad import IV, WOE, gini, gini_cond, entropy_cond, quality
+from toad.utils import _IV, feature_splits
 
 np.random.seed(1)
 

@@ -3,7 +3,7 @@ import numpy as np
 import pyximport
 pyximport.install()
 
-from detector import ChiMerge
+from toad import ChiMerge
 
 np.random.seed(1)
 feature = np.random.rand(500)

@@ -4,12 +4,12 @@ from Cython.Build import cythonize
 
 
 extensions = [
-    Extension('detector.merge', ['detector/merge.pyx']),
-    Extension('detector.utils', ['detector/utils.pyx']),
+    Extension('toad.merge', ['toad/merge.pyx']),
+    Extension('toad.utils', ['toad/utils.pyx']),
 ]
 
 setup(
-    name='detector',
+    name='toad',
     version='0.0.1',
     description='python utils for detect data',
     author='Secbone',
