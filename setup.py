@@ -10,8 +10,11 @@ extensions = [
 
 setup(
     name='toad',
-    version='0.0.1',
+    version='0.0.3',
     description='python utils for detect data',
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
+    python_requires=">=3.5",
     author='Secbone',
     author_email='secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
