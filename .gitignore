@@ -4,6 +4,7 @@ __pycache__
 *.xlsx
 *.c
 *.so
+*.pyc
 build/
 *.egg-info/
 dist/
