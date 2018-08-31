@@ -9,4 +9,4 @@ uninstall:
 	cat files.txt | xargs rm -rf
 
 test:
-	python3 -m unittest discover
+	python3 -m unittest discover -s ./tests
