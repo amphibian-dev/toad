@@ -17,17 +17,17 @@ ESC Team's data-detector for finance
 Install
 -------
 
-via pip ::
+.. code:: bash
     pip install toad
 
-via source code ::
+.. code:: bash
     python setup.py install
 
 
 Usage
 -----
 
-example ::
+.. code:: python
     import toad
 
 

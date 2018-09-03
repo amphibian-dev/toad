@@ -12,7 +12,7 @@ setup(
     name='toad',
     version='0.0.3',
     description='python utils for detect data',
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     long_description_content_type='text/markdown',
     author='Secbone',
     author_email='secbone@gmail.com',
