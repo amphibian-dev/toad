@@ -10,7 +10,7 @@ extensions = [
 
 setup(
     name='toad',
-    version='0.0.3',
+    version='0.0.4',
     description='python utils for detect data',
     long_description=open('README.rst').read(),
     long_description_content_type='text/markdown',
@@ -25,5 +25,12 @@ setup(
         'pandas',
         'scipy',
         'sklearn',
-    ]
+    ],
+    classifiers = [
+        'Operating System :: POSIX',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: MacOS :: MacOS X',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+    ],
 )
