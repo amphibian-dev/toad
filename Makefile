@@ -11,6 +11,6 @@ uninstall:
 test:
 	python3 -m unittest discover -s ./tests
 
-public:
+publish:
 	python3 setup.py sdist bdist_wheel --universal
 	twine upload dist/*
