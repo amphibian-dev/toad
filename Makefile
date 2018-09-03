@@ -12,4 +12,5 @@ test:
 	python3 -m unittest discover -s ./tests
 
 public:
-	python3 setup.py bdist_wheel --universal upload -r pypi
+	python3 setup.py sdist bdist_wheel --universal
+	twine upload dist/*

@@ -1,3 +1,6 @@
 include README.rst
 include setup.py
 include toad/*.pyx
+
+include CONTRIBUTORS
+include LICENSE
