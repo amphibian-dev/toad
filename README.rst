@@ -51,4 +51,4 @@ Usage
 Documents
 ---------
 
-working...
+A simple API `docs <docs/API.rst>`_
