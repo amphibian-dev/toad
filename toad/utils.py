@@ -146,7 +146,7 @@ def _gini_cond(feature, target):
     size = feature.size
     matrix = np.vstack([feature, target])
 
-    cdef double value = 0
+    value = 0
     for v, c in zip(*np.unique(feature, return_counts = True)):
         target_series = matrix[:, matrix[0,:] == v][1,:]
         value += c / size * gini(target_series)
@@ -161,8 +161,7 @@ def gini_cond(feature, target):
 
     # find best split for continuous data
     splits = feature_splits(feature, target)
-    cdef double best = 999
-    cdef double v
+    best = 999
 
     for f in inter_feature(feature, splits):
         v = _gini_cond(f, target)
@@ -176,7 +175,7 @@ def entropy(target):
     target = _to_ndarray(target)
     uni, counts = np.unique(target, return_counts = True)
     prob = counts / len(target)
-    cdef double entropy = stats.entropy(prob)
+    entropy = stats.entropy(prob)
     return entropy
 
 def _entropy_cond(feature, target):
@@ -226,10 +225,10 @@ def _IV(feature, target):
     feature = _to_ndarray(feature)
     target = _to_ndarray(target)
 
-    cdef double t_counts_0 = _count(target, 0, default = 1)
-    cdef double t_counts_1 = _count(target, 1, default = 1)
+    t_counts_0 = _count(target, 0, default = 1)
+    t_counts_1 = _count(target, 1, default = 1)
 
-    cdef double value = 0
+    value = 0
 
     for v in np.unique(feature):
         sub_target = target[feature == v]
