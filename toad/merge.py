@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from cython.parallel import prange
+# from cython.parallel import prange
 
 # from numpy import int32
 # from numpy cimport int32_t
@@ -70,8 +70,8 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
 
     target_unique = np.unique(target)
     feature_unique = np.unique(feature)
-    cdef int len_f = len(feature_unique)
-    cdef int len_t = len(target_unique)
+    len_f = len(feature_unique)
+    len_t = len(target_unique)
     grouped = np.zeros((len_f, len_t))
     # grouped[:,1] = feature_unique
     for i in range(len_f):
@@ -145,7 +145,6 @@ def merge(feature, target, method = 'dt', **kwargs):
     Returns:
         array: a array of merged label with the same size of feature
     """
-    cdef double[:] splits
     if method is 'dt':
         splits = DTMerge(feature, target, **kwargs)
     elif method is 'chi':

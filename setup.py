@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages, Extension
-from Cython.Build import cythonize
+# from Cython.Build import cythonize
 # from distutils.core import setup
 
 
-extensions = [
-    Extension('toad.merge', ['toad/merge.pyx']),
-    Extension('toad.utils', ['toad/utils.pyx']),
-]
+# extensions = [
+#     Extension('toad.merge', ['toad/merge.pyx']),
+#     Extension('toad.utils', ['toad/utils.pyx']),
+# ]
 
 setup(
     name = 'toad',
@@ -18,14 +18,14 @@ setup(
     author = 'ESC Team',
     author_email = 'secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
-    ext_modules = cythonize(extensions),
+    # ext_modules = cythonize(extensions),
     python_requires = '>=3.5',
     setup_requires = [
         'setuptools',
-        'cython',
+        # 'cython',
     ],
     install_requires = [
-        'cython',
+        # 'cython',
         'numpy',
         'pandas',
         'scipy',

@@ -6,9 +6,9 @@ from scipy import stats
 from sklearn.metrics import f1_score
 from .merge import merge
 
-cimport cython
+# cimport cython
 
-cdef double FEATURE_THRESHOLD = 1e-7
+FEATURE_THRESHOLD = 1e-7
 
 def _count(arr, value, default = None):
     c = (arr == value).sum()
@@ -42,7 +42,7 @@ def KS(score, target):
     return max(abs(df['ks']))
 
 
-def KS_bucket(score, target, int bucket = 10):
+def KS_bucket(score, target, bucket = 10):
     """calculate ks value by bucket
     """
     df = pd.DataFrame({

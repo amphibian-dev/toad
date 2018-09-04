@@ -1,8 +1,8 @@
 import unittest
 import numpy as np
 import pandas as pd
-import pyximport
-pyximport.install()
+# import pyximport
+# pyximport.install()
 
 from toad import IV, WOE, gini, gini_cond, entropy_cond, quality
 from toad.utils import _IV, feature_splits
