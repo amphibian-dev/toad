@@ -24,5 +24,8 @@ publish:
 	$(PYTHON) setup.py sdist bdist_wheel --universal
 	twine upload dist/*
 
+clean:
+	@rm -rf build/ dist/ *.egg-info/
+
 docs: build
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
