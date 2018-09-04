@@ -4,16 +4,9 @@ import pandas as pd
 
 from sklearn.tree import DecisionTreeClassifier, _tree
 
+from .utils import fillna, bin_by_splits, to_ndarray
 
-def _fillna(feature, by = -1):
-    feature[np.isnan(feature)] = by
-    return feature
 
-def _bin(feature, splits):
-    """Bin feature by split points
-    """
-    feature = _fillna(feature)
-    return np.digitize(feature, splits)
 
 
 def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
@@ -25,10 +18,7 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     if n_bins is None and min_samples == 1:
         n_bins = 20
 
-    if isinstance(feature, pd.Series):
-        feature = feature.values
-
-    feature = _fillna(feature, by = nan)
+    feature = fillna(feature, by = nan)
 
     tree = DecisionTreeClassifier(
         min_samples_leaf = min_samples,
@@ -63,7 +53,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
     if min_samples and min_samples < 1:
         min_samples = len(feature) * min_samples
 
-    feature = _fillna(feature, by = nan)
+    feature = fillna(feature, by = nan)
 
     target_unique = np.unique(target)
     feature_unique = np.unique(feature)
@@ -142,10 +132,12 @@ def merge(feature, target, method = 'dt', **kwargs):
     Returns:
         array: a array of merged label with the same size of feature
     """
+    feature = to_ndarray(feature)
+    
     if method is 'dt':
         splits = DTMerge(feature, target, **kwargs)
     elif method is 'chi':
         splits = ChiMerge(feature, target, **kwargs)
 
     # print(splits)
-    return _bin(feature, splits)
+    return bin_by_splits(feature, splits)

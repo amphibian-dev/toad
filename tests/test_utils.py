@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 
 from toad import IV, WOE, gini, gini_cond, entropy_cond, quality
-from toad.utils import _IV, feature_splits
+from toad.stats import _IV
+from toad.utils import feature_splits
 
 np.random.seed(1)
 
