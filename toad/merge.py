@@ -1,9 +1,6 @@
 import numpy as np
 import pandas as pd
-# from cython.parallel import prange
 
-# from numpy import int32
-# from numpy cimport int32_t
 
 from sklearn.tree import DecisionTreeClassifier, _tree
 

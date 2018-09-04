@@ -1,7 +1,5 @@
 import unittest
 import numpy as np
-# import pyximport
-# pyximport.install()
 
 from toad import ChiMerge
 

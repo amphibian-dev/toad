@@ -6,7 +6,6 @@ from scipy import stats
 from sklearn.metrics import f1_score
 from .merge import merge
 
-# cimport cython
 
 FEATURE_THRESHOLD = 1e-7
 

@@ -1,16 +1,28 @@
+.PHONY: build test
+
+PYTHON = python3
+SPHINXOPTS =
+SPHINXBUILD = sphinx-build
+SPHINXPROJ = toad
+DOCSDIR = docs
+SOURCEDIR = $(DOCSDIR)/source
+BUILDDIR = $(DOCSDIR)/build
+
 build:
-	python3 setup.py build_ext --inplace
+	$(PYTHON) setup.py build_ext --inplace
 
 install:
-	python3 setup.py install
+	$(PYTHON) setup.py install --record files.txt
 
 uninstall:
-	python3 setup.py install --record files.txt
 	cat files.txt | xargs rm -rf
 
 test:
-	python3 -m unittest discover -s ./tests
+	$(PYTHON) -m unittest discover -s ./tests
 
 publish:
-	python3 setup.py sdist bdist_wheel --universal
+	$(PYTHON) setup.py sdist bdist_wheel --universal
 	twine upload dist/*
+
+docs: build
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
