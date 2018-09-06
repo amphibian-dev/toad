@@ -19,7 +19,7 @@ df = pd.DataFrame({
     'B': B,
 })
 
-class TestUtils(unittest.TestCase):
+class TestStats(unittest.TestCase):
     def setUp(self):
         pass
 

@@ -121,8 +121,8 @@ def clip(series, value = None, std = None, quantile = None):
     return np.clip(series, min, max)
 
 
-def _get_clip_value(value):
-    if isinstance(value, tuple):
-        return tuple
+def _get_clip_value(params):
+    if isinstance(params, tuple):
+        return params
     else:
-        return value, value
+        return params, params
