@@ -12,5 +12,6 @@ class TestUtils(unittest.TestCase):
         pass
 
     def test_clip(self):
-        res = clip(feature, quantile = (None, .98))
-        self.assertEqual(len(res), 500)
+        res1 = clip(feature, quantile = (.05, .95))
+        res2 = clip(feature, quantile = 0.05)
+        self.assertIsNone(np.testing.assert_array_equal(res1, res2))

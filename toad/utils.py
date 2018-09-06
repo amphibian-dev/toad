@@ -114,7 +114,12 @@ def clip(series, value = None, std = None, quantile = None):
         max = None if max is None else mean + s * max
 
     elif quantile is not None:
-        min, max = _get_clip_value(quantile)
+        if isinstance(quantile, tuple):
+            min, max = quantile
+        else:
+            min = quantile
+            max = 1 - quantile
+            
         min = None if min is None else np.quantile(series, min)
         max = None if max is None else np.quantile(series, max)
 
