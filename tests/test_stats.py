@@ -12,6 +12,8 @@ feature = np.random.rand(500)
 target = np.random.randint(2, size = 500)
 A = np.random.randint(100, size = 500)
 B = np.random.randint(100, size = 500)
+mask = np.random.randint(8, size = 500)
+
 df = pd.DataFrame({
     'feature': feature,
     'target': target,
@@ -63,7 +65,6 @@ class TestStats(unittest.TestCase):
         self.assertEqual(result.loc['feature', 'gini'], '--')
 
     def test_quality_object_type_array_with_nan(self):
-        mask = np.random.randint(8, size = 500)
         feature = np.array([np.nan, 'A', 'B', 'C', 'D', 'E', 'F', 'G'], dtype = 'O')[mask]
 
         df = pd.DataFrame({
@@ -71,4 +72,4 @@ class TestStats(unittest.TestCase):
             'target': target,
         })
         result = quality(df)
-        self.assertEqual(result.loc['feature', 'iv'], 0.03443287832743326)
+        self.assertEqual(result.loc['feature', 'iv'], 0.01637933818053033)
