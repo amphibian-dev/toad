@@ -16,7 +16,7 @@ setup(
         'setuptools',
     ],
     install_requires = [
-        'numpy',
+        'numpy >= 1.15',
         'pandas',
         'scipy',
         'sklearn',

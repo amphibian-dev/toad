@@ -20,7 +20,7 @@ def to_ndarray(s):
     if isinstance(s, pd.core.base.PandasObject):
         return s.values
 
-    return s
+    return np.array(s)
 
 
 def fillna(feature, by = -1):
@@ -119,7 +119,7 @@ def clip(series, value = None, std = None, quantile = None):
         else:
             min = quantile
             max = 1 - quantile
-            
+
         min = None if min is None else np.quantile(series, min)
         max = None if max is None else np.quantile(series, max)
 
@@ -131,3 +131,23 @@ def _get_clip_value(params):
         return params
     else:
         return params, params
+
+
+def diff_time(base, target, format = None):
+    # if base is not a datetime list
+    if not np.issubdtype(base.dtype, np.datetime64):
+        base = pd.to_datetime(base, format = format, cache = True)
+
+    target = pd.to_datetime(target, format = format, cache = True)
+
+    return target - base
+
+def diff_time_frame(base, frame, format = None):
+    res = pd.DataFrame()
+
+    base = pd.to_datetime(base, format = format, cache = True)
+
+    for col in frame:
+        res[col] = diff_time(base, frame[col], format = format)
+
+    return res
