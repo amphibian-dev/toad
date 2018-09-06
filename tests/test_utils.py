@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from toad.utils import clip, diff_time_frame
+from toad.utils import clip, diff_time_frame, bin_to_number
 
 np.random.seed(1)
 feature = np.random.rand(500)
@@ -39,3 +39,17 @@ class TestUtils(unittest.TestCase):
         frame = pd.DataFrame(time_data)
         res = diff_time_frame(frame['base'], frame[['time1', 'time2']], format='%Y-%m-%d')
         self.assertEqual(res.iloc[0, 1].days, 91)
+
+    def test_bin_to_number(self):
+        s = pd.Series([
+            '1',
+            '1-100',
+            '-',
+            '100-200',
+            '200-300',
+            '300',
+            '100-200',
+        ])
+
+        res = s.apply(bin_to_number())
+        self.assertEqual(res[3], 150)

@@ -1,3 +1,4 @@
+import re
 import numpy as np
 import pandas as pd
 
@@ -142,6 +143,7 @@ def diff_time(base, target, format = None):
 
     return target - base
 
+
 def diff_time_frame(base, frame, format = None):
     res = pd.DataFrame()
 
@@ -151,3 +153,23 @@ def diff_time_frame(base, frame, format = None):
         res[col] = diff_time(base, frame[col], format = format)
 
     return res
+
+
+def bin_to_number(reg = None):
+    """
+    Returns:
+        function: func(string) -> number
+    """
+    if reg is None:
+        reg = '\d+'
+
+    def func(x):
+        res = re.findall(reg, x)
+        l = len(res)
+        res = map(float, res)
+        if l == 0:
+            return np.nan
+        else:
+            return sum(res) / l
+
+    return func
