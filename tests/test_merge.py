@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from toad import ChiMerge
+from toad import ChiMerge, DTMerge, QuantileMerge, StepMerge
 
 np.random.seed(1)
 feature = np.random.rand(500)
@@ -13,6 +13,18 @@ class TestMerge(unittest.TestCase):
 
     def test_chimerge(self):
         splits = ChiMerge(feature, target, n_bins = 10)
+        self.assertEqual(len(splits), 9)
+
+    def test_dtmerge(self):
+        splits = DTMerge(feature, target, n_bins = 10)
+        self.assertEqual(len(splits), 9)
+
+    def test_quantilemerge(self):
+        splits = QuantileMerge(feature, n_bins = 10)
+        self.assertEqual(len(splits), 9)
+
+    def test_stepmerge(self):
+        splits = StepMerge(feature, n_bins = 10)
         self.assertEqual(len(splits), 9)
 
     def test_get_unknow_value(self):

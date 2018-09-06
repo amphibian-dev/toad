@@ -6,7 +6,34 @@ from sklearn.tree import DecisionTreeClassifier, _tree
 
 from .utils import fillna, bin_by_splits, to_ndarray
 
+DEFAULT_BINS = 20
 
+
+def StepMerge(feature, nan = -1, n_bins = None):
+    if n_bins is None:
+        n_bins = DEFAULT_BINS
+
+    feature = fillna(feature, by = nan)
+
+    max = np.max(feature)
+    min = np.min(feature)
+
+    step = (max - min) / n_bins
+    return np.arange(min, max, step)[1:]
+
+def QuantileMerge(feature, nan = -1, n_bins = None, q = None):
+    """Merge by quantile
+    """
+    if n_bins is None and quantile is None:
+        n_bins = DEFAULT_BINS
+
+    if q is None:
+        step = 1 / n_bins
+        q = np.arange(0, 1, step)[1:]
+
+    feature = fillna(feature, by = nan)
+
+    return np.quantile(feature, q)
 
 
 def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
@@ -16,7 +43,7 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
         array: array of split points
     """
     if n_bins is None and min_samples == 1:
-        n_bins = 20
+        n_bins = DEFAULT_BINS
 
     feature = fillna(feature, by = nan)
 
@@ -48,7 +75,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
 
     # set default break condition
     if n_bins is None and min_samples is None and min_threshold is None:
-        n_bins = 20
+        n_bins = DEFAULT_BINS
 
     if min_samples and min_samples < 1:
         min_samples = len(feature) * min_samples
@@ -121,7 +148,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
     return feature_unique[1:]
 
 
-def merge(feature, target, method = 'dt', **kwargs):
+def merge(feature, target = None, method = 'dt', **kwargs):
     """merge feature into groups
 
     Params:
@@ -133,11 +160,15 @@ def merge(feature, target, method = 'dt', **kwargs):
         array: a array of merged label with the same size of feature
     """
     feature = to_ndarray(feature)
-    
+
     if method is 'dt':
         splits = DTMerge(feature, target, **kwargs)
     elif method is 'chi':
         splits = ChiMerge(feature, target, **kwargs)
+    elif method is 'quantile':
+        splits = QuantileMerge(feature, **kwargs)
+    elif method is 'step':
+        splits = StepMerge(feature, **kwargs)
 
     # print(splits)
     return bin_by_splits(feature, splits)
