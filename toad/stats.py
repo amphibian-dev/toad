@@ -252,6 +252,9 @@ def quality(dataframe, target = 'target', iv_only = False, **kwargs):
     pool = Pool(cpu_count())
 
     for column in dataframe:
+        if column == target:
+            continue
+        
         r = pool.apply_async(column_quality, args = (dataframe[column].values, dataframe[target].values), kwds = {'name': column, 'iv_only': iv_only, **kwargs})
         res.append(r)
 
