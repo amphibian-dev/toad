@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 
 
+CONTINUOUS_NUM = 20
 FEATURE_THRESHOLD = 1e-7
 
 def np_count(arr, value, default = None):
@@ -89,3 +90,39 @@ def is_continuous(series):
     n = len(np.unique(series))
     return n > 20 or n / series.size > 0.5
     # return n / series.size > 0.5
+
+
+def clip(series, value = None, std = None, quantile = None):
+    """clip series
+
+    Args:
+        series (array-like): series need to be clipped
+        value (number | tuple): min/max value of clipping
+        std (number | tuple): min/max std of clipping
+        quantile (number | tuple): min/max quantile of clipping
+    """
+    series = to_ndarray(series)
+
+    if value is not None:
+        min, max = _get_clip_value(value)
+
+    elif std is not None:
+        min, max = _get_clip_value(std)
+        s = np.std(series, ddof = 1)
+        mean = np.mean(series)
+        min = None if min is None else mean - s * min
+        max = None if max is None else mean + s * max
+
+    elif quantile is not None:
+        min, max = _get_clip_value(quantile)
+        min = None if min is None else np.quantile(series, min)
+        max = None if max is None else np.quantile(series, max)
+
+    return np.clip(series, min, max)
+
+
+def _get_clip_value(value):
+    if isinstance(value, tuple):
+        return tuple
+    else:
+        return value, value
