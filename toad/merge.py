@@ -148,7 +148,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
     return feature_unique[1:]
 
 
-def merge(feature, target = None, method = 'dt', **kwargs):
+def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs):
     """merge feature into groups
 
     Params:
@@ -171,4 +171,9 @@ def merge(feature, target = None, method = 'dt', **kwargs):
         splits = StepMerge(feature, **kwargs)
 
     # print(splits)
-    return bin_by_splits(feature, splits)
+    bins = bin_by_splits(feature, splits)
+
+    if return_splits:
+        return bins, splits
+
+    return bins
