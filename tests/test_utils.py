@@ -38,7 +38,7 @@ class TestUtils(unittest.TestCase):
 
         frame = pd.DataFrame(time_data)
         res = diff_time_frame(frame['base'], frame[['time1', 'time2']], format='%Y-%m-%d')
-        self.assertEqual(res.iloc[0, 1].days, 91)
+        self.assertEqual(res.iloc[0, 1], 91)
 
     def test_bin_to_number(self):
         s = pd.Series([
@@ -54,7 +54,6 @@ class TestUtils(unittest.TestCase):
         ])
 
         res = s.apply(bin_to_number())
-        print(res)
         self.assertEqual(res[3], 150)
 
     def test_bin_to_number_for_frame(self):

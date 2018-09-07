@@ -144,7 +144,7 @@ def diff_time(base, target, format = None, time = 'day'):
     delta = target - base
 
     if time == 'day':
-        return delta.days
+        return delta.dt.days
 
     return delta
 
