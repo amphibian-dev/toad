@@ -12,3 +12,12 @@ install: pip install tox cython numpy pandas
 
 script:
     - tox
+
+deploy:
+    skip_cleanup: true
+    script:
+        - pip install twine
+        - python setup.py sdist bdist_wheel --universal
+        - twine upload dist/* -u $TWINE_USER -p $TWINE_PASS
+    on:
+        tags: true
