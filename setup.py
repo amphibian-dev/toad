@@ -3,7 +3,7 @@ from setuptools import setup, find_packages, Extension
 
 setup(
     name = 'toad',
-    version = '0.0.7',
+    version = '0.0.8',
     description = 'python utils for detect data',
     long_description = open('README.rst').read(),
     # long_description_content_type = 'text/markdown',
