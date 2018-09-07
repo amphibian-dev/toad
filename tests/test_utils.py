@@ -46,10 +46,36 @@ class TestUtils(unittest.TestCase):
             '1-100',
             '-',
             '100-200',
+            np.nan,
             '200-300',
             '300',
             '100-200',
+            '>500',
         ])
 
         res = s.apply(bin_to_number())
+        print(res)
         self.assertEqual(res[3], 150)
+
+    def test_bin_to_number_for_frame(self):
+        df = pd.DataFrame([
+            {
+                'area_1': '100-200',
+                'area_2': '150~200',
+            },
+            {
+                'area_1': '300-400',
+                'area_2': '200~250',
+            },
+            {
+                'area_1': '200-300',
+                'area_2': '450~500',
+            },
+            {
+                'area_1': '100-200',
+                'area_2': '250~300',
+            },
+        ])
+
+        res = df.applymap(bin_to_number())
+        self.assertEqual(res.loc[1, 'area_2'], 225)

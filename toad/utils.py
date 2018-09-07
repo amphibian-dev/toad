@@ -134,14 +134,19 @@ def _get_clip_value(params):
         return params, params
 
 
-def diff_time(base, target, format = None):
+def diff_time(base, target, format = None, time = 'day'):
     # if base is not a datetime list
     if not np.issubdtype(base.dtype, np.datetime64):
         base = pd.to_datetime(base, format = format, cache = True)
 
     target = pd.to_datetime(target, format = format, cache = True)
 
-    return target - base
+    delta = target - base
+
+    if time == 'day':
+        return delta.days
+
+    return delta
 
 
 def diff_time_frame(base, frame, format = None):
@@ -150,7 +155,10 @@ def diff_time_frame(base, frame, format = None):
     base = pd.to_datetime(base, format = format, cache = True)
 
     for col in frame:
-        res[col] = diff_time(base, frame[col], format = format)
+        try:
+            res[col] = diff_time(base, frame[col], format = format)
+        except:
+            continue
 
     return res
 
@@ -164,6 +172,9 @@ def bin_to_number(reg = None):
         reg = '\d+'
 
     def func(x):
+        if pd.isnull(x):
+            return np.nan
+
         res = re.findall(reg, x)
         l = len(res)
         res = map(float, res)
@@ -173,3 +184,15 @@ def bin_to_number(reg = None):
             return sum(res) / l
 
     return func
+
+
+def get_dummies(dataframe, exclude = None):
+    """get dummies
+    """
+    columns = dataframe.select_dtypes(exclude = 'number').columns
+
+    if exclude is not None:
+        columns = columns.difference(exclude)
+
+    data = pd.get_dummies(dataframe, columns = columns)
+    return data
