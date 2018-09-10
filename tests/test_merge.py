@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from toad import ChiMerge, DTMerge, QuantileMerge, StepMerge
+from toad import ChiMerge, DTMerge, QuantileMerge, StepMerge, KMeansMerge
 
 np.random.seed(1)
 feature = np.random.rand(500)
@@ -25,6 +25,10 @@ class TestMerge(unittest.TestCase):
 
     def test_stepmerge(self):
         splits = StepMerge(feature, n_bins = 10)
+        self.assertEqual(len(splits), 9)
+
+    def test_kmeansmerge(self):
+        splits = KMeansMerge(feature, n_bins = 10)
         self.assertEqual(len(splits), 9)
 
     def test_get_unknow_value(self):

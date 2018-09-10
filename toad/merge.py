@@ -3,6 +3,7 @@ import pandas as pd
 
 
 from sklearn.tree import DecisionTreeClassifier, _tree
+from sklearn.cluster import KMeans
 
 from .utils import fillna, bin_by_splits, to_ndarray
 
@@ -34,6 +35,31 @@ def QuantileMerge(feature, nan = -1, n_bins = None, q = None):
     feature = fillna(feature, by = nan)
 
     return np.quantile(feature, q)
+
+
+def KMeansMerge(feature, target = None, nan = -1, n_bins = None, random_state = 1):
+    """Merge by KMeans
+    """
+    if n_bins is None:
+        n_bins = DEFAULT_BINS
+
+    feature = fillna(feature, by = nan)
+
+    model = KMeans(
+        n_clusters = n_bins,
+        random_state = random_state
+    )
+    model.fit(feature.reshape((-1 ,1)), target)
+
+    centers = np.sort(model.cluster_centers_.reshape(-1))
+
+    l = len(centers) - 1
+    splits = np.zeros(l)
+    for i in range(l):
+        splits[i] = (centers[i] + centers[i+1]) / 2
+
+    return splits
+
 
 
 def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
@@ -169,6 +195,8 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
         splits = QuantileMerge(feature, **kwargs)
     elif method is 'step':
         splits = StepMerge(feature, **kwargs)
+    elif method is 'kmeans':
+        splits = KMeaMerge(feature, target = target, **kwargs)
 
     # print(splits)
     bins = bin_by_splits(feature, splits)

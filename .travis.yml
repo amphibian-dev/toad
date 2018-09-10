@@ -8,7 +8,7 @@ matrix:
         - python: "3.6"
           env: TOXENV=py36
 
-install: pip install tox cython numpy pandas
+install: pip install tox numpy pandas
 
 script:
     - tox
