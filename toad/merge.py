@@ -10,14 +10,15 @@ from .utils import fillna, bin_by_splits, to_ndarray
 DEFAULT_BINS = 20
 
 
-def StepMerge(feature, nan = -1, n_bins = None):
+def StepMerge(feature, nan = None, n_bins = None):
     if n_bins is None:
         n_bins = DEFAULT_BINS
 
-    feature = fillna(feature, by = nan)
+    if nan is not None:
+        feature = fillna(feature, by = nan)
 
-    max = np.max(feature)
-    min = np.min(feature)
+    max = np.nanmax(feature)
+    min = np.nanmin(feature)
 
     step = (max - min) / n_bins
     return np.arange(min, max, step)[1:]
