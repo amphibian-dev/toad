@@ -1,24 +1,19 @@
 dist: trusty
 sudo: false
-
 language: python
-
 matrix:
-    include:
-        - python: "3.6"
-          env: TOXENV=py36
-
+  include:
+  - python: '3.6'
+    env: TOXENV=py36
 install: pip install tox numpy pandas
-
 script:
-    - tox
-
+- tox
 deploy:
-    provider: script
-    skip_cleanup: true
-    script:
-        - pip install twine
-        - python setup.py sdist bdist_wheel --universal
-        - twine upload dist/* -u $TWINE_USER -p $TWINE_PASS
-    on:
-        tags: true
+  provider: pypi
+  skip_cleanup: true
+  user: Secbone
+  password:
+    secure: VyLQEOAwJ1FZbM5qzAcxpO56cFbx1NHhAIrzx3xC2qQ16CPBGPRsieWXC5BvuSBWeRFCuXWr+yByZYEHz4lUUb5lzLpvwYmShAmaS+FFMQVHTJoNzCAiK0Uzo0FOygTHIctGtpD8d/npuyztfItQGMWo9l82F0Is5wxscd0baSFc/kyNvma93duB5t0k9vNsu0F2bpJhjq2Mx7X8tqmWAMe98olMrFQ3toSCc/88Bof1dmOIbS+3b4kjmm5b0WFkPP6K2nwY8/iyOY0bj5FcOOaFjEzKnCBqy9aOZZw27vX1ZLIiP4ypR77uF/dzIZPjUra/FvcBjncEfGfBoIXA+5WYzNOhvTdEcWOIlH7QlQs2BO/RMs8TXcETPzv/mnxivpgePG6bxvBFNggUyfd+fG5MQgxe9i/ay3SDjklDwdQOftc0yfQA/7/QTPyNnUAXt8THv8DTVZJ6ZLVAGPt/udyYUsBNwXAomfcCQ7zub4A5MfR+Xhp/PjBh11k54CjOq1eyWwU6qxV34WFrh2qZ/t/P2XF4tNd1MkAxnXZ/xNiKCQu8IFVo6nmri/XAL3MTeG4esx6L5S1pXELsCdrG2x1HS78snGvEGqhLQDtj5T8xnDnW20bFpjtXko1B/ylhBUAcXhbdhQ684gC+MjTkYG7z2kaB9oDtr96QIBdWnkw=
+  distributions: sdist bdist_wheel --universal
+  on:
+    tags: true
