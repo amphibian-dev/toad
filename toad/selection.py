@@ -1,6 +1,7 @@
 import numpy as np
+import pandas as pd
 from .stats import IV
-
+from .utils import split_target
 
 def drop_empty(frame, threshold = 0.9, nan = None):
     """drop columns by empty
@@ -24,12 +25,7 @@ def drop_empty(frame, threshold = 0.9, nan = None):
 def drop_corr(frame, target = None, threshold = 0.7, by = 'IV'):
     """drop columns by corr
     """
-    t = target
-    f = frame
-
-    if target is not None:
-        t = frame[target]
-        f = frame.drop(columns = target)
+    f, t = split_target(frame, target)
 
     corr = f.corr()
 
@@ -42,7 +38,14 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV'):
     # calc weights for nodes
     weights = np.zeros(len(corr.index))
 
-    if by is 'IV':
+
+    if isinstance(by, np.ndarray):
+        weights = by
+    elif isinstance(by, pd.Series):
+        weights = by.values
+    elif isinstance(by, list):
+        weights = np.array(by)
+    elif by.upper() == 'IV':
         for ix in uni:
             weights[ix] = IV(frame[corr.index[ix]], target = t)
 
@@ -84,3 +87,46 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV'):
 
 
     return frame.drop(columns = corr.index[drops])
+
+
+def drop_iv(frame, target = 'target', threshold = 0.02, return_iv = False):
+    """
+    """
+    f, t = split_target(frame, target)
+
+    l = len(f.columns)
+    iv = np.zeros(l)
+
+    for i in range(l):
+        iv[i] = IV(frame.iloc[:,i], target = t)
+
+    drop_ix = np.where(iv < threshold)
+
+    df = frame.drop(columns = f.columns[drop_ix])
+
+    if return_iv:
+        return df, pd.Series(iv, index = f.columns)
+
+    return df
+
+
+def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7):
+    """
+    """
+    if empty is not False:
+        frame = drop_empty(frame, threshold = empty)
+
+    if iv is not False:
+        frame, iv_list = drop_iv(frame, target = target, threshold = iv, return_iv = True)
+
+    if corr is not False:
+        weights = 'IV'
+
+        if iv is not False:
+            ix = frame.columns.tolist()
+            ix.remove(target)
+            weights = iv_list[ix]
+
+        frame = drop_corr(frame, target = target, threshold = corr, by = weights)
+
+    return frame

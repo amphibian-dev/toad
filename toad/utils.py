@@ -93,6 +93,19 @@ def is_continuous(series):
     # return n / series.size > 0.5
 
 
+def split_target(frame, target):
+    """
+    """
+    if isinstance(target, str):
+        f = frame.drop(columns = target)
+        t = frame[target]
+    else:
+        f = frame.copy()
+        t = target
+
+    return f, t
+
+
 def clip(series, value = None, std = None, quantile = None):
     """clip series
 
