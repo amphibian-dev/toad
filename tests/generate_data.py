@@ -30,4 +30,6 @@ frame = pd.DataFrame({
 
 frame['target'] = target
 
-frame.to_csv('test_data.csv', index = False)
+
+
+# frame.to_csv('test_data.csv', index = False)

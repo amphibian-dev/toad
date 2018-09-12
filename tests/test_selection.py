@@ -4,7 +4,7 @@ import pandas as pd
 
 from toad.selection import drop_empty, drop_corr
 
-frame = pd.read_csv('tests/test_data.csv')
+from tests.generate_data import frame
 
 class TestSelection(unittest.TestCase):
     def setUp(self):
