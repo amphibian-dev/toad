@@ -1,3 +1,8 @@
+.. raw:: html
+    <p align="center">
+        <img src="images/toadlogo.png" width="512px" />
+    </p>
+
 TOAD
 ^^^^
 
