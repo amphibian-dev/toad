@@ -12,7 +12,7 @@ TOAD
   :alt: Travis-CI build status
 
 
-ESC Team's data-detector for finance
+ESC Team's data-detector for credit risk
 
 Install
 -------

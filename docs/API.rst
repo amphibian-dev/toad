@@ -8,3 +8,4 @@
 - **WOE** (y_prob, n_prob)
 - **gini_cond** (feature, target)
 - **entropy_cond** (feature, target)
+- **select** (dataframe, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7)
