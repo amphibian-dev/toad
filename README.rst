@@ -1,7 +1,3 @@
-.. image:: images/toadlogo.png
-  :width: 512px
-  :align: center
-
 TOAD
 ^^^^
 
