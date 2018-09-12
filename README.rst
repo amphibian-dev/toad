@@ -1,7 +1,6 @@
-.. raw:: html
-    <p align="center">
-        <img src="images/toadlogo.png" width="512px" />
-    </p>
+.. image:: images/toadlogo.png
+  :width: 512px
+  :align: center
 
 TOAD
 ^^^^
