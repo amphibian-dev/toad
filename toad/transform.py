@@ -16,9 +16,9 @@ def woe_transform(feature, target):
     f = np.zeros(len(feature))
 
     for v in np.unique(feature):
-        mask =feature == v
+        mask = feature == v
         sub_target = target[mask]
-        
+
         sub_0 = np_count(sub_target, 0, default = 1)
         sub_1 = np_count(sub_target, 1, default = 1)
 
