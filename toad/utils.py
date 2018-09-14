@@ -106,6 +106,13 @@ def split_target(frame, target):
     return f, t
 
 
+def unpack_tuple(x):
+    if len(x) == 1:
+        return x[0]
+    else:
+        return x
+
+
 def clip(series, value = None, std = None, quantile = None):
     """clip series
 
@@ -170,7 +177,7 @@ def diff_time_frame(base, frame, format = None):
     for col in frame:
         try:
             res[col] = diff_time(base, frame[col], format = format)
-        except:
+        except Exception as e:
             continue
 
     return res

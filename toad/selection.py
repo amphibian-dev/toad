@@ -1,9 +1,9 @@
 import numpy as np
 import pandas as pd
 from .stats import IV
-from .utils import split_target
+from .utils import split_target, unpack_tuple
 
-def drop_empty(frame, threshold = 0.9, nan = None):
+def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False):
     """drop columns by empty
     """
     if nan is not None:
@@ -20,9 +20,15 @@ def drop_empty(frame, threshold = 0.9, nan = None):
         if n > threshold:
             drop_list.append(col)
 
-    return frame.drop(columns = drop_list)
+    r = frame.drop(columns = drop_list)
 
-def drop_corr(frame, target = None, threshold = 0.7, by = 'IV'):
+    res = (r,)
+    if return_drop:
+        res += (np.array(drop_list),)
+
+    return unpack_tuple(res)
+
+def drop_corr(frame, target = None, threshold = 0.7, by = 'IV', return_drop = False):
     """drop columns by corr
     """
     f, t = split_target(frame, target)
@@ -86,10 +92,17 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV'):
         uni, counts = np.unique(graph, return_counts = True)
 
 
-    return frame.drop(columns = corr.index[drops])
+    drop_list = corr.index[drops].values
+    r = frame.drop(columns = drop_list)
+
+    res = (r,)
+    if return_drop:
+        res += (drop_list,)
+
+    return unpack_tuple(res)
 
 
-def drop_iv(frame, target = 'target', threshold = 0.02, return_iv = False):
+def drop_iv(frame, target = 'target', threshold = 0.02, return_drop = False, return_iv = False):
     """
     """
     f, t = split_target(frame, target)
@@ -102,22 +115,29 @@ def drop_iv(frame, target = 'target', threshold = 0.02, return_iv = False):
 
     drop_ix = np.where(iv < threshold)
 
-    df = frame.drop(columns = f.columns[drop_ix])
+    drop_list = f.columns[drop_ix].values
+    df = frame.drop(columns = drop_list)
+
+    res = (df,)
+    if return_drop:
+        res += (drop_list,)
 
     if return_iv:
-        return df, pd.Series(iv, index = f.columns)
+        res += (pd.Series(iv, index = f.columns),)
 
-    return df
+    return unpack_tuple(res)
 
 
-def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7):
+def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7, return_drop = False):
     """
     """
+    empty_drop = iv_drop = corr_drop = None
+
     if empty is not False:
-        frame = drop_empty(frame, threshold = empty)
+        frame, empty_drop = drop_empty(frame, threshold = empty, return_drop = True)
 
     if iv is not False:
-        frame, iv_list = drop_iv(frame, target = target, threshold = iv, return_iv = True)
+        frame, iv_drop, iv_list = drop_iv(frame, target = target, threshold = iv, return_drop = True, return_iv = True)
 
     if corr is not False:
         weights = 'IV'
@@ -127,6 +147,15 @@ def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7):
             ix.remove(target)
             weights = iv_list[ix]
 
-        frame = drop_corr(frame, target = target, threshold = corr, by = weights)
+        frame, corr_drop = drop_corr(frame, target = target, threshold = corr, by = weights, return_drop = True)
 
-    return frame
+    res = (frame,)
+    if return_drop:
+        d = {
+            'empty': empty_drop,
+            'iv': iv_drop,
+            'corr': corr_drop,
+        }
+        res += (d,)
+
+    return unpack_tuple(res)
