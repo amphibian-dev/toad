@@ -3,7 +3,8 @@ import pandas as pd
 from .stats import IV
 from .utils import split_target, unpack_tuple
 
-def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False):
+def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
+            exclude = None):
     """drop columns by empty
     """
     if nan is not None:
@@ -28,7 +29,8 @@ def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False):
 
     return unpack_tuple(res)
 
-def drop_corr(frame, target = None, threshold = 0.7, by = 'IV', return_drop = False):
+def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
+            return_drop = False, exclude = None):
     """drop columns by corr
     """
     f, t = split_target(frame, target)
@@ -102,7 +104,8 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV', return_drop = Fa
     return unpack_tuple(res)
 
 
-def drop_iv(frame, target = 'target', threshold = 0.02, return_drop = False, return_iv = False):
+def drop_iv(frame, target = 'target', threshold = 0.02, return_drop = False,
+            return_iv = False, exclude = None):
     """
     """
     f, t = split_target(frame, target)
@@ -128,16 +131,17 @@ def drop_iv(frame, target = 'target', threshold = 0.02, return_drop = False, ret
     return unpack_tuple(res)
 
 
-def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7, return_drop = False):
+def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7,
+            return_drop = False, exclude = None):
     """
     """
     empty_drop = iv_drop = corr_drop = None
 
     if empty is not False:
-        frame, empty_drop = drop_empty(frame, threshold = empty, return_drop = True)
+        frame, empty_drop = drop_empty(frame, threshold = empty, return_drop = True, exclude = exclude)
 
     if iv is not False:
-        frame, iv_drop, iv_list = drop_iv(frame, target = target, threshold = iv, return_drop = True, return_iv = True)
+        frame, iv_drop, iv_list = drop_iv(frame, target = target, threshold = iv, return_drop = True, return_iv = True, exclude = exclude)
 
     if corr is not False:
         weights = 'IV'
@@ -147,7 +151,7 @@ def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7, return_
             ix.remove(target)
             weights = iv_list[ix]
 
-        frame, corr_drop = drop_corr(frame, target = target, threshold = corr, by = weights, return_drop = True)
+        frame, corr_drop = drop_corr(frame, target = target, threshold = corr, by = weights, return_drop = True, exclude = exclude)
 
     res = (frame,)
     if return_drop:

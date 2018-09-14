@@ -157,6 +157,10 @@ def _IV(feature, target):
     feature = to_ndarray(feature)
     target = to_ndarray(target)
 
+    # HACK change onject type to unicode
+    if feature.dtype == 'object':
+        feature = feature.astype(np.dtype('U'))
+
     t_counts_0 = np_count(target, 0, default = 1)
     t_counts_1 = np_count(target, 1, default = 1)
 
@@ -254,7 +258,7 @@ def quality(dataframe, target = 'target', iv_only = False, **kwargs):
     for column in dataframe:
         if column == target:
             continue
-        
+
         r = pool.apply_async(column_quality, args = (dataframe[column].values, dataframe[target].values), kwds = {'name': column, 'iv_only': iv_only, **kwargs})
         res.append(r)
 
