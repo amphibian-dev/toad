@@ -25,8 +25,11 @@ def to_ndarray(s):
 
 
 def fillna(feature, by = -1):
-    feature[np.isnan(feature)] = by
-    return feature
+    # copy array
+    copied = np.copy(feature)
+
+    copied[np.isnan(copied)] = by
+    return copied
 
 def bin_by_splits(feature, splits):
     """Bin feature by split points
