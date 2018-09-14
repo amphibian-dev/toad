@@ -25,3 +25,7 @@ class TestSelection(unittest.TestCase):
     def test_select(self):
         df = select(frame, target = 'target', empty = 0.8, iv = 0.42, corr = 0.7)
         self.assertListEqual(['B', 'D', 'target'], df.columns.tolist())
+
+    def test_select_exclude(self):
+        df = select(frame, target = 'target', empty = 0.8, iv = 0.42, corr = 0.7, exclude = ['A'])
+        self.assertListEqual(['A', 'B', 'D', 'target'], df.columns.tolist())
