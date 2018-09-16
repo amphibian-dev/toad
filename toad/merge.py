@@ -199,8 +199,11 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
     elif method is 'kmeans':
         splits = KMeaMerge(feature, target = target, **kwargs)
 
-    # print(splits)
-    bins = bin_by_splits(feature, splits)
+    
+    if len(splits):
+        bins = bin_by_splits(feature, splits)
+    else:
+        bins = np.zeros(len(feature))
 
     if return_splits:
         return bins, splits

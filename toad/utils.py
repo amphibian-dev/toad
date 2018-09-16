@@ -15,13 +15,20 @@ def np_count(arr, value, default = None):
     return c
 
 def to_ndarray(s):
+    """
+    """
     if isinstance(s, np.ndarray):
-        return s
+        arr = s
+    elif isinstance(s, pd.core.base.PandasObject):
+        arr = s.values
+    else:
+        arr = np.array(s)
 
-    if isinstance(s, pd.core.base.PandasObject):
-        return s.values
+    # covert object type to str
+    if arr.dtype.type is np.object_:
+        arr = arr.astype(np.str)
 
-    return np.array(s)
+    return arr
 
 
 def fillna(feature, by = -1):

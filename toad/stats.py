@@ -157,10 +157,6 @@ def _IV(feature, target):
     feature = to_ndarray(feature)
     target = to_ndarray(target)
 
-    # HACK change onject type to unicode
-    if feature.dtype == 'object':
-        feature = feature.astype(np.dtype('U'))
-
     t_counts_0 = np_count(target, 0, default = 1)
     t_counts_1 = np_count(target, 1, default = 1)
 
