@@ -76,11 +76,10 @@ def _gini_cond(feature, target):
     """private conditional gini function
     """
     size = feature.size
-    matrix = np.vstack([feature, target])
 
     value = 0
     for v, c in zip(*np.unique(feature, return_counts = True)):
-        target_series = matrix[:, matrix[0,:] == v][1,:]
+        target_series = target[feature == v]
         value += c / size * gini(target_series)
 
     return value
