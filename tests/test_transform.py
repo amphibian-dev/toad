@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from toad.transform import woe_transform
+from toad.transform import WOETransformer, Combiner
 
 np.random.seed(1)
 
@@ -14,6 +14,10 @@ class TestTransform(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_woe_transform(self):
-        f = woe_transform(feature, target)
-        self.assertEqual(len(np.unique(f)), 10)
+    def test_woe_transformer(self):
+        f = WOETransformer().fit_transform(feature, target)
+        self.assertEqual(f[451], -0.17061154127869285)
+
+    def test_combiner(self):
+        f = Combiner().fit_transform(feature, target, method = 'chi')
+        self.assertEqual(f[451], 3)

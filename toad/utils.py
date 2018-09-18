@@ -14,18 +14,21 @@ def np_count(arr, value, default = None):
 
     return c
 
-def to_ndarray(s):
+def to_ndarray(s, dtype = None):
     """
     """
     if isinstance(s, np.ndarray):
-        arr = s
+        arr = np.copy(s)
     elif isinstance(s, pd.core.base.PandasObject):
-        arr = s.values
+        arr = np.copy(s.values)
     else:
         arr = np.array(s)
 
+    
+    if dtype is not None:
+        arr = arr.astype(dtype)
     # covert object type to str
-    if arr.dtype.type is np.object_:
+    elif arr.dtype.type is np.object_:
         arr = arr.astype(np.str)
 
     return arr
