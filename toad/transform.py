@@ -36,12 +36,13 @@ class WOETransformer:
     def transform(self, feature):
         """
         """
-        feature = to_ndarray(feature, dtype = np.float)
+        feature = to_ndarray(feature)
 
+        woe = np.zeros(len(feature))
         for i in range(len(self.values_)):
-            feature[feature == self.values_[i]] = self.woe_[i]
+            woe[feature == self.values_[i]] = self.woe_[i]
 
-        return feature
+        return woe
 
 
     def fit_transform(self, feature, target):
