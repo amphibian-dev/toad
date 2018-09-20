@@ -31,5 +31,5 @@ frame = pd.DataFrame({
 frame['target'] = target
 
 
-
-# frame.to_csv('test_data.csv', index = False)
+if __name__ == '__main__':
+    frame.to_csv('test_data.csv', index = False)
