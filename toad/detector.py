@@ -127,39 +127,3 @@ def detect(dataframe):
         rows.append(row)
 
     return pd.DataFrame(rows)
-
-
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser(
-        description = 'Detect data from a csv file'
-    )
-
-    parser.add_argument(
-        '-i', '--input',
-        type = argparse.FileType('r'),
-        help = 'the csv file which will be detected',
-        required = True
-    )
-
-    parser.add_argument(
-        '-o', '--output',
-        type = argparse.FileType('w'),
-        help = 'path of the csv report will be saved',
-    )
-
-    args = parser.parse_args()
-
-    print('reading data....')
-    data = pd.read_csv(args.input, index_col = False)
-
-    print('detecting...')
-    report = detect(data)
-
-    if args.output:
-        print('saving report...')
-        report.to_csv(args.output)
-        print('report saved!')
-    else:
-        print(report)

@@ -24,6 +24,12 @@ def add_sub(parsers, config):
 
 
 def detect(args):
+    """detect csv data
+    
+    Examples:
+
+        toad detect -i xxx.csv -o report.csv
+    """
     from .detector import detect
 
     sys.stdout.write('reading data....\n')
