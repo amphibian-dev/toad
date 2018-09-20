@@ -1,3 +1,7 @@
+<div align="center">
+    <img src="images/toadlogo.png" width="256px" />
+</div>
+
 # TOAD
 
 
