@@ -2,9 +2,42 @@ import re
 import numpy as np
 import pandas as pd
 
+from multiprocessing import Pool, current_process, cpu_count
+
 
 CONTINUOUS_NUM = 20
 FEATURE_THRESHOLD = 1e-7
+
+
+class Parallel:
+    def __init__(self):
+        self.ismain = False
+        self.results = []
+        self.pro = current_process()
+
+        if self.pro.name == 'MainProcess':
+            self.ismain = True
+            self.pool = Pool(cpu_count())
+
+
+    def apply(self, func, args = (), kwargs = {}):
+        if not self.ismain:
+            r = func(*args, **kwargs)
+        else:
+            r = self.pool.apply_async(func, args = args, kwds = kwargs)
+
+        self.results.append(r)
+
+    def join(self):
+        if not self.ismain:
+            return self.results
+
+        self.pool.close()
+        self.pool.join()
+
+        return [r.get() for r in self.results]
+
+
 
 def np_count(arr, value, default = None):
     c = (arr == value).sum()
@@ -24,7 +57,7 @@ def to_ndarray(s, dtype = None):
     else:
         arr = np.array(s)
 
-    
+
     if dtype is not None:
         arr = arr.astype(dtype)
     # covert object type to str
@@ -124,6 +157,36 @@ def unpack_tuple(x):
         return x[0]
     else:
         return x
+
+
+def support_dataframe(require_target = True):
+    """decorator for supporting dataframe
+    """
+    def decorator(fn):
+
+        def func(frame, *args, **kwargs):
+            if not isinstance(frame, pd.DataFrame):
+                return fn(frame, *args, **kwargs)
+
+            frame = frame.copy()
+            if require_target and isinstance(args[0], str):
+                target = frame.pop(args[0])
+                args = (target,) + args[1:]
+
+            res = dict()
+            for col in frame:
+                r = fn(frame[col], *args, **kwargs)
+
+                if not isinstance(r, np.ndarray):
+                    r = [r]
+
+                res[col] = r
+            return pd.DataFrame(res)
+
+        return func
+
+    return decorator
+
 
 
 def clip(series, value = None, std = None, quantile = None):

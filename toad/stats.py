@@ -14,6 +14,7 @@ from .utils import (
     is_continuous,
     inter_feature,
     iter_df,
+    support_dataframe,
 )
 
 def KS(score, target):
@@ -84,6 +85,7 @@ def _gini_cond(feature, target):
 
     return value
 
+@support_dataframe()
 def gini_cond(feature, target):
     """get conditional gini index of a feature
     """
@@ -121,6 +123,7 @@ def _entropy_cond(feature, target):
 
     return value
 
+@support_dataframe()
 def entropy_cond(feature, target):
     """get conditional entropy of a feature
     """
@@ -175,6 +178,7 @@ def _IV(feature, target):
     return value
 
 
+@support_dataframe()
 def IV(feature, target, **kwargs):
     """get IV of a feature
     """

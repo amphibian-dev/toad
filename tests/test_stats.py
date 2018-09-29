@@ -37,6 +37,10 @@ class TestStats(unittest.TestCase):
         value = IV(df['feature'], df['target'])
         self.assertEqual(value, 0.5313391779453922)
 
+    def test_iv_frame(self):
+        res = IV(df, 'target')
+        self.assertEqual(res.loc[0, 'A'], 0.3427835694491965)
+
     def test_gini(self):
         value = gini(df['target'])
         self.assertEqual(value, 0.499352)
