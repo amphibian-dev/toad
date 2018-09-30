@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier, _tree
 from sklearn.cluster import KMeans
 
-from .utils import fillna, bin_by_splits, to_ndarray
+from .utils import fillna, bin_by_splits, to_ndarray, support_dataframe
 
 DEFAULT_BINS = 20
 
@@ -174,7 +174,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
 
     return feature_unique[1:]
 
-
+@support_dataframe(require_target = False)
 def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs):
     """merge feature into groups
 
@@ -199,7 +199,7 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
     elif method is 'kmeans':
         splits = KMeaMerge(feature, target = target, **kwargs)
 
-    
+
     if len(splits):
         bins = bin_by_splits(feature, splits)
     else:

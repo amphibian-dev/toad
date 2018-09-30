@@ -172,6 +172,8 @@ def support_dataframe(require_target = True):
             if require_target and isinstance(args[0], str):
                 target = frame.pop(args[0])
                 args = (target,) + args[1:]
+            elif 'target' in kwargs and isinstance(kwargs['target'], str):
+                kwargs['target'] = frame.pop(kwargs['target'])
 
             res = dict()
             for col in frame:

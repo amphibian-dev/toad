@@ -1,11 +1,21 @@
 import unittest
 import numpy as np
+import pandas as pd
 
-from toad import ChiMerge, DTMerge, QuantileMerge, StepMerge, KMeansMerge
+from toad import merge, ChiMerge, DTMerge, QuantileMerge, StepMerge, KMeansMerge
 
 np.random.seed(1)
 feature = np.random.rand(500)
 target = np.random.randint(2, size = 500)
+A = np.random.randint(100, size = 500)
+
+df = pd.DataFrame({
+    'feature': feature,
+    'target': target,
+    'A': A,
+})
+
+
 
 class TestMerge(unittest.TestCase):
     def setUp(self):
@@ -31,7 +41,10 @@ class TestMerge(unittest.TestCase):
         splits = KMeansMerge(feature, n_bins = 10)
         self.assertEqual(len(splits), 9)
 
-    def test_get_unknow_value(self):
-        # unknow = self.config.get('unknow')
-        # self.assertEqual(unknow, None)
-        pass
+    def test_merge(self):
+        res = merge(feature, target = target, method = 'chi')
+        self.assertEqual(len(np.unique(res)), 20)
+
+    def test_merge_frame(self):
+        res = merge(df, target = 'target', method = 'chi')
+        self.assertEqual(len(np.unique(res['A'])), 20)
