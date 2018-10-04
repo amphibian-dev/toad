@@ -156,9 +156,22 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
         # get indexes of the groups who has the minimun chi
         min_ix = np.array(chi_ix)
 
-        # bin groups by indexes
+        # get the indexes witch needs to drop
         drop_ix = min_ix + 1
-        grouped[min_ix] = grouped[min_ix] + grouped[drop_ix]
+
+
+        # combine groups by indexes
+        retain_ix = min_ix[0]
+        last_ix = retain_ix
+        for ix in min_ix:
+            # set a new group
+            if ix - last_ix > 1:
+                retain_ix = ix
+
+            # combine all contiguous indexes into one group
+            grouped[retain_ix] = grouped[retain_ix] + grouped[ix + 1]
+            last_ix = ix
+
 
         # drop binned groups
         grouped = np.delete(grouped, drop_ix, axis = 0)
