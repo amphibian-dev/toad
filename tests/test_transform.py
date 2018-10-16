@@ -11,6 +11,11 @@ feature = np.random.randint(10, size = 500)
 target = np.random.randint(2, size = 500)
 str_feat = ab[np.random.choice(7, 500)]
 
+df = pd.DataFrame({
+    'A': feature,
+    'B': str_feat,
+})
+
 
 class TestTransform(unittest.TestCase):
     def setUp(self):
@@ -19,6 +24,10 @@ class TestTransform(unittest.TestCase):
     def test_woe_transformer(self):
         f = WOETransformer().fit_transform(feature, target)
         self.assertEqual(f[451], -0.17061154127869285)
+
+    def test_woe_transformer_frame(self):
+        res = WOETransformer().fit_transform(df, target)
+        self.assertEqual(res[451, 1], -0.2198594761130199)
 
     def test_woe_transformer_with_str(self):
         f = WOETransformer().fit_transform(str_feat, target)
