@@ -108,6 +108,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
         min_samples = len(feature) * min_samples
 
     feature = fillna(feature, by = nan)
+    target = to_ndarray(target)
 
     target_unique = np.unique(target)
     feature_unique = np.unique(feature)
