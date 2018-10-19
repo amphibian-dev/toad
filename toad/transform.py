@@ -72,16 +72,16 @@ class WOETransformer(TransformerMixin):
 class Combiner(TransformerMixin):
     def fit(self, X, y = None, **kwargs):
         if not isinstance(X, pd.DataFrame):
-            self.splits_, self.transer_ = self._merge(X, y = y, **kwargs)
+            self.splits_, self.values_ = self._merge(X, y = y, **kwargs)
             return self
 
         if isinstance(y, str):
             y = X.pop(y)
 
         self.splits_ = dict()
-        self.transer_ = dict()
+        self.values_ = dict()
         for col in X:
-            self.splits_[col], self.transer_[col] = self._merge(X[col], y = y, **kwargs)
+            self.splits_[col], self.values_[col] = self._merge(X[col], y = y, **kwargs)
 
         return self
 
@@ -92,10 +92,17 @@ class Combiner(TransformerMixin):
             y = to_ndarray(y)
 
         transer = False
+        uni_val = False
         if not np.issubdtype(X.dtype, np.number):
+            # transform raw data by woe
             transer = WOETransformer()
-            source = X.copy()
-            X = transer.fit_transform(X, y)
+            woe = transer.fit_transform(X, y)
+            uni_woe, ix_woe = np.unique(woe, return_index = True)
+            # sort value by woe
+            ix = np.argsort(uni_woe)
+            uni_val = X[ix_woe[ix]]
+            # replace X by sorted index
+            X = self._raw_to_bin(X, uni_val)
 
         if method is 'dt':
             splits = DTMerge(X, y, **kwargs)
@@ -108,27 +115,34 @@ class Combiner(TransformerMixin):
         elif method is 'kmeans':
             splits = KMeaMerge(X, target = y, **kwargs)
 
-        return splits, transer
+        return splits, uni_val
 
     def transform(self, X):
         if not isinstance(self.splits_, dict):
-            return self._transform_apply(X, self.splits_, self.transer_)
+            return self._transform_apply(X, self.splits_, self.values_)
 
         res = X.copy()
         for col in X:
             if col in self.splits_:
-                res[col] = self._transform_apply(X[col], self.splits_[col], self.transer_[col])
+                res[col] = self._transform_apply(X[col], self.splits_[col], self.values_[col])
 
         return res
 
-    def _transform_apply(self, X, splits, transer = False):
+    def _transform_apply(self, X, splits, values):
         X = to_ndarray(X)
-        if transer:
-            X = transer.transform(X)
+        if values is not False:
+            X = self._raw_to_bin(X, values)
 
         if len(splits):
             bins = bin_by_splits(X, splits)
         else:
             bins = np.zeros(len(X))
+
+        return bins
+
+    def _raw_to_bin(self, X, values):
+        bins = np.zeros(X.shape)
+        for i in range(len(values)):
+            bins[X == values[i]] = i
 
         return bins
