@@ -129,17 +129,18 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
         chi_min = np.inf
         chi_ix = []
         for i in range(l):
+            chi = 0
             couple = grouped[i:i+2,:]
             total = np.sum(couple)
             cols = np.sum(couple, axis = 0)
             rows = np.sum(couple, axis = 1)
 
-            e = np.zeros(couple.shape)
             for j in range(couple.shape[0]):
                 for k in range(couple.shape[1]):
-                    e[j,k] = rows[j] * cols[k] / total
-
-            chi = np.sum(np.nan_to_num((couple - e) ** 2 / e))
+                    e = rows[j] * cols[k] / total
+                    if e != 0:
+                        chi += (couple[j, k] - e) ** 2 / e
+            
             chi_list[i] = chi
 
             if chi == chi_min:
