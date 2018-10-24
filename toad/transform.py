@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 from .stats import WOE
@@ -141,8 +142,35 @@ class Combiner(TransformerMixin):
         return bins
 
     def _raw_to_bin(self, X, values):
-        bins = np.zeros(X.shape)
+        # set default group to -1
+        bins = np.full(X.shape, -1)
         for i in range(len(values)):
             bins[X == values[i]] = i
 
         return bins
+
+    def export(self):
+        """export combine rules for score card
+        """
+        res = dict()
+        for col in self.splits_:
+            res[col] = self._covert_export(self.values_[col], self.splits_[col])
+
+        return res
+
+    def _covert_export(self, value, splits):
+        """covert combine rules to array
+        """
+        if value is False:
+            return splits
+
+        start = 0
+        l = list()
+        for i in splits:
+            i = math.ceil(i)
+            l.append(np.array(value[start:i]))
+            start = i
+
+        l.append(value[start:])
+
+        return np.array(l)
