@@ -19,6 +19,13 @@ from .utils import (
 
 def KS(score, target):
     """calculate ks value
+
+    Args:
+        score (array-like): list of score or probability that the model predict
+        target (array-like): list of real target
+
+    Returns:
+        float: the max KS value
     """
     df = pd.DataFrame({
         'score': score,
@@ -34,6 +41,14 @@ def KS(score, target):
 
 def KS_bucket(score, target, bucket = 10):
     """calculate ks value by bucket
+
+    Args:
+        score (array-like): list of score or probability that the model predict
+        target (array-like): list of real target
+        bucket (int): n groups that will bin into
+
+    Returns:
+        DataFrame
     """
     df = pd.DataFrame({
         'score': score,
@@ -67,6 +82,12 @@ def KS_by_col(df, by='feature', score='score', target='target'):
 
 def gini(target):
     """get gini index of a feature
+
+    Args:
+        target (array-like): list of target that will be calculate gini
+
+    Returns:
+        number: gini value
     """
     target = to_ndarray(target)
     v, c = np.unique(target, return_counts = True)
@@ -75,6 +96,13 @@ def gini(target):
 
 def _gini_cond(feature, target):
     """private conditional gini function
+
+    Args:
+        feature (numpy.ndarray)
+        target (numpy.ndarray)
+
+    Returns:
+        number: conditional gini value
     """
     size = feature.size
 
@@ -88,6 +116,13 @@ def _gini_cond(feature, target):
 @support_dataframe()
 def gini_cond(feature, target):
     """get conditional gini index of a feature
+
+    Args:
+        feature (array-like)
+        target (array-like)
+
+    Returns:
+        number: conditional gini value. If feature is continuous, it will return the best gini value when the feature bins into two groups
     """
     if not is_continuous(feature):
         return _gini_cond(feature, target)
@@ -104,6 +139,12 @@ def gini_cond(feature, target):
 
 def entropy(target):
     """get infomation entropy of a feature
+
+    Args:
+        target (array-like)
+
+    Returns:
+        number: information entropy
     """
     target = to_ndarray(target)
     uni, counts = np.unique(target, return_counts = True)
@@ -113,6 +154,13 @@ def entropy(target):
 
 def _entropy_cond(feature, target):
     """private conditional entropy func
+
+    Args:
+        feature (numpy.ndarray)
+        target (numpy.ndarray)
+
+    Returns:
+        number: conditional information entropy
     """
     size = len(feature)
 
@@ -126,6 +174,13 @@ def _entropy_cond(feature, target):
 @support_dataframe()
 def entropy_cond(feature, target):
     """get conditional entropy of a feature
+
+    Args:
+        feature (array-like)
+        target (array-like)
+
+    Returns:
+        number: conditional information entropy. If feature is continuous, it will return the best entropy when the feature bins into two groups
     """
     feature = to_ndarray(feature)
     target = to_ndarray(target)
@@ -149,12 +204,22 @@ def WOE(y_prob, n_prob):
     Args:
         y_prob: the probability of grouped y in total y
         n_prob: the probability of grouped n in total n
+
+    Returns:
+        number: woe value
     """
     return np.log(y_prob / n_prob)
 
 
 def _IV(feature, target):
-    """
+    """private information value func
+
+    Args:
+        feature (array-like)
+        target (array-like)
+
+    Returns:
+        number: IV
     """
     feature = to_ndarray(feature)
     target = to_ndarray(target)
@@ -180,15 +245,17 @@ def _IV(feature, target):
 
 @support_dataframe()
 def IV(feature, target, **kwargs):
-    """get IV of a feature
+    """get the IV of a feature
+
+    Args:
+        feature (array-like)
+        target (array-like)
+        n_bins (int): n groups that the feature will bin into
+        method (str): the strategy to be used to merge feature, default is 'dt'
+        **kwargs (): other options for merge function
     """
     if not is_continuous(feature):
         return _IV(feature, target)
-
-    # df = pd.DataFrame({
-    #     feature: pd.cut(dataframe[feature], 20),
-    #     target: dataframe[target],
-    # })
 
     feature = merge(feature, target, **kwargs)
 
@@ -197,7 +264,11 @@ def IV(feature, target, **kwargs):
 
 
 def F1(score, target):
-    """
+    """calculate f1 value
+
+    Args:
+        score (array-like)
+        target (array-like)
 
     Returns:
         float: best f1 score
@@ -223,6 +294,17 @@ def F1(score, target):
 
 
 def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs):
+    """calculate quality of a feature
+
+    Args:
+        feature (array-like)
+        target (array-like)
+        name (str): feature's name that will be setted in the returned Series
+        iv_only (bool): if only calculate IV
+
+    Returns:
+        Series: a list of quality with the feature's name
+    """
     if not np.issubdtype(feature.dtype, np.number):
         feature = feature.astype(str)
 
@@ -248,8 +330,13 @@ def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs)
 def quality(dataframe, target = 'target', iv_only = False, **kwargs):
     """get quality of features in data
 
+    Args:
+        dataframe (DataFrame): dataframe that will be calculate quality
+        target (str): the target's name in dataframe
+        iv_only (bool): if only calculate IV
+
     Returns:
-        dataframe
+        DataFrame: quality of features with the features' name as row name
     """
     res = []
     pool = Pool(cpu_count())

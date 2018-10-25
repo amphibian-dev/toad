@@ -11,6 +11,16 @@ DEFAULT_BINS = 20
 
 
 def StepMerge(feature, nan = None, n_bins = None):
+    """Merge by step
+
+    Args:
+        feature (array-like)
+        nan (number): value will be used to fill nan
+        n_bins (int): n groups that will be merged into
+
+    Returns:
+        array: split points of feature
+    """
     if n_bins is None:
         n_bins = DEFAULT_BINS
 
@@ -25,6 +35,15 @@ def StepMerge(feature, nan = None, n_bins = None):
 
 def QuantileMerge(feature, nan = -1, n_bins = None, q = None):
     """Merge by quantile
+
+    Args:
+        feature (array-like)
+        nan (number): value will be used to fill nan
+        n_bins (int): n groups that will be merged into
+        q (array-like): list of percentage split points
+
+    Returns:
+        array: split points of feature
     """
     if n_bins is None and quantile is None:
         n_bins = DEFAULT_BINS
@@ -40,6 +59,16 @@ def QuantileMerge(feature, nan = -1, n_bins = None, q = None):
 
 def KMeansMerge(feature, target = None, nan = -1, n_bins = None, random_state = 1):
     """Merge by KMeans
+
+    Args:
+        feature (array-like)
+        target (array-like): target will be used to fit kmeans model
+        nan (number): value will be used to fill nan
+        n_bins (int): n groups that will be merged into
+        random_state (int): random state will be used for kmeans model
+
+    Returns:
+        array: split points of feature
     """
     if n_bins is None:
         n_bins = DEFAULT_BINS
@@ -65,6 +94,13 @@ def KMeansMerge(feature, target = None, nan = -1, n_bins = None, random_state = 
 
 def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     """Merge continue
+
+    Args:
+        feature (array-like)
+        target (array-like): target will be used to fit decision tree
+        nan (number): value will be used to fill nan
+        n_bins (int): n groups that will be merged into
+        min_samples (int): min number of samples in each leaf nodes
 
     Returns:
         array: array of split points
@@ -140,7 +176,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
                     e = rows[j] * cols[k] / total
                     if e != 0:
                         chi += (couple[j, k] - e) ** 2 / e
-            
+
             chi_list[i] = chi
 
             if chi == chi_min:
@@ -196,10 +232,14 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
     Params:
         feature (array-like)
         target (array-like)
-        method (str): 'dt', 'chi' - the strategy to be used to merge feature
+        method (str): 'dt', 'chi', 'quality', 'step', 'kmeans' - the strategy to be used to merge feature
+        return_splits (bool): if needs to return splits
+        n_bins (int): n groups that will be merged into
+
 
     Returns:
         array: a array of merged label with the same size of feature
+        array: list of split points
     """
     feature = to_ndarray(feature)
 

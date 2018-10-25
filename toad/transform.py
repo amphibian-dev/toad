@@ -10,8 +10,11 @@ from .merge import DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
 
 
 class WOETransformer(TransformerMixin):
-
+    """WOE transformer
+    """
     def fit(self, X, y, **kwargs):
+        """
+        """
         if not isinstance(X, pd.DataFrame):
             self.values_, self.woe_ = self._fit_woe(X, y, **kwargs)
             return self
@@ -48,7 +51,7 @@ class WOETransformer(TransformerMixin):
         return values, woe
 
 
-    def transform(self, X, ix = 0):
+    def transform(self, X):
         if not isinstance(self.values_, dict):
             return self._transform_apply(X, self.values_, self.woe_)
 
