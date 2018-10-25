@@ -143,3 +143,24 @@ class ScoreCard(BaseEstimator):
             s_map[k] = self.woe_to_score(woe, weight = weight)
 
         return s_map
+
+    def export_map(self):
+        """generate a scorecard object
+
+        Returns:
+            dict
+        """
+        card = dict()
+        for col in self.combiner:
+            group = self.combiner[col]
+            card[col] = dict()
+
+            if not np.issubdtype(group.dtype, np.number):
+                for i, v in enumerate(group):
+                    card[col][','.join(v)] = self.score_map_[col][i]
+            else:
+                sp_l = [-np.inf] + group.tolist() + [np.inf]
+                for i in range(len(sp_l) - 1):
+                    card[col]['['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')'] = self.score_map_[col][i]
+
+        return card

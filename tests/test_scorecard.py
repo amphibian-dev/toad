@@ -62,3 +62,7 @@ class TestScoreCard(unittest.TestCase):
     def test_bin_to_score(self):
         score = card.bin_to_score(bins)
         self.assertEqual(score[404], 456.66402014254516)
+
+    def test_export_map(self):
+        card_map = card.export_map()
+        self.assertEqual(card_map['B']['D'], 232.18437983377214)
