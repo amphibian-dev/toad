@@ -58,7 +58,7 @@ class ScoreCard(BaseEstimator):
             else:
                 cb[key] = np.array(c)
 
-        self.combiner = combiner
+        self.combiner = cb
 
 
     def predict(self, X, **kwargs):
