@@ -8,6 +8,7 @@ np.random.seed(1)
 feature = np.random.rand(500)
 target = np.random.randint(2, size = 500)
 A = np.random.randint(100, size = 500)
+B = np.random.randint(3, size = 500)
 
 df = pd.DataFrame({
     'feature': feature,
@@ -24,6 +25,10 @@ class TestMerge(unittest.TestCase):
     def test_chimerge(self):
         splits = ChiMerge(feature, target, n_bins = 10)
         self.assertEqual(len(splits), 9)
+
+    def test_chimerge_bins_not_enough(self):
+        splits = ChiMerge(B, target, n_bins = 10)
+        self.assertEqual(len(splits), 2)
 
     def test_dtmerge(self):
         splits = DTMerge(feature, target, n_bins = 10)

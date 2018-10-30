@@ -150,8 +150,9 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
     feature_unique = np.unique(feature)
     len_f = len(feature_unique)
     len_t = len(target_unique)
+
     grouped = np.zeros((len_f, len_t))
-    # grouped[:,1] = feature_unique
+
     for i in range(len_f):
         tmp = target[feature == feature_unique[i]]
         for j in range(len_t):
@@ -159,6 +160,14 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
 
 
     while(True):
+        # break loop when reach n_bins
+        if n_bins and len(grouped) <= n_bins:
+            break
+
+        # break loop if min samples of groups is greater than threshold
+        if min_samples and np.sum(grouped.values, axis = 1).min() > min_samples:
+            break
+
         # Calc chi square for each group
         l = len(grouped) - 1
         chi_list = np.zeros(l)
@@ -215,13 +224,6 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
         grouped = np.delete(grouped, drop_ix, axis = 0)
         feature_unique = np.delete(feature_unique, drop_ix)
 
-        # break loop when reach n_bins
-        if n_bins and len(grouped) <= n_bins:
-            break
-
-        # break loop if min samples of groups is greater than threshold
-        if min_samples and np.sum(grouped.values, axis = 1).min() > min_samples:
-            break
 
     return feature_unique[1:]
 

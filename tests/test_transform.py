@@ -43,4 +43,4 @@ class TestTransform(unittest.TestCase):
 
     def test_combiner_frame(self):
         res = Combiner().fit_transform(df, target)
-        self.assertEqual(res.iloc[404, 1], 1)
+        self.assertEqual(res.iloc[404, 1], 2)
