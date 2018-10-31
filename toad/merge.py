@@ -165,7 +165,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
             break
 
         # break loop if min samples of groups is greater than threshold
-        if min_samples and np.sum(grouped.values, axis = 1).min() > min_samples:
+        if min_samples and np.sum(grouped, axis = 1).min() > min_samples:
             break
 
         # Calc chi square for each group
