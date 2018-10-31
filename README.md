@@ -50,5 +50,5 @@ A simple API [docs](docs/API.rst)
 [pypi-image]: https://img.shields.io/pypi/v/toad.svg?style=flat-square
 [pypi-url]: https://pypi.org/project/toad/
 [python-image]: https://img.shields.io/pypi/pyversions/toad.svg?style=flat-square
-[travis-image]: https://img.shields.io/travis/Secbone/toad/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/Secbone/toad
+[travis-image]: https://img.shields.io/travis/amphibian-dev/toad/master.svg?style=flat-square
+[travis-url]: https://travis-ci.org/amphibian-dev/toad
