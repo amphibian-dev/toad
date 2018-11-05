@@ -51,21 +51,29 @@ class WOETransformer(TransformerMixin):
         return values, woe
 
 
-    def transform(self, X):
+    def transform(self, X, **kwargs):
         if not isinstance(self.values_, dict):
-            return self._transform_apply(X, self.values_, self.woe_)
+            return self._transform_apply(X, self.values_, self.woe_, **kwargs)
 
         res = X.copy()
         for col in X:
             if col in self.values_:
-                res[col] = self._transform_apply(X[col], self.values_[col], self.woe_[col])
+                res[col] = self._transform_apply(X[col], self.values_[col], self.woe_[col], **kwargs)
 
         return res
 
 
-    def _transform_apply(self, X, value, woe):
+    def _transform_apply(self, X, value, woe, default = 'min'):
         X = to_ndarray(X)
         res = np.zeros(len(X))
+
+        if default is 'min':
+            default = np.min(woe)
+        elif default is 'max':
+            default = np.max(woe)
+
+        # replace unknown group to default value
+        res[np.isin(X, value, invert = True)] = default
 
         for i in range(len(value)):
             res[X == value[i]] = woe[i]

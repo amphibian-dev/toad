@@ -29,6 +29,10 @@ class TestTransform(unittest.TestCase):
         f = WOETransformer().fit_transform(str_feat, target)
         self.assertEqual(f[451], -0.2198594761130199)
 
+    def test_woe_transformer_with_unknown_group(self):
+        f = WOETransformer().fit_transform(['Z'], target)
+        self.assertEqual(f[0], -0.048009219186360606)
+
     def test_woe_transformer_frame(self):
         res = WOETransformer().fit_transform(df, target)
         self.assertEqual(res.iloc[451, 1], -0.2198594761130199)
