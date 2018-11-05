@@ -17,4 +17,4 @@ deploy:
   on:
     tags: true
     distributions: sdist bdist_wheel --universal
-    repo: Secbone/toad
+    repo: amphibian-dev/toad
