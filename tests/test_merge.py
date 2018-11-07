@@ -32,7 +32,7 @@ class TestMerge(unittest.TestCase):
 
     def test_chimerge_bins_with_min_samples(self):
         splits = ChiMerge(feature, target, min_samples = 0.02)
-        self.assertEqual(len(splits), 4)
+        self.assertEqual(len(splits), 10)
 
     def test_dtmerge(self):
         splits = DTMerge(feature, target, n_bins = 10)

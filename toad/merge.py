@@ -122,7 +122,8 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
 
 
 
-def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold = None, nan = -1):
+def ChiMerge(feature, target, n_bins = None, min_samples = None,
+            min_threshold = None, nan = -1, balance = True):
     """Chi-Merge
 
     Args:
@@ -185,6 +186,10 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None, min_threshold =
                     e = rows[j] * cols[k] / total
                     if e != 0:
                         chi += (couple[j, k] - e) ** 2 / e
+
+            # balance weight of chi
+            if balance:
+                chi *= total
 
             chi_list[i] = chi
 
