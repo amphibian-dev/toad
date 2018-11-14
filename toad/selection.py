@@ -1,7 +1,116 @@
 import numpy as np
 import pandas as pd
+import statsmodels.api as sm
+
 from .stats import IV
 from .utils import split_target, unpack_tuple, to_ndarray
+
+
+def stats_features(X, y, intercept = False):
+    """
+    """
+    if intercept:
+        X = sm.add_constant(X)
+
+    res = sm.OLS(y, X).fit()
+
+    return res
+
+
+def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_enter = 0,
+            p_remove = 0.01, intercept = False, p_value_enter = 0.2, max_iter = None):
+    """stepwise to select features
+
+    Args:
+        frame (DataFrame): dataframe that will be use to select
+        target (str): target name in frame
+        direction (str): direction of stepwise, support 'forward', 'backward' and 'both'
+        criterion (str): criterion to statistic model, support 'aic', 'bic'
+        p_enter (float): threshold that will be used in 'forward' and 'both' to keep features
+        p_remove (float): threshold that will be used in 'backward' to remove features
+        intercept (bool): if have intercept
+        p_value_enter (float): threshold that will be used in 'both' to remove features
+        max_iter (int): maximum number of iterate
+
+    Returns:
+        DataFrame:
+    """
+    df, y = split_target(frame, target)
+
+    remaining = df.columns.tolist()
+
+    if direction is 'backward':
+        selected = remaining
+    else:
+        selected = []
+
+    best_res = stats_features(
+        df[remaining[0]],
+        y,
+        intercept = intercept,
+    )
+    best_score = getattr(best_res, criterion)
+
+    iter = -1
+    while remaining:
+        iter += 1
+        if max_iter and iter > max_iter:
+            break
+
+        l = len(remaining)
+        test_score = np.zeros(l)
+        test_res = np.empty(l, dtype = np.object)
+
+        if direction is 'backward':
+            for i in range(l):
+                test_res[i] = stats_features(
+                    df[ remaining[:i] + remaining[i+1:] ],
+                    y,
+                    intercept = intercept,
+                )
+                test_score[i] = getattr(test_res[i], criterion)
+
+            curr_ix = np.argmin(test_score)
+            curr_score = test_score[curr_ix]
+
+            name = remaining.pop(curr_ix)
+
+            if best_score - curr_score < p_remove:
+                break
+
+            best_score = curr_score
+
+        # forward and both
+        else:
+            for i in range(l):
+                test_res[i] = stats_features(
+                    df[ selected + [remaining[i]] ],
+                    y,
+                    intercept = intercept,
+                )
+                test_score[i] = getattr(test_res[i], criterion)
+
+            curr_ix = np.argmin(test_score)
+            curr_score = test_score[curr_ix]
+
+            name = remaining.pop(curr_ix)
+            if best_score - curr_score < p_enter:
+                # early stop
+                if selected: break
+                continue
+
+            selected.append(name)
+            best_score = curr_score
+
+            if direction is 'both':
+                p_values = getattr(test_res[curr_ix], 'pvalues')
+
+                max_name = p_values.idxmax()
+                if p_values[max_name] > p_value_enter:
+                    selected.remove(max_name)
+
+    return frame[selected + [target]]
+
 
 def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
             exclude = None):

@@ -20,6 +20,7 @@ setup(
         'pandas',
         'scipy',
         'sklearn',
+        'statsmodels',
     ],
     license = 'MIT',
     classifiers = [
