@@ -293,6 +293,37 @@ def F1(score, target):
     return best, split
 
 
+def SSE(y_pred, y):
+    """sum of squares due to error
+    """
+    return np.sum((y_pred - y) ** 2)
+
+
+def AIC(y_pred, y, k):
+    """Akaike Information Criterion
+
+    Args:
+        y_pred (array-like)
+        y (array-like)
+        k (int): number of featuers
+    """
+    sse = SSE(y_pred, y)
+    return 2 * k - 2 * np.log(sse)
+
+
+def BIC(y_pred, y, k, n):
+    """Bayesian Information Criterion
+
+    Args:
+        y_pred (array-like)
+        y (array-like)
+        k (int): number of featuers
+        n (int): number of samples
+    """
+    sse = SSE(y_pred, y)
+    return np.log(n) * k - 2 * np.log(sse)
+
+
 def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs):
     """calculate quality of a feature
 
