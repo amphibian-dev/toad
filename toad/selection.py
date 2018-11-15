@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 from .stats import IV
 from .utils import split_target, unpack_tuple, to_ndarray
@@ -296,6 +297,51 @@ def drop_iv(frame, target = 'target', threshold = 0.02, return_drop = False,
 
     if return_iv:
         res += (pd.Series(iv, index = f.columns),)
+
+    return unpack_tuple(res)
+
+
+def drop_vif(frame, threshold = 6, return_drop = False, exclude = None):
+    """variance inflation factor
+
+    Args:
+        frame (DataFrame)
+        threshold (float): drop features until all vif is less than threshold
+        return_drop (bool): if need to return features' name who has been dropped
+        exclude (array-like): ist of feature name that will not drop
+
+    Returns:
+        DataFrame: selected dataframe
+        array: list of feature names that has been dropped
+    """
+    df = frame.copy()
+
+    if exclude is not None:
+        df = df.drop(columns = exclude)
+
+    drop_list = []
+    while(True):
+        l = len(df.columns)
+        vif = np.zeros(l)
+        for i in range(l):
+            vif[i] = variance_inflation_factor(df.values, i)
+
+        ix = np.argmax(vif)
+        max = vif[ix]
+
+        if max < threshold:
+            break
+
+        col = df.columns[ix]
+        df = df.drop(columns = col)
+        drop_list.append(col)
+
+
+    r = frame.drop(columns = drop_list)
+
+    res = (r,)
+    if return_drop:
+        res += (drop_list,)
 
     return unpack_tuple(res)
 

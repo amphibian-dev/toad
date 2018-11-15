@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from toad.selection import drop_empty, drop_corr, drop_iv, select, stepwise
+from toad.selection import drop_empty, drop_corr, drop_iv, drop_vif, select, stepwise
 
 from tests.generate_data import frame
 
@@ -31,5 +31,9 @@ class TestSelection(unittest.TestCase):
         self.assertListEqual(['A', 'B', 'D', 'target'], df.columns.tolist())
 
     def test_stepwise(self):
-        df = stepwise(frame.fillna(-1))
+        df = stepwise(frame.fillna(-1), target = 'target')
         self.assertListEqual(['E', 'C', 'F', 'target'], df.columns.tolist())
+
+    def test_drop_vif(self):
+        df = drop_vif(frame.fillna(-1), exclude = 'target')
+        self.assertListEqual(['C', 'E', 'F', 'target'], df.columns.tolist())
