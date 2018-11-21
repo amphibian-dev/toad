@@ -1,10 +1,16 @@
 """
 toad command line application
 """
+import pkgutil
+import os
 import sys
 import argparse
 import pandas as pd
+from importlib import import_module
 
+COMMANDS = 'commands'
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+COMMAND_DIR = os.path.join(CURRENT_DIR, COMMANDS)
 
 def add_sub(parsers, config):
     """add sub parser by config
@@ -23,55 +29,15 @@ def add_sub(parsers, config):
         sub_parser.set_defaults(**defaults)
 
 
-def detect(args):
-    """detect csv data
-    
-    Examples:
+def get_plugins():
+    plugins = []
 
-        toad detect -i xxx.csv -o report.csv
-    """
-    from .detector import detect
+    for _, name, ispkg in pkgutil.iter_modules([COMMAND_DIR]):
+        if ispkg:
+            module = import_module('toad.{}.{}'.format(COMMANDS, name))
+            plugins.append(module)
 
-    sys.stdout.write('reading data....\n')
-    with args.input as input:
-        data = pd.read_csv(input)
-
-    sys.stdout.write('detecting...\n')
-    report = detect(data)
-
-    if args.output:
-        sys.stdout.write('saving report...\n')
-        report.to_csv(args.output)
-        sys.stdout.write('report saved!\n')
-    else:
-        sys.stdout.write(str(report))
-        sys.stdout.write('\n')
-
-    return report
-
-
-DETECT_ARGS = {
-    'info': {
-        'name': 'detect',
-        'description': 'detect data from a csv file',
-    },
-    'defaults': {
-        'func': detect,
-    },
-    'args': [
-        {
-            'flag': ('-i', '--input'),
-            'type': argparse.FileType(),
-            'help': 'the csv file which will be detected',
-            'required': True,
-        },
-        {
-            'flag': ('-o', '--output'),
-            'type': argparse.FileType('w'),
-            'help': 'path of the csv report will be saved',
-        },
-    ]
-}
+    return plugins
 
 
 def get_parser():
@@ -83,7 +49,10 @@ def get_parser():
     )
 
     subparsers = parser.add_subparsers()
-    add_sub(subparsers, DETECT_ARGS)
+
+    plugins = get_plugins()
+    for plug in plugins:
+        add_sub(subparsers, plug.ARGS)
 
     return parser
 
@@ -92,9 +61,10 @@ def main():
     """
     """
     parser = get_parser()
-
+    
     args = parser.parse_args()
-    args.func(args)
+    if hasattr(args, 'func'):
+        args.func(args)
 
 
 if __name__ == '__main__':
