@@ -1,7 +1,5 @@
 import numpy as np
 import pandas as pd
-import statsmodels.api as sm
-from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 from .stats import IV
 from .utils import split_target, unpack_tuple, to_ndarray
@@ -10,6 +8,8 @@ from .utils import split_target, unpack_tuple, to_ndarray
 def stats_features(X, y, intercept = False):
     """
     """
+    import statsmodels.api as sm
+
     if intercept:
         X = sm.add_constant(X)
 
@@ -314,6 +314,8 @@ def drop_vif(frame, threshold = 6, return_drop = False, exclude = None):
         DataFrame: selected dataframe
         array: list of feature names that has been dropped
     """
+    from statsmodels.stats.outliers_influence import variance_inflation_factor
+    
     df = frame.copy()
 
     if exclude is not None:
