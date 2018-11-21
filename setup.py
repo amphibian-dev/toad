@@ -7,7 +7,7 @@ setup(
     description = 'python utils for detect data',
     long_description = open('README.md').read(),
     long_description_content_type = 'text/markdown',
-    url = 'https://github.com/Secbone/toad',
+    url = 'https://github.com/amphibian-dev/toad',
     author = 'ESC Team',
     author_email = 'secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
