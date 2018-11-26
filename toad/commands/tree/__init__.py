@@ -9,9 +9,13 @@ def func(args):
 
         toad tree -i xxx.csv
     """
+    import toad
     from .tree import split_data, dtree
     args = vars(args)
 
+    # remove func attribute
+    args.pop('func')
+    
     input = args.pop('input')
     target = args.pop('target')
     include = args.pop('include')
@@ -32,7 +36,7 @@ def func(args):
 
 
     for t in tars:
-        sys.stdout.write('analyse', t.name, '...\n')
+        sys.stdout.write('analyse '+ t.name +' ...\n')
         dtree(X, t, **args)
 
 

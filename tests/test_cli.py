@@ -40,3 +40,9 @@ class TestTransform(unittest.TestCase):
         args = parser.parse_args(['detect', '-i', 'tests/test_data.csv'])
         rep = args.func(args)
         self.assertEqual(rep.loc['E', 'unique'], 20)
+
+    @disable_stdout
+    def test_tree(self):
+        args = parser.parse_args(['tree', '-i', 'tests/test_data.csv'])
+        args.func(args)
+        pass
