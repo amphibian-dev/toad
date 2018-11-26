@@ -1,16 +1,9 @@
 """
 toad command line application
 """
-import pkgutil
-import os
-import sys
 import argparse
-import pandas as pd
-from importlib import import_module
+from .commands import get_plugins
 
-COMMANDS = 'commands'
-CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-COMMAND_DIR = os.path.join(CURRENT_DIR, COMMANDS)
 
 def add_sub(parsers, config):
     """add sub parser by config
@@ -27,17 +20,6 @@ def add_sub(parsers, config):
 
     if defaults:
         sub_parser.set_defaults(**defaults)
-
-
-def get_plugins():
-    plugins = []
-
-    for _, name, ispkg in pkgutil.iter_modules([COMMAND_DIR]):
-        if ispkg:
-            module = import_module('toad.{}.{}'.format(COMMANDS, name))
-            plugins.append(module)
-
-    return plugins
 
 
 def get_parser():
@@ -61,7 +43,7 @@ def main():
     """
     """
     parser = get_parser()
-    
+
     args = parser.parse_args()
     if hasattr(args, 'func'):
         args.func(args)
