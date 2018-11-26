@@ -6,7 +6,7 @@ matrix:
   - python: '3.6'
     env: TOXENV=py36
 install:
-    - apt-get install graphviz
+    - sudo apt-get install graphviz
     - pip install tox graphviz
 script:
 - tox
