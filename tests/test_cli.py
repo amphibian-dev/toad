@@ -20,13 +20,6 @@ def disable_stdout(fn):
 
     return wrapper
 
-# np.random.seed(1)
-#
-# ab = np.array(list('ABCDEFG'))
-# feature = np.random.randint(10, size = 500)
-# target = np.random.randint(2, size = 500)
-# str_feat = ab[np.random.choice(7, 500)]
-
 
 parser = get_parser()
 
@@ -41,6 +34,7 @@ class TestTransform(unittest.TestCase):
         rep = args.func(args)
         self.assertEqual(rep.loc['E', 'unique'], 20)
 
+    @unittest.skip("tree command will generate a pic in travis-ci log")
     @disable_stdout
     def test_tree(self):
         args = parser.parse_args(['tree', '-i', 'tests/test_data.csv'])
