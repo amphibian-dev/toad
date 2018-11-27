@@ -1,15 +1,13 @@
 dist: trusty
 sudo: false
 language: python
-matrix:
-  include:
-  - python: '3.6'
-    env: TOXENV=py36
+python:
+    - "3.6"
 install:
     - sudo apt-get install -y graphviz
-    - pip install tox graphviz
+    - pip install graphviz tox-travis
 script:
-- tox
+    - tox
 deploy:
   provider: pypi
   skip_cleanup: true
