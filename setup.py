@@ -22,9 +22,6 @@ setup(
         'sklearn',
         'statsmodels',
     ],
-    tests_require = [
-        'graphviz',
-    ],
     license = 'MIT',
     classifiers = [
         'Operating System :: POSIX',
