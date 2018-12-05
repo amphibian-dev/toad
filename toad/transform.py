@@ -84,16 +84,15 @@ class WOETransformer(TransformerMixin):
 class Combiner(TransformerMixin):
     def fit(self, X, y = None, **kwargs):
         if not isinstance(X, pd.DataFrame):
-            self.splits_, self.values_ = self._merge(X, y = y, **kwargs)
+            self.splits_ = self._merge(X, y = y, **kwargs)
             return self
 
         if isinstance(y, str):
             y = X.pop(y)
 
         self.splits_ = dict()
-        self.values_ = dict()
         for col in X:
-            self.splits_[col], self.values_[col] = self._merge(X[col], y = y, **kwargs)
+            self.splits_[col] = self._merge(X[col], y = y, **kwargs)
 
         return self
 
@@ -103,7 +102,6 @@ class Combiner(TransformerMixin):
         if y is not None:
             y = to_ndarray(y)
 
-        transer = False
         uni_val = False
         if not np.issubdtype(X.dtype, np.number):
             # transform raw data by woe
@@ -127,23 +125,25 @@ class Combiner(TransformerMixin):
         elif method is 'kmeans':
             splits = KMeaMerge(X, target = y, **kwargs)
 
-        return splits, uni_val
+        return self._covert_splits(uni_val, splits)
 
     def transform(self, X):
         if not isinstance(self.splits_, dict):
-            return self._transform_apply(X, self.splits_, self.values_)
+            return self._transform_apply(X, self.splits_)
 
         res = X.copy()
         for col in X:
             if col in self.splits_:
-                res[col] = self._transform_apply(X[col], self.splits_[col], self.values_[col])
+                res[col] = self._transform_apply(X[col], self.splits_[col])
 
         return res
 
-    def _transform_apply(self, X, splits, values):
+    def _transform_apply(self, X, splits):
         X = to_ndarray(X)
-        if values is not False:
-            X = self._raw_to_bin(X, values)
+
+        # if is not continuous
+        if not np.issubdtype(splits.dtype, np.number):
+            return self._raw_to_bin(X, splits)
 
         if len(splits):
             bins = bin_by_splits(X, splits)
@@ -152,24 +152,28 @@ class Combiner(TransformerMixin):
 
         return bins
 
-    def _raw_to_bin(self, X, values):
+    def _raw_to_bin(self, X, splits):
         # set default group to -1
         bins = np.full(X.shape, -1)
-        for i in range(len(values)):
-            bins[X == values[i]] = i
+        for i in range(len(splits)):
+            bins[np.isin(X, splits[i])] = i
 
         return bins
+
+    def set_rules(self, map):
+        if not isinstance(map, dict):
+            self.splits_ = np.arrary(map)
+
+        self.splits_ = dict()
+        for col in map:
+            self.splits_[col] = np.array(map[col])
 
     def export(self):
         """export combine rules for score card
         """
-        res = dict()
-        for col in self.splits_:
-            res[col] = self._covert_export(self.values_[col], self.splits_[col])
+        return self.splits_
 
-        return res
-
-    def _covert_export(self, value, splits):
+    def _covert_splits(self, value, splits):
         """covert combine rules to array
         """
         if value is False:
