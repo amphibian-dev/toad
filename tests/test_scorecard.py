@@ -28,12 +28,10 @@ model = LogisticRegression()
 model.fit(woe, target)
 
 # create a score card
-card = ScoreCard()
-
-# fit score card
-card.fit(df, target,
-    model = model,
+card = ScoreCard(
     combiner = combiner,
+    transer = woe_transer,
+    model = model,
 )
 
 

@@ -6,8 +6,23 @@ from .transform import WOETransformer, Combiner
 from .utils import to_ndarray, bin_by_splits
 
 
+RE_NUM = '-?\d+(.\d+)?'
+RE_SEP = '[~-]'
+RE_BEGIN = '(-inf|{num})'.format(num = RE_NUM)
+RE_END = '(inf|{num})'.format(num = RE_NUM)
+RE_RANGE = '\[{begin}\s*{sep}\s*{end}\)'.format(
+    begin = RE_BEGIN,
+    end = RE_END,
+    sep = RE_SEP,
+)
+
+
+
 class ScoreCard(BaseEstimator):
-    def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750):
+    def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750,
+                card = None, combiner = None, transer = None, model = None):
+        """
+        """
         self.pdo = pdo
         self.rate = rate
         self.base_odds = base_odds
@@ -16,30 +31,94 @@ class ScoreCard(BaseEstimator):
         self.factor = pdo / np.log(rate)
         self.offset = base_score - self.factor * np.log(base_odds)
 
-    def fit(self, X, y, model = None, combiner = None):
+        self.generate_card(
+            card = card,
+            combiner = combiner,
+            transer = transer,
+            model = model,
+        )
+
+
+    def generate_card(self, card = None, combiner = None, transer = None, model = None):
+        """
+        """
+        if card is not None:
+            return self.set_card(card)
+
+        self.set_combiner(combiner)
+        map = self.generate_map(transer, model)
+        self.set_score(map)
+
+        return self
+
+
+    def fit(self, X, y):
         """
         Args:
             X (2D array-like)
             Y (array-like)
-            model (estimator): sklearn logistic regression estimator
-            combiner (dict)
 
         """
-        if model is None:
-            raise ValueError('model must be setted!')
+        # self.n_features_ = len(self.weight)
 
-        if combiner is None:
-            raise ValueError('combiner must be setted!')
+        return self
 
-        self.weight = model.coef_[0]
-        self.bias = model.intercept_[0]
-        self.n_features_ = len(self.weight)
+
+    def _parse_range(self, bins):
+        exp = re.compile(RE_RANGE)
+
+        l = list()
+        for item in bins:
+            m = exp.match(item)
+
+            # if is not range
+            if m is None:
+                return None
+
+            # get the end number of range
+            split = m.group(3)
+            if split == 'inf':
+                split = np.inf
+            else:
+                split = float(split)
+
+            l.append(split)
+
+        return np.array(l)
+
+
+    def _parse_card(self, card):
+        bins = card.keys()
+        scores = card.values()
+        scores = np.array(scores)
+
+        groups = self._parse_range(bins)
+        # if is continuous
+        if groups:
+            ix = np.argsort(groups)
+            scores = scores[ix]
+            groups = groups[ix[:-1]]
+        else:
+            groups = list()
+            for item in bins:
+                groups.append(items.split(','))
+            groups = np.array(groups)
+
+        return groups, scores
+
+
+    def set_card(self, card):
+        """set card dict
+        """
+        combiner = dict()
+        map = dict()
+        for feature in card:
+            bins, scores = self._parse_card(card[feature])
+            combiner[feature] = bins
+            map[feature] = scores
 
         self.set_combiner(combiner)
-
-        bins = self.combine(X)
-        transer = WOETransformer().fit(bins, y)
-        self.score_map_ = self.score_map(transer)
+        self.set_score(map)
 
         return self
 
@@ -47,18 +126,24 @@ class ScoreCard(BaseEstimator):
     def set_combiner(self, combiner):
         """set combiner
         """
-        if isinstance(combiner, Combiner):
-            combiner = combiner.export()
+        if not isinstance(combiner, Combiner):
+            combiner = Combiner().set_rules(combiner)
 
-        cb = dict()
-        for key in combiner:
-            c = combiner[key]
-            if isinstance(c, np.ndarray):
-                cb[key] = np.copy(c)
+        self.combiner = combiner
+
+
+    def set_score(self, map):
+        """set score map by dict
+        """
+        sm = dict()
+        for key in map:
+            s = map[key]
+            if isinstance(s, np.ndarray):
+                sm[key] = np.copy(s)
             else:
-                cb[key] = np.array(c)
+                sm[key] = np.array(s)
 
-        self.combiner = cb
+        self.score_map = sm
 
 
     def predict(self, X, **kwargs):
@@ -81,30 +166,15 @@ class ScoreCard(BaseEstimator):
         return self.factor * np.log(odds) + self.offset
 
     def combine(self, X):
-        res = X.copy()
+        return self.combiner.transform(X)
 
-        for col in self.combiner:
-            groups = self.combiner[col]
-            val = res[col].values
-            if np.issubdtype(groups.dtype, np.number):
-                val = bin_by_splits(val, groups)
-            else:
-                # set default group to -1
-                b = np.full(val.shape, -1)
-                for i in range(len(groups)):
-                    b[np.isin(val, groups[i])] = i
-                val = b
-
-            res[col] = val
-
-        return res
 
     def bin_to_score(self, bins, return_sub = False):
         """predict score from bins
         """
         res = bins.copy()
         for col in bins:
-            s_map = self.score_map_[col]
+            s_map = self.score_map[col]
             b = bins[col].values
             # set default group to min score
             b[b == -1] = np.argmin(s_map)
@@ -131,9 +201,20 @@ class ScoreCard(BaseEstimator):
 
         return s + b / self.n_features_
 
-    def score_map(self, transer):
+
+    def set_model(self, model):
+        """set logistic regression model
+        """
+        self.weight = model.coef_[0]
+        self.bias = model.intercept_[0]
+        self.n_features_ = len(self.weight)
+
+
+    def generate_map(self, transer, model):
         """calculate score map by woe
         """
+        self.set_model(model)
+
         keys = list(transer.values_.keys())
 
         s_map = dict()
@@ -144,6 +225,7 @@ class ScoreCard(BaseEstimator):
 
         return s_map
 
+
     def export_map(self):
         """generate a scorecard object
 
@@ -151,16 +233,17 @@ class ScoreCard(BaseEstimator):
             dict
         """
         card = dict()
-        for col in self.combiner:
-            group = self.combiner[col]
+        combiner = self.combiner.export()
+        for col in combiner:
+            group = combiner[col]
             card[col] = dict()
 
             if not np.issubdtype(group.dtype, np.number):
                 for i, v in enumerate(group):
-                    card[col][','.join(v)] = self.score_map_[col][i]
+                    card[col][','.join(v)] = self.score_map[col][i]
             else:
                 sp_l = [-np.inf] + group.tolist() + [np.inf]
                 for i in range(len(sp_l) - 1):
-                    card[col]['['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')'] = self.score_map_[col][i]
+                    card[col]['['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')'] = self.score_map[col][i]
 
         return card

@@ -168,6 +168,8 @@ class Combiner(TransformerMixin):
         for col in map:
             self.splits_[col] = np.array(map[col])
 
+        return self
+
     def export(self):
         """export combine rules for score card
         """
