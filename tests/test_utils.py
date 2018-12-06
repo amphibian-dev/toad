@@ -2,7 +2,12 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from toad.utils import clip, diff_time_frame, bin_to_number
+from toad.utils import (
+    clip,
+    diff_time_frame,
+    bin_to_number,
+    generate_target,
+)
 
 np.random.seed(1)
 feature = np.random.rand(500)
@@ -78,3 +83,8 @@ class TestUtils(unittest.TestCase):
 
         res = df.applymap(bin_to_number())
         self.assertEqual(res.loc[1, 'area_2'], 225)
+
+    def test_generate_target(self):
+        t = generate_target(len(feature), rate = 0.3, weight = feature)
+        rate = t.sum() / len(t)
+        self.assertEqual(rate, 0.3)

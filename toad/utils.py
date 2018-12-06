@@ -284,6 +284,35 @@ def bin_to_number(reg = None):
     return func
 
 
+def generate_target(size, rate = 0.5, weight = None, reverse = False):
+    """generate target for reject inference
+
+    Args:
+        size (int): size of target
+        rate (float): rate of '1' in target
+        weight (array-like): weight of '1' to generate target
+        reverse (bool): if need reverse weight
+
+    Returns:
+        array
+    """
+    if weight is not None:
+        weight = np.asarray(weight)
+
+        if reverse is True:
+            weight = (np.max(weight) + np.min(weight)) - weight
+
+        weight = weight / weight.sum()
+
+    res = np.zeros(size)
+
+    choice_num = int(size * rate)
+    ix = np.random.choice(size, choice_num, replace = False, p = weight)
+    res[ix] = 1
+
+    return res
+
+
 def get_dummies(dataframe, exclude = None):
     """get dummies
     """
