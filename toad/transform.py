@@ -162,7 +162,7 @@ class Combiner(TransformerMixin):
 
     def set_rules(self, map):
         if not isinstance(map, dict):
-            self.splits_ = np.arrary(map)
+            self.splits_ = np.array(map)
 
         self.splits_ = dict()
         for col in map:
