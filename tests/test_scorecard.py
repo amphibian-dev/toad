@@ -18,6 +18,19 @@ df = pd.DataFrame({
     'B': str_feat,
 })
 
+card_config = {
+    'A': {
+        '[-inf ~ 3)': 100,
+        '[3 ~ 5)': 200,
+        '[5 ~ 8)': 300,
+        '[8 ~ inf)': 400,
+    },
+    'B': {
+        ','.join(list('ABCD')): 200,
+        ','.join(list('EFG')): 400,
+    },
+}
+
 combiner = Combiner()
 bins = combiner.fit_transform(df, target, n_bins = 5)
 woe_transer = WOETransformer()
@@ -45,7 +58,7 @@ class TestScoreCard(unittest.TestCase):
         self.assertEqual(score[404], 456.66402014254516)
 
     def test_predict(self):
-        score= card.predict(df)
+        score = card.predict(df)
         self.assertEqual(score[404], 456.66402014254516)
 
     def test_predict_sub_score(self):
@@ -64,3 +77,9 @@ class TestScoreCard(unittest.TestCase):
     def test_export_map(self):
         card_map = card.export_map()
         self.assertEqual(card_map['B']['D'], 232.18437983377214)
+
+    def test_card_map(self):
+        config = card.export_map()
+        card_from_map = ScoreCard(card = config)
+        score = card_from_map.predict(df)
+        self.assertEqual(score[404], 456.66402014254516)

@@ -1,3 +1,4 @@
+import re
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -90,18 +91,18 @@ class ScoreCard(BaseEstimator):
     def _parse_card(self, card):
         bins = card.keys()
         scores = card.values()
-        scores = np.array(scores)
+        scores = np.array(list(scores))
 
         groups = self._parse_range(bins)
         # if is continuous
-        if groups:
+        if groups is not None:
             ix = np.argsort(groups)
             scores = scores[ix]
             groups = groups[ix[:-1]]
         else:
             groups = list()
             for item in bins:
-                groups.append(items.split(','))
+                groups.append(item.split(','))
             groups = np.array(groups)
 
         return groups, scores
