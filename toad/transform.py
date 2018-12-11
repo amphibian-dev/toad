@@ -7,6 +7,7 @@ from sklearn.base import TransformerMixin
 from .utils import to_ndarray, np_count, bin_by_splits
 from .merge import DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
 
+ELSE_GROUP = 'else'
 
 
 class WOETransformer(TransformerMixin):
@@ -156,7 +157,12 @@ class Combiner(TransformerMixin):
         # set default group to -1
         bins = np.full(X.shape, -1)
         for i in range(len(splits)):
-            bins[np.isin(X, splits[i])] = i
+            group = splits[i]
+            # if group is else, set all empty group to it
+            if isinstance(group, str) and group == ELSE_GROUP:
+                bins[bins == -1] = i
+            else:
+                bins[np.isin(X, group)] = i
 
         return bins
 

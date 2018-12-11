@@ -27,7 +27,8 @@ card_config = {
     },
     'B': {
         ','.join(list('ABCD')): 200,
-        ','.join(list('EFG')): 400,
+        ','.join(list('EF')): 400,
+        'else': 500,
     },
 }
 
@@ -83,3 +84,8 @@ class TestScoreCard(unittest.TestCase):
         card_from_map = ScoreCard(card = config)
         score = card_from_map.predict(df)
         self.assertEqual(score[404], 456.66402014254516)
+
+    def test_card_map_with_else(self):
+        card_from_map = ScoreCard(card = card_config)
+        score = card_from_map.predict(df)
+        self.assertEqual(score[80], 800)

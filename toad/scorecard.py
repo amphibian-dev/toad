@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 
-from .transform import WOETransformer, Combiner
+from .transform import WOETransformer, Combiner, ELSE_GROUP
 from .utils import to_ndarray, bin_by_splits
 
 
@@ -102,7 +102,10 @@ class ScoreCard(BaseEstimator):
         else:
             groups = list()
             for item in bins:
-                groups.append(item.split(','))
+                if item == ELSE_GROUP:
+                    groups.append(item)
+                else:
+                    groups.append(item.split(','))
             groups = np.array(groups)
 
         return groups, scores
