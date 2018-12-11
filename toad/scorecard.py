@@ -46,9 +46,12 @@ class ScoreCard(BaseEstimator):
         if card is not None:
             return self.set_card(card)
 
-        self.set_combiner(combiner)
-        map = self.generate_map(transer, model)
-        self.set_score(map)
+        if combiner is not None:
+            self.set_combiner(combiner)
+
+        if transer is not None and model is not None:
+            map = self.generate_map(transer, model)
+            self.set_score(map)
 
         return self
 
