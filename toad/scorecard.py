@@ -163,7 +163,8 @@ class ScoreCard(BaseEstimator):
             array-like: predicted score
             DataFrame: sub score for each feature
         """
-        bins = self.combine(X)
+        select = list(self.score_map.keys())
+        bins = self.combine(X[select])
         return self.bin_to_score(bins, **kwargs)
 
     def proba_to_score(self, prob):
