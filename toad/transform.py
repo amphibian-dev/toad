@@ -124,7 +124,7 @@ class Combiner(TransformerMixin):
         elif method is 'step':
             splits = StepMerge(X, **kwargs)
         elif method is 'kmeans':
-            splits = KMeaMerge(X, target = y, **kwargs)
+            splits = KMeansMerge(X, target = y, **kwargs)
 
         return self._covert_splits(uni_val, splits)
 

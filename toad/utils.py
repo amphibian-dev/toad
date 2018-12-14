@@ -8,6 +8,14 @@ from multiprocessing import Pool, current_process, cpu_count
 CONTINUOUS_NUM = 20
 FEATURE_THRESHOLD = 1e-7
 
+NAN_LIST = [
+    'nan',
+    'Nan',
+    'null',
+    'None',
+    np.nan,
+]
+
 
 class Parallel:
     def __init__(self):
@@ -71,7 +79,13 @@ def fillna(feature, by = -1):
     # copy array
     copied = np.copy(feature)
 
-    copied[np.isnan(copied)] = by
+    if isinstance(copied.dtype, np.number):
+        mask = np.isnan(copied)
+    else:
+        mask = np.isin(copied, NAN_LIST)
+    
+    copied[mask] = by
+
     return copied
 
 def bin_by_splits(feature, splits):
