@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from toad.utils import (
+    fillna,
     clip,
     diff_time_frame,
     bin_to_number,
@@ -16,6 +17,12 @@ target = np.random.randint(2, size = 500)
 class TestUtils(unittest.TestCase):
     def setUp(self):
         pass
+
+
+    def test_fillna(self):
+        res = fillna(np.array([1, 2, 3, np.nan, 4, 5]))
+        self.assertEqual(res[3], -1)
+
 
     def test_clip(self):
         res1 = clip(feature, quantile = (.05, .95))

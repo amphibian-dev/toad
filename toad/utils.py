@@ -79,7 +79,7 @@ def fillna(feature, by = -1):
     # copy array
     copied = np.copy(feature)
 
-    if isinstance(copied.dtype, np.number):
+    if np.issubdtype(copied.dtype, np.number):
         mask = np.isnan(copied)
     else:
         mask = np.isin(copied, NAN_LIST)
