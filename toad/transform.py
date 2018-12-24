@@ -1,4 +1,5 @@
 import math
+import copy
 import numpy as np
 import pandas as pd
 from .stats import WOE
@@ -7,6 +8,7 @@ from sklearn.base import TransformerMixin
 from .utils import to_ndarray, np_count, bin_by_splits
 from .merge import DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
 
+EMPTY_BIN = -1
 ELSE_GROUP = 'else'
 
 
@@ -128,43 +130,62 @@ class Combiner(TransformerMixin):
 
         return self._covert_splits(uni_val, splits)
 
-    def transform(self, X):
+    def transform(self, X, *args):
         if not isinstance(self.splits_, dict):
-            return self._transform_apply(X, self.splits_)
+            return self._transform_apply(X, self.splits_, *args)
 
         res = X.copy()
         for col in X:
             if col in self.splits_:
-                res[col] = self._transform_apply(X[col], self.splits_[col])
+                res[col] = self._transform_apply(X[col], self.splits_[col], *args)
 
         return res
 
-    def _transform_apply(self, X, splits):
+    def _transform_apply(self, X, splits, labels = False):
         X = to_ndarray(X)
 
         # if is not continuous
         if not np.issubdtype(splits.dtype, np.number):
-            return self._raw_to_bin(X, splits)
+            bins = self._raw_to_bin(X, splits)
 
-        if len(splits):
-            bins = bin_by_splits(X, splits)
         else:
-            bins = np.zeros(len(X))
+            if len(splits):
+                bins = bin_by_splits(X, splits)
+            else:
+                bins = np.zeros(len(X))
+
+        if labels:
+            formated = self._format_splits(splits)
+            empty_mask = (bins == EMPTY_BIN)
+            bins = formated[bins]
+            bins[empty_mask] = EMPTY_BIN
 
         return bins
 
     def _raw_to_bin(self, X, splits):
-        # set default group to -1
-        bins = np.full(X.shape, -1)
+        # set default group to EMPTY_BIN
+        bins = np.full(X.shape, EMPTY_BIN)
         for i in range(len(splits)):
             group = splits[i]
             # if group is else, set all empty group to it
             if isinstance(group, str) and group == ELSE_GROUP:
-                bins[bins == -1] = i
+                bins[bins == EMPTY_BIN] = i
             else:
                 bins[np.isin(X, group)] = i
 
         return bins
+
+    def _format_splits(self, splits):
+        l = list()
+        if np.issubdtype(splits.dtype, np.number):
+            sp_l = [-np.inf] + splits.tolist() + [np.inf]
+            for i in range(len(sp_l) - 1):
+                l.append('['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')')
+        else:
+            for keys in splits:
+                l.append(','.join(keys))
+
+        return np.array(l)
 
     def set_rules(self, map):
         if not isinstance(map, dict):
@@ -176,10 +197,19 @@ class Combiner(TransformerMixin):
 
         return self
 
-    def export(self):
+    def export(self, format = False):
         """export combine rules for score card
         """
-        return self.splits_
+        splits = copy.deepcopy(self.splits_)
+
+        if format:
+            if not isinstance(splits, dict):
+                splits = self._format_splits(splits)
+            else:
+                for col in splits:
+                    splits[col] = self._format_splits(splits[col])
+
+        return splits
 
     def _covert_splits(self, value, splits):
         """covert combine rules to array

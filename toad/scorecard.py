@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 
-from .transform import WOETransformer, Combiner, ELSE_GROUP
+from .transform import WOETransformer, Combiner, ELSE_GROUP, EMPTY_BIN
 from .utils import to_ndarray, bin_by_splits
 
 
@@ -185,7 +185,7 @@ class ScoreCard(BaseEstimator):
             s_map = self.score_map[col]
             b = bins[col].values
             # set default group to min score
-            b[b == -1] = np.argmin(s_map)
+            b[b == EMPTY_BIN] = np.argmin(s_map)
             # replace score
             res[col] = s_map[b]
 
@@ -241,17 +241,13 @@ class ScoreCard(BaseEstimator):
             dict
         """
         card = dict()
-        combiner = self.combiner.export()
+        combiner = self.combiner.export(format = True)
+        
         for col in combiner:
-            group = combiner[col]
+            bins = combiner[col]
             card[col] = dict()
 
-            if not np.issubdtype(group.dtype, np.number):
-                for i, v in enumerate(group):
-                    card[col][','.join(v)] = self.score_map[col][i]
-            else:
-                sp_l = [-np.inf] + group.tolist() + [np.inf]
-                for i in range(len(sp_l) - 1):
-                    card[col]['['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')'] = self.score_map[col][i]
+            for i in range(len(bins)):
+                card[col][bins[i]] = self.score_map[col][i]
 
         return card
