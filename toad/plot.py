@@ -12,7 +12,7 @@ sns.set(font = myfont.get_family())
 
 
 def badrate_plot(frame, x = None, target = 'target', by = None,
-                freq = None, format = None, return_counts = False):
+                freq = None, format = None, return_counts = False, return_frame = False):
     frame = frame.copy()
 
     grouper = x
@@ -49,5 +49,8 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
             aspect = 2,
         )
         res += (count_plot,)
+
+    if return_frame:
+        res += (table,)
 
     return unpack_tuple(res)
