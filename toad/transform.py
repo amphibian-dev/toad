@@ -130,14 +130,14 @@ class Combiner(TransformerMixin):
 
         return self._covert_splits(uni_val, splits)
 
-    def transform(self, X, *args):
+    def transform(self, X, **kwargs):
         if not isinstance(self.splits_, dict):
-            return self._transform_apply(X, self.splits_, *args)
+            return self._transform_apply(X, self.splits_, **kwargs)
 
         res = X.copy()
         for col in X:
             if col in self.splits_:
-                res[col] = self._transform_apply(X[col], self.splits_[col], *args)
+                res[col] = self._transform_apply(X[col], self.splits_[col], **kwargs)
 
         return res
 
