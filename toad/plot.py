@@ -6,6 +6,8 @@ from matplotlib.font_manager import FontProperties
 
 from .utils import unpack_tuple
 
+sns.set_palette('muted')
+
 FONTS_PATH = os.path.join(os.path.abspath(__file__), '../../fonts/pingfang.ttf')
 myfont = FontProperties(fname = os.path.abspath(FONTS_PATH))
 sns.set(font = myfont.get_family())
