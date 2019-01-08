@@ -1,4 +1,6 @@
 import re
+import io
+import json
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -44,6 +46,10 @@ class ScoreCard(BaseEstimator):
         """
         """
         if card is not None:
+            if isinstance(card, io.IOBase):
+                with card as f:
+                    card = json.load(f)
+
             return self.set_card(card)
 
         if combiner is not None:
@@ -242,7 +248,7 @@ class ScoreCard(BaseEstimator):
         """
         card = dict()
         combiner = self.combiner.export(format = True)
-        
+
         for col in combiner:
             bins = combiner[col]
             card[col] = dict()
