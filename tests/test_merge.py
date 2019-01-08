@@ -42,6 +42,10 @@ class TestMerge(unittest.TestCase):
         splits = QuantileMerge(feature, n_bins = 10)
         self.assertEqual(len(splits), 9)
 
+    def test_quantilemerge_not_enough(self):
+        splits = QuantileMerge(B, n_bins = 10)
+        self.assertEqual(len(splits), 3)
+
     def test_stepmerge(self):
         splits = StepMerge(feature, n_bins = 10)
         self.assertEqual(len(splits), 9)
