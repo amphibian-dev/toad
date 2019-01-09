@@ -262,6 +262,17 @@ def IV(feature, target, **kwargs):
     return _IV(feature, target)
 
 
+def badrate(target):
+    """calculate badrate
+
+    Args:
+        target (array-like): target array which `1` is bad
+
+    Returns:
+        float
+    """
+    return np.sum(target) / len(target)
+
 
 def F1(score, target):
     """calculate f1 value

@@ -15,6 +15,21 @@ sns.set(font = myfont.get_family())
 
 def badrate_plot(frame, x = None, target = 'target', by = None,
                 freq = None, format = None, return_counts = False, return_frame = False):
+    """plot for badrate
+
+    Args:
+        frame (DataFrame)
+        x (str): column in frame that will be used as x axis
+        target (str): target column in frame
+        by (str): column in frame that will be calculated badrate by it
+        freq (str): offset aliases string by pandas
+        format (str): format string for time
+        return_counts (bool): if need return counts plot
+        return_frame (bool): if need return frame
+
+    Returns:
+        
+    """
     frame = frame.copy()
 
     grouper = x
