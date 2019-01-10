@@ -282,8 +282,8 @@ class ScoreCard(BaseEstimator):
                 patch = number_patch
             else:
                 # remove else group
-                mask = np.where(v == ELSE_GROUP)
-                if mask:
+                mask = np.argwhere(v == ELSE_GROUP)
+                if mask.size > 0:
                     v = np.delete(v, mask)
 
                 items = np.concatenate(v)

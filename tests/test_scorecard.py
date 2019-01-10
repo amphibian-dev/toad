@@ -30,6 +30,10 @@ card_config = {
         ','.join(list('EF')): 400,
         'else': 500,
     },
+    'C': {
+        'A': 200,
+        'B': 100,
+    },
 }
 
 combiner = Combiner()
