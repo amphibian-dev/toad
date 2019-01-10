@@ -48,3 +48,8 @@ class TestTransform(unittest.TestCase):
     def test_combiner_frame(self):
         res = Combiner().fit_transform(df, target)
         self.assertEqual(res.iloc[404, 1], 2)
+
+    def test_combiner_export(self):
+        combiner = Combiner().fit(df, target, method = 'chi', n_bins = 4)
+        bins = combiner.export()
+        self.assertIsInstance(bins['B'][0], list)

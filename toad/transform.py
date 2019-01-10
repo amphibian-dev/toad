@@ -209,7 +209,7 @@ class Combiner(TransformerMixin):
                 for col in splits:
                     splits[col] = self._format_splits(splits[col])
 
-        return splits
+        return {k: v.tolist() for k, v in splits.items()}
 
     def _covert_splits(self, value, splits):
         """covert combine rules to array
@@ -217,11 +217,14 @@ class Combiner(TransformerMixin):
         if value is False:
             return splits
 
+        if isinstance(value, np.ndarray):
+            value = value.tolist()
+        
         start = 0
         l = list()
         for i in splits:
             i = math.ceil(i)
-            l.append(np.array(value[start:i]))
+            l.append(value[start:i])
             start = i
 
         l.append(value[start:])
