@@ -89,3 +89,8 @@ class TestScoreCard(unittest.TestCase):
         card_from_map = ScoreCard(card = card_config)
         score = card_from_map.predict(df)
         self.assertEqual(score[80], 800)
+
+    def test_generate_testing_frame(self):
+        card = ScoreCard(card = card_config)
+        frame = card.testing_frame()
+        self.assertEqual(frame.loc[4, 'B'], 'E')

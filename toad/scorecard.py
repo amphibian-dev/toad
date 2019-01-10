@@ -20,6 +20,13 @@ RE_RANGE = '\[{begin}\s*{sep}\s*{end}\)'.format(
 )
 
 
+BORDER_THRESHOLD = 1e-6
+NUMBER_EMPTY = -9999999
+NUMBER_INF = 1e10
+FACTOR_EMPTY = 'MISSING'
+FACTOR_UNKNOWN = 'UNKNOWN'
+
+
 
 class ScoreCard(BaseEstimator):
     def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750,
@@ -257,3 +264,59 @@ class ScoreCard(BaseEstimator):
                 card[col][bins[i]] = self.score_map[col][i]
 
         return card
+
+    def _generate_testing_frame(self):
+        """
+        """
+        c_map = self.combiner.export()
+
+        number_patch = np.array([NUMBER_EMPTY, NUMBER_INF])
+        factor_patch = np.array([FACTOR_EMPTY, FACTOR_UNKNOWN])
+
+        values = []
+        cols = []
+        for k, v in c_map.items():
+            v = np.array(v)
+            if np.issubdtype(v.dtype, np.number):
+                items = np.concatenate((v, v + BORDER_THRESHOLD))
+                patch = number_patch
+            else:
+                # remove else group
+                mask = np.where(v == ELSE_GROUP)
+                if mask:
+                    v = np.delete(v, mask)
+
+                items = np.concatenate(v)
+                patch = factor_patch
+
+            # add patch to items
+            items = np.concatenate((items, patch))
+
+            cols.append(k)
+            values.append(np.unique(items))
+
+        # calculate length of values in each columns
+        lens = [len(x) for x in values]
+
+        # calculate lcm
+        lcm = np.lcm.reduce(lens)
+
+        stacks = dict()
+        for i in range(len(cols)):
+            l = lens[i]
+            # generate indexes of value in column
+            ix = list(np.arange(l)) * int(lcm / l)
+            stacks[cols[i]] = values[i][ix]
+
+        return pd.DataFrame(stacks)
+
+    def testing_frame(self):
+        """get testing frame with score
+
+        Returns:
+            DataFrame: testing frame with score
+        """
+        frame = self._generate_testing_frame()
+        frame['score'] = self.predict(frame)
+
+        return frame
