@@ -1,5 +1,6 @@
 import re
 import io
+import math
 import json
 import numpy as np
 import pandas as pd
@@ -265,8 +266,13 @@ class ScoreCard(BaseEstimator):
 
         return card
 
-    def _generate_testing_frame(self):
+    def _generate_testing_frame(self, size = 'max'):
         """
+        Args:
+            size (int|str): size of frame. 'max' (default), 'lcm'
+
+        Returns:
+            DataFrame
         """
         c_map = self.combiner.export()
 
@@ -298,25 +304,29 @@ class ScoreCard(BaseEstimator):
         # calculate length of values in each columns
         lens = [len(x) for x in values]
 
-        # calculate lcm
-        lcm = np.lcm.reduce(lens)
+        # get size
+        if isinstance(size, str):
+            if size == 'lcm':
+                size = np.lcm.reduce(lens)
+            else:
+                size = np.max(lens)
 
         stacks = dict()
         for i in range(len(cols)):
             l = lens[i]
             # generate indexes of value in column
-            ix = list(np.arange(l)) * int(lcm / l)
-            stacks[cols[i]] = values[i][ix]
+            ix = list(np.arange(l)) * math.ceil(size / l)
+            stacks[cols[i]] = values[i][ix[:size]]
 
         return pd.DataFrame(stacks)
 
-    def testing_frame(self):
+    def testing_frame(self, **kwargs):
         """get testing frame with score
 
         Returns:
             DataFrame: testing frame with score
         """
-        frame = self._generate_testing_frame()
+        frame = self._generate_testing_frame(**kwargs)
         frame['score'] = self.predict(frame)
 
         return frame
