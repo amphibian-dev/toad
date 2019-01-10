@@ -16,6 +16,7 @@ str_feat = ab[np.random.choice(7, 500)]
 df = pd.DataFrame({
     'A': feature,
     'B': str_feat,
+    'C': ab[np.random.choice(2, 500)],
 })
 
 card_config = {
@@ -52,6 +53,8 @@ card = ScoreCard(
     model = model,
 )
 
+TEST_SCORE = 453.58201689869964
+
 
 class TestScoreCard(unittest.TestCase):
     def setUp(self):
@@ -60,39 +63,39 @@ class TestScoreCard(unittest.TestCase):
     def test_proba_to_score(self):
         proba = model.predict_proba(woe)[:,1]
         score = card.proba_to_score(proba)
-        self.assertEqual(score[404], 456.66402014254516)
+        self.assertEqual(score[404], 453.5820168986997)
 
     def test_predict(self):
         score = card.predict(df)
-        self.assertEqual(score[404], 456.66402014254516)
+        self.assertEqual(score[404], TEST_SCORE)
 
     def test_predict_sub_score(self):
         score, sub = card.predict(df, return_sub = True)
-        self.assertEqual(sub.iloc[250, 1], 235.0048506817883)
+        self.assertEqual(sub.iloc[250, 1], 162.08878336572937)
 
     def test_woe_to_score(self):
         score = card.woe_to_score(woe)
         score = np.sum(score, axis = 1)
-        self.assertEqual(score[404], 456.66402014254516)
+        self.assertEqual(score[404], TEST_SCORE)
 
     def test_bin_to_score(self):
         score = card.bin_to_score(bins)
-        self.assertEqual(score[404], 456.66402014254516)
+        self.assertEqual(score[404], TEST_SCORE)
 
     def test_export_map(self):
         card_map = card.export_map()
-        self.assertEqual(card_map['B']['D'], 232.18437983377214)
+        self.assertEqual(card_map['B']['D'], 159.2498541513114)
 
     def test_card_map(self):
         config = card.export_map()
         card_from_map = ScoreCard(card = config)
         score = card_from_map.predict(df)
-        self.assertEqual(score[404], 456.66402014254516)
+        self.assertEqual(score[404], TEST_SCORE)
 
     def test_card_map_with_else(self):
         card_from_map = ScoreCard(card = card_config)
         score = card_from_map.predict(df)
-        self.assertEqual(score[80], 800)
+        self.assertEqual(score[80], 1000)
 
     def test_generate_testing_frame(self):
         card = ScoreCard(card = card_config)
