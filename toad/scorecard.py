@@ -278,7 +278,7 @@ class ScoreCard(BaseEstimator):
         for k, v in c_map.items():
             v = np.array(v)
             if np.issubdtype(v.dtype, np.number):
-                items = np.concatenate((v, v + BORDER_THRESHOLD))
+                items = np.concatenate((v, v - BORDER_THRESHOLD))
                 patch = number_patch
             else:
                 # remove else group
