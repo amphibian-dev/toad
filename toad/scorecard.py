@@ -52,6 +52,12 @@ class ScoreCard(BaseEstimator):
 
     def generate_card(self, card = None, combiner = None, transer = None, model = None):
         """
+
+        Args:
+            card (dict|IOBase): dict of card or io to read json
+            combiner (toad.Combiner)
+            transer (toad.WOETransformer)
+            model (LogisticRegression)
         """
         if card is not None:
             if isinstance(card, io.IOBase):
@@ -248,8 +254,11 @@ class ScoreCard(BaseEstimator):
         return s_map
 
 
-    def export_map(self):
+    def export_map(self, to_json = None):
         """generate a scorecard object
+
+        Args:
+            to_json (IOBase): io to write json file
 
         Returns:
             dict
@@ -264,7 +273,13 @@ class ScoreCard(BaseEstimator):
             for i in range(len(bins)):
                 card[col][bins[i]] = self.score_map[col][i]
 
-        return card
+        if to_json is None:
+            return card
+
+        with to_json as f:
+            json.dump(card, f, ensure_ascii = False)
+
+
 
     def _generate_testing_frame(self, size = 'max'):
         """
