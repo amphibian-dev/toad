@@ -23,12 +23,13 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
         target (str): target column in frame
         by (str): column in frame that will be calculated badrate by it
         freq (str): offset aliases string by pandas
+                    http://pandas.pydata.org/pandas-docs/stable/timeseries.html#offset-aliases
         format (str): format string for time
         return_counts (bool): if need return counts plot
         return_frame (bool): if need return frame
 
     Returns:
-        
+
     """
     frame = frame.copy()
 
