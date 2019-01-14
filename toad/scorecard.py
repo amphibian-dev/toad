@@ -281,10 +281,11 @@ class ScoreCard(BaseEstimator):
 
 
 
-    def _generate_testing_frame(self, size = 'max'):
+    def _generate_testing_frame(self, size = 'max', mishap = True):
         """
         Args:
             size (int|str): size of frame. 'max' (default), 'lcm'
+            mishap (bool): is need to add mishap patch to test frame
 
         Returns:
             DataFrame
@@ -310,8 +311,9 @@ class ScoreCard(BaseEstimator):
                 items = np.concatenate(v)
                 patch = factor_patch
 
-            # add patch to items
-            items = np.concatenate((items, patch))
+            if mishap:
+                # add patch to items
+                items = np.concatenate((items, patch))
 
             cols.append(k)
             values.append(np.unique(items))
