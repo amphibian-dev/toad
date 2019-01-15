@@ -197,8 +197,15 @@ class Combiner(TransformerMixin):
 
         return self
 
-    def export(self, format = False):
+    def export(self, format = False, to_json = None):
         """export combine rules for score card
+
+        Args:
+            format (bool): if True, bins will be replace with string label for values
+            to_json (IOBase): io to write json file
+
+        Returns:
+            dict
         """
         splits = copy.deepcopy(self.splits_)
 
@@ -209,7 +216,13 @@ class Combiner(TransformerMixin):
                 for col in splits:
                     splits[col] = self._format_splits(splits[col])
 
-        return {k: v.tolist() for k, v in splits.items()}
+        bins = {k: v.tolist() for k, v in splits.items()}
+
+        if to_json is None:
+            return bins
+
+        with to_json as f:
+            json.dump(bins, f, ensure_ascii = False)
 
     def _covert_splits(self, value, splits):
         """covert combine rules to array
@@ -219,7 +232,7 @@ class Combiner(TransformerMixin):
 
         if isinstance(value, np.ndarray):
             value = value.tolist()
-        
+
         start = 0
         l = list()
         for i in splits:
