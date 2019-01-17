@@ -83,11 +83,11 @@ class TestScoreCard(unittest.TestCase):
         self.assertEqual(score[404], TEST_SCORE)
 
     def test_export_map(self):
-        card_map = card.export_map()
+        card_map = card.export()
         self.assertEqual(card_map['B']['D'], 159.2498541513114)
 
     def test_card_map(self):
-        config = card.export_map()
+        config = card.export()
         card_from_map = ScoreCard(card = config)
         score = card_from_map.predict(df)
         self.assertEqual(score[404], TEST_SCORE)

@@ -254,7 +254,7 @@ class ScoreCard(BaseEstimator):
         return s_map
 
 
-    def export_map(self, to_json = None):
+    def export(self, to_json = None):
         """generate a scorecard object
 
         Args:
