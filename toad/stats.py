@@ -67,9 +67,9 @@ def KS_bucket(score, target, bucket = 10):
     agg1['total'] = agg1['bads'] + agg1['goods']
 
     agg2 = (agg1.sort_values(by = 'min')).reset_index(drop = True)
-    agg2['bad_rate'] = (agg2['bads'] / agg2['total']).apply('{0:.2%}'.format)
+    agg2['bad_rate'] = agg2['bads'] / agg2['total']
 
-    agg2['ks'] = np.round((agg2['bads'] / agg2['bads'].sum()).cumsum() - (agg2['goods'] / agg2['goods'].sum()).cumsum(), 4) * 100
+    agg2['ks'] = (agg2['bads'] / agg2['bads'].sum()).cumsum() - (agg2['goods'] / agg2['goods'].sum()).cumsum()
 
     return agg2
 
