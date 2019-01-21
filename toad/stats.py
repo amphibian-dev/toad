@@ -15,6 +15,7 @@ from .utils import (
     inter_feature,
     iter_df,
     support_dataframe,
+    clip,
 )
 
 def KS(score, target):
@@ -39,13 +40,15 @@ def KS(score, target):
     return max(abs(df['ks']))
 
 
-def KS_bucket(score, target, bucket = 10):
+def KS_bucket(score, target, bucket = 10, method = 'quantile', clip_q = None):
     """calculate ks value by bucket
 
     Args:
         score (array-like): list of score or probability that the model predict
         target (array-like): list of real target
         bucket (int): n groups that will bin into
+        method (str): method to bin score. `quantile` (default), `step`
+        clip_q (float): only for `step`, clip n quantile of both ends
 
     Returns:
         DataFrame
@@ -56,7 +59,19 @@ def KS_bucket(score, target, bucket = 10):
     })
 
     df['good'] = 1 - df['bad']
-    df['bucket'] = pd.qcut(df['score'], bucket, duplicates = 'drop')
+
+    bad_total = df['bad'].sum()
+    good_total = df['good'].sum()
+
+    if method == 'step':
+        score = df['score']
+        if clip_q is not None:
+            score = clip(score, quantile = clip_q)
+
+        df['bucket'] = pd.cut(score, bucket)
+    else:
+        df['bucket'] = pd.qcut(score, bucket, duplicates = 'drop')
+
     grouped = df.groupby('bucket', as_index = False)
 
     agg1 = pd.DataFrame()
@@ -67,9 +82,21 @@ def KS_bucket(score, target, bucket = 10):
     agg1['total'] = agg1['bads'] + agg1['goods']
 
     agg2 = (agg1.sort_values(by = 'min')).reset_index(drop = True)
-    agg2['bad_rate'] = agg2['bads'] / agg2['total']
 
-    agg2['ks'] = (agg2['bads'] / agg2['bads'].sum()).cumsum() - (agg2['goods'] / agg2['goods'].sum()).cumsum()
+    agg2['bad_rate'] = agg2['bads'] / agg2['total']
+    agg2['good_rate'] = agg2['goods'] / agg2['total']
+
+    agg2['bad_prop'] = agg2['bads'] / bad_total
+    agg2['good_prop'] = agg2['goods'] / good_total
+
+    agg2['cum_bads'] = agg2['bads'].cumsum()
+    agg2['cum_goods'] = agg2['goods'].cumsum()
+
+    agg2['cum_bads_prop'] = agg2['cum_bads'] / bad_total
+    agg2['cum_goods_prop'] = agg2['cum_goods'] / good_total
+
+
+    agg2['ks'] = agg2['cum_bads_prop'] - agg2['cum_goods_prop']
 
     return agg2
 

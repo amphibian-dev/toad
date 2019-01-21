@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from toad import IV, WOE, gini, gini_cond, entropy_cond, quality
+from toad import IV, WOE, gini, gini_cond, entropy_cond, quality, KS_bucket
 from toad.stats import _IV
 from toad.utils import feature_splits
 
@@ -77,3 +77,11 @@ class TestStats(unittest.TestCase):
         })
         result = quality(df)
         self.assertEqual(result.loc['feature', 'iv'], 0.01637933818053033)
+
+    def test_KS_bucket(self):
+        result = KS_bucket(feature, target)
+        self.assertEqual(result.loc[4, 'ks'], 0.028036335090276976)
+
+    def test_KS_bucket_use_step(self):
+        result = KS_bucket(feature, target, method = 'step', clip_q = 0.01)
+        self.assertEqual(result.loc[4, 'ks'], 0.0422147102645028)
