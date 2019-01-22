@@ -15,7 +15,6 @@ from .utils import (
     inter_feature,
     iter_df,
     support_dataframe,
-    clip,
 )
 
 def KS(score, target):
@@ -40,7 +39,7 @@ def KS(score, target):
     return max(abs(df['ks']))
 
 
-def KS_bucket(score, target, bucket = 10, method = 'quantile', clip_q = None):
+def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
     """calculate ks value by bucket
 
     Args:
@@ -48,7 +47,6 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', clip_q = None):
         target (array-like): list of real target
         bucket (int): n groups that will bin into
         method (str): method to bin score. `quantile` (default), `step`
-        clip_q (float): only for `step`, clip n quantile of both ends
 
     Returns:
         DataFrame
@@ -63,14 +61,7 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', clip_q = None):
     bad_total = df['bad'].sum()
     good_total = df['good'].sum()
 
-    if method == 'step':
-        score = df['score']
-        if clip_q is not None:
-            score = clip(score, quantile = clip_q)
-
-        df['bucket'] = pd.cut(score, bucket)
-    else:
-        df['bucket'] = pd.qcut(score, bucket, duplicates = 'drop')
+    df['bucket'] = merge(score, n_bins = bucket, method = method, **kwargs)
 
     grouped = df.groupby('bucket', as_index = False)
 

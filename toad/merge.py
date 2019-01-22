@@ -5,19 +5,21 @@ import pandas as pd
 from sklearn.tree import DecisionTreeClassifier, _tree
 from sklearn.cluster import KMeans
 
-from .utils import fillna, bin_by_splits, to_ndarray, support_dataframe
+from .utils import fillna, bin_by_splits, to_ndarray, support_dataframe, clip
 
 DEFAULT_BINS = 20
 
 
-def StepMerge(feature, nan = None, n_bins = None):
+def StepMerge(feature, nan = None, n_bins = None, clip_v = None, clip_std = None, clip_q = None):
     """Merge by step
 
     Args:
         feature (array-like)
         nan (number): value will be used to fill nan
         n_bins (int): n groups that will be merged into
-
+        clip_v (number | tuple): min/max value of clipping
+        clip_std (number | tuple): min/max std of clipping
+        clip_q (number | tuple): min/max quantile of clipping
     Returns:
         array: split points of feature
     """
@@ -26,6 +28,8 @@ def StepMerge(feature, nan = None, n_bins = None):
 
     if nan is not None:
         feature = fillna(feature, by = nan)
+
+    feature = clip(feature, value = clip_v, std = clip_std, quantile = clip_q)
 
     max = np.nanmax(feature)
     min = np.nanmin(feature)

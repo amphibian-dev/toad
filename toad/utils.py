@@ -234,6 +234,9 @@ def clip(series, value = None, std = None, quantile = None):
         min = None if min is None else np.quantile(series, min)
         max = None if max is None else np.quantile(series, max)
 
+    else:
+        return series
+
     return np.clip(series, min, max)
 
 
