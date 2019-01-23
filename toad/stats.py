@@ -61,6 +61,9 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
     bad_total = df['bad'].sum()
     good_total = df['good'].sum()
 
+    if bucket is False:
+        bucket = len(np.unique(score))
+
     df['bucket'] = merge(score, n_bins = bucket, method = method, **kwargs)
 
     grouped = df.groupby('bucket', as_index = False)
