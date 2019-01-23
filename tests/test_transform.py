@@ -10,10 +10,12 @@ ab = np.array(list('ABCDEFG'))
 feature = np.random.randint(10, size = 500)
 target = np.random.randint(2, size = 500)
 str_feat = ab[np.random.choice(7, 500)]
+uni_feat = np.ones(500)
 
 df = pd.DataFrame({
     'A': feature,
     'B': str_feat,
+    'C': uni_feat,
 })
 
 
@@ -43,6 +45,10 @@ class TestTransform(unittest.TestCase):
 
     def test_combiner_with_str(self):
         f = Combiner().fit_transform(str_feat, target, method = 'chi')
+        self.assertEqual(f[451], 0)
+
+    def test_combiner_unique_feature(self):
+        f = Combiner().fit_transform(uni_feat, target, method = 'chi')
         self.assertEqual(f[451], 0)
 
     def test_combiner_frame(self):

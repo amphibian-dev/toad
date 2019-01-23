@@ -143,7 +143,7 @@ class Combiner(TransformerMixin):
             if len(splits):
                 bins = bin_by_splits(X, splits)
             else:
-                bins = np.zeros(len(X))
+                bins = np.zeros(len(X), dtype = int)
 
         if labels:
             formated = self._format_splits(splits)
@@ -207,7 +207,10 @@ class Combiner(TransformerMixin):
                 for col in splits:
                     splits[col] = self._format_splits(splits[col])
 
-        bins = {k: v.tolist() for k, v in splits.items()}
+        if not isinstance(splits, dict):
+            bins = splits.tolist()
+        else:
+            bins = {k: v.tolist() for k, v in splits.items()}
 
         if to_json is None:
             return bins

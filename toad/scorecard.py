@@ -83,7 +83,6 @@ class ScoreCard(BaseEstimator):
             Y (array-like)
 
         """
-        # self.n_features_ = len(self.weight)
 
         return self
 
@@ -201,7 +200,7 @@ class ScoreCard(BaseEstimator):
         """predict score from bins
         """
         res = bins.copy()
-        for col in bins:
+        for col in self.score_map:
             s_map = self.score_map[col]
             b = bins[col].values
             # set default group to min score
@@ -227,7 +226,12 @@ class ScoreCard(BaseEstimator):
         b = self.offset - self.factor * self.bias
         s = -self.factor * weight * woe
 
-        return s + b / self.n_features_
+        # drop score whose weight is 0
+        mask = 1
+        if isinstance(weight, np.ndarray):
+            mask = (weight != 0).astype(int)
+        
+        return (s + b / self.n_features_) * mask
 
 
     def set_model(self, model):
@@ -235,7 +239,7 @@ class ScoreCard(BaseEstimator):
         """
         self.weight = model.coef_[0]
         self.bias = model.intercept_[0]
-        self.n_features_ = len(self.weight)
+        self.n_features_ = (self.weight != 0).sum()
 
 
     def generate_map(self, transer, model):
@@ -248,6 +252,10 @@ class ScoreCard(BaseEstimator):
         s_map = dict()
         for i, k in enumerate(keys):
             weight = self.weight[i]
+            # skip feature whose weight is 0
+            if weight == 0:
+                continue
+
             woe = transer.woe_[k]
             s_map[k] = self.woe_to_score(woe, weight = weight)
 
@@ -266,7 +274,7 @@ class ScoreCard(BaseEstimator):
         card = dict()
         combiner = self.combiner.export(format = True)
 
-        for col in combiner:
+        for col in self.score_map:
             bins = combiner[col]
             card[col] = dict()
 

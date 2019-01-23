@@ -17,6 +17,7 @@ df = pd.DataFrame({
     'A': feature,
     'B': str_feat,
     'C': ab[np.random.choice(2, 500)],
+    'D': np.ones(500),
 })
 
 card_config = {
