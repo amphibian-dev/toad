@@ -6,7 +6,7 @@ from .stats import WOE
 from sklearn.base import TransformerMixin
 
 from .utils import to_ndarray, np_count, bin_by_splits
-from .merge import DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
+from .merge import merge
 
 EMPTY_BIN = -1
 ELSE_GROUP = 'else'
@@ -117,16 +117,7 @@ class Combiner(TransformerMixin):
             # replace X by sorted index
             X = self._raw_to_bin(X, uni_val)
 
-        if method is 'dt':
-            splits = DTMerge(X, y, **kwargs)
-        elif method is 'chi':
-            splits = ChiMerge(X, y, **kwargs)
-        elif method is 'quantile':
-            splits = QuantileMerge(X, **kwargs)
-        elif method is 'step':
-            splits = StepMerge(X, **kwargs)
-        elif method is 'kmeans':
-            splits = KMeansMerge(X, target = y, **kwargs)
+        _, splits = merge(X, target = y, method = method, return_splits = True, **kwargs)
 
         return self._covert_splits(uni_val, splits)
 
