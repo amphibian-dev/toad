@@ -80,6 +80,8 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
     agg2['bad_rate'] = agg2['bads'] / agg2['total']
     agg2['good_rate'] = agg2['goods'] / agg2['total']
 
+    agg2['odds'] = agg2['bads'] / agg2['goods']
+
     agg2['bad_prop'] = agg2['bads'] / bad_total
     agg2['good_prop'] = agg2['goods'] / good_total
 
