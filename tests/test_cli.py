@@ -1,4 +1,4 @@
-import unittest
+import pytest
 import numpy as np
 import pandas as pd
 
@@ -24,19 +24,16 @@ def disable_stdout(fn):
 parser = get_parser()
 
 
-class TestTransform(unittest.TestCase):
-    def setUp(self):
-        pass
 
-    @disable_stdout
-    def test_detect(self):
-        args = parser.parse_args(['detect', '-i', 'tests/test_data.csv'])
-        rep = args.func(args)
-        self.assertEqual(rep.loc['E', 'unique'], 20)
+@disable_stdout
+def test_detect():
+    args = parser.parse_args(['detect', '-i', 'tests/test_data.csv'])
+    rep = args.func(args)
+    assert rep.loc['E', 'unique'] == 20
 
-    @unittest.skip("tree command will generate a pic in travis-ci log")
-    @disable_stdout
-    def test_tree(self):
-        args = parser.parse_args(['tree', '-i', 'tests/test_data.csv'])
-        args.func(args)
-        pass
+@pytest.mark.skip("tree command will generate a pic in travis-ci log")
+@disable_stdout
+def test_tree():
+    args = parser.parse_args(['tree', '-i', 'tests/test_data.csv'])
+    args.func(args)
+    pass

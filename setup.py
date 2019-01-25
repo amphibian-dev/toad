@@ -22,6 +22,9 @@ setup(
         'sklearn',
         'statsmodels',
     ],
+    tests_require=[
+        'pytest'
+    ],
     license = 'MIT',
     classifiers = [
         'Operating System :: POSIX',

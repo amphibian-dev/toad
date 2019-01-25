@@ -18,7 +18,7 @@ uninstall:
 	cat files.txt | xargs rm -rf
 
 test:
-	$(PYTHON) -m unittest discover -s ./tests
+	$(PYTHON) -m pytest -x ./tests
 
 publish:
 	$(PYTHON) setup.py sdist bdist_wheel --universal

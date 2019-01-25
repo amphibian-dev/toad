@@ -1,4 +1,4 @@
-import unittest
+import pytest
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
@@ -57,48 +57,45 @@ card = ScoreCard(
 TEST_SCORE = 453.58201689869964
 
 
-class TestScoreCard(unittest.TestCase):
-    def setUp(self):
-        pass
 
-    def test_proba_to_score(self):
-        proba = model.predict_proba(woe)[:,1]
-        score = card.proba_to_score(proba)
-        self.assertEqual(score[404], 453.5820168986997)
+def test_proba_to_score():
+    proba = model.predict_proba(woe)[:,1]
+    score = card.proba_to_score(proba)
+    assert score[404] == 453.5820168986997
 
-    def test_predict(self):
-        score = card.predict(df)
-        self.assertEqual(score[404], TEST_SCORE)
+def test_predict():
+    score = card.predict(df)
+    assert score[404] == TEST_SCORE
 
-    def test_predict_sub_score(self):
-        score, sub = card.predict(df, return_sub = True)
-        self.assertEqual(sub.iloc[250, 1], 162.08878336572937)
+def test_predict_sub_score():
+    score, sub = card.predict(df, return_sub = True)
+    assert sub.iloc[250, 1] == 162.08878336572937
 
-    def test_woe_to_score(self):
-        score = card.woe_to_score(woe)
-        score = np.sum(score, axis = 1)
-        self.assertEqual(score[404], TEST_SCORE)
+def test_woe_to_score():
+    score = card.woe_to_score(woe)
+    score = np.sum(score, axis = 1)
+    assert score[404] == TEST_SCORE
 
-    def test_bin_to_score(self):
-        score = card.bin_to_score(bins)
-        self.assertEqual(score[404], TEST_SCORE)
+def test_bin_to_score():
+    score = card.bin_to_score(bins)
+    assert score[404] == TEST_SCORE
 
-    def test_export_map(self):
-        card_map = card.export()
-        self.assertEqual(card_map['B']['D'], 159.2498541513114)
+def test_export_map():
+    card_map = card.export()
+    assert card_map['B']['D'] == 159.2498541513114
 
-    def test_card_map(self):
-        config = card.export()
-        card_from_map = ScoreCard(card = config)
-        score = card_from_map.predict(df)
-        self.assertEqual(score[404], TEST_SCORE)
+def test_card_map():
+    config = card.export()
+    card_from_map = ScoreCard(card = config)
+    score = card_from_map.predict(df)
+    assert score[404] == TEST_SCORE
 
-    def test_card_map_with_else(self):
-        card_from_map = ScoreCard(card = card_config)
-        score = card_from_map.predict(df)
-        self.assertEqual(score[80], 1000)
+def test_card_map_with_else():
+    card_from_map = ScoreCard(card = card_config)
+    score = card_from_map.predict(df)
+    assert score[80] == 1000
 
-    def test_generate_testing_frame(self):
-        card = ScoreCard(card = card_config)
-        frame = card.testing_frame()
-        self.assertEqual(frame.loc[4, 'B'], 'E')
+def test_generate_testing_frame():
+    card = ScoreCard(card = card_config)
+    frame = card.testing_frame()
+    assert frame.loc[4, 'B'] == 'E'
