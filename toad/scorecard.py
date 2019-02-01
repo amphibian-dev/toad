@@ -230,7 +230,7 @@ class ScoreCard(BaseEstimator):
         mask = 1
         if isinstance(weight, np.ndarray):
             mask = (weight != 0).astype(int)
-        
+
         return (s + b / self.n_features_) * mask
 
 
@@ -262,11 +262,13 @@ class ScoreCard(BaseEstimator):
         return s_map
 
 
-    def export(self, to_json = None):
+    def export(self, to_frame = False, to_json = None, to_csv = None):
         """generate a scorecard object
 
         Args:
+            to_frame (bool): return DataFrame of card
             to_json (IOBase): io to write json file
+            to_csv (filepath|IOBase): file to write csv
 
         Returns:
             dict
@@ -281,11 +283,27 @@ class ScoreCard(BaseEstimator):
             for i in range(len(bins)):
                 card[col][bins[i]] = self.score_map[col][i]
 
-        if to_json is None:
-            return card
+        if to_json is not None:
+            with to_json as f:
+                return json.dump(card, f, ensure_ascii = False)
 
-        with to_json as f:
-            json.dump(card, f, ensure_ascii = False)
+        if to_frame or to_csv is not None:
+            rows = list()
+            for name in card:
+                for value, score in card[name].items():
+                    rows.append({
+                        'name': name,
+                        'value': value,
+                        'score': score,
+                    })
+
+            card = pd.DataFrame(l)
+
+
+        if to_csv is not None:
+            return card.to_csv(to_csv)
+
+        return card
 
 
 
