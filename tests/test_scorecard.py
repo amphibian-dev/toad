@@ -99,3 +99,8 @@ def test_generate_testing_frame():
     card = ScoreCard(card = card_config)
     frame = card.testing_frame()
     assert frame.loc[4, 'B'] == 'E'
+
+def test_export_frame():
+    card = ScoreCard(card = card_config)
+    frame = card.export(to_frame = True)
+    assert frame.loc[6, 'value'] == 'else'

@@ -297,7 +297,7 @@ class ScoreCard(BaseEstimator):
                         'score': score,
                     })
 
-            card = pd.DataFrame(l)
+            card = pd.DataFrame(rows)
 
 
         if to_csv is not None:

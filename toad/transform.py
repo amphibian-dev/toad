@@ -175,7 +175,10 @@ class Combiner(TransformerMixin):
                 l.append('['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')')
         else:
             for keys in splits:
-                l.append(','.join(keys))
+                if keys == ELSE_GROUP:
+                    l.append(keys)
+                else:
+                    l.append(','.join(keys))
 
         return np.array(l)
 
