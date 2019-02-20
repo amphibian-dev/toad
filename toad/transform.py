@@ -175,7 +175,7 @@ class Combiner(TransformerMixin):
                 l.append('['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')')
         else:
             for keys in splits:
-                if keys == ELSE_GROUP:
+                if isinstance(keys, str) and keys == ELSE_GROUP:
                     l.append(keys)
                 else:
                     l.append(','.join(keys))
