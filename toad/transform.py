@@ -56,6 +56,15 @@ class WOETransformer(TransformerMixin):
 
 
     def transform(self, X, **kwargs):
+        """transform woe
+
+        Args:
+            X (DataFrame|array-like)
+            default (str): 'min'(default), 'max' - the strategy to be used for unknown group
+
+        Returns:
+            array-like
+        """
         if not isinstance(self.values_, dict):
             return self._transform_apply(X, self.values_, self.woe_, **kwargs)
 
@@ -68,6 +77,17 @@ class WOETransformer(TransformerMixin):
 
 
     def _transform_apply(self, X, value, woe, default = 'min'):
+        """transform function for single feature
+
+        Args:
+            X (array-like)
+            value (array-like)
+            woe (array-like)
+            default (str): 'min'(default), 'max' - the strategy to be used for unknown group
+
+        Returns:
+            array-like
+        """
         X = to_ndarray(X)
         res = np.zeros(len(X))
 
@@ -87,11 +107,23 @@ class WOETransformer(TransformerMixin):
 
 class Combiner(TransformerMixin):
     def fit(self, X, y = None, **kwargs):
+        """fit combiner
+
+        Args:
+            X (DataFrame|array-like): features to be combined
+            y (str|array-like): target data or name of target in `X`
+            method (str): the strategy to be used to merge `X`, same as `.merge`, default is `chi`
+            n_bins (int): counts of bins will be combined
+
+        Returns:
+            self
+        """
         if not isinstance(X, pd.DataFrame):
             self.splits_ = self._merge(X, y = y, **kwargs)
             return self
 
         if isinstance(y, str):
+            X = X.copy()
             y = X.pop(y)
 
         self.splits_ = dict()
@@ -101,6 +133,16 @@ class Combiner(TransformerMixin):
         return self
 
     def _merge(self, X, y = None, method = 'chi', **kwargs):
+        """merge function for fit
+
+        Args:
+            X (DataFrame|array-like): features to be combined
+            y (str|array-like): target data or name of target in `X`
+            method (str): the strategy to be used to merge `X`, same as `.merge`, `chi` by default
+
+        Returns:
+            array-like: array of splits
+        """
         X = to_ndarray(X)
 
         if y is not None:
@@ -123,6 +165,15 @@ class Combiner(TransformerMixin):
         return self._covert_splits(uni_val, splits)
 
     def transform(self, X, **kwargs):
+        """transform X by combiner
+
+        Args:
+            X (DataFrame|array-like): features to be transformed
+            labels (bool): if need to use labels for resulting bins, `False` by default
+
+        Returns:
+            array-like
+        """
         if not isinstance(self.splits_, dict):
             return self._transform_apply(X, self.splits_, **kwargs)
 
@@ -134,6 +185,16 @@ class Combiner(TransformerMixin):
         return res
 
     def _transform_apply(self, X, splits, labels = False):
+        """transform function for single feature
+
+        Args:
+            X (array-like): feature to be transformed
+            splits (array-like): splits of `X`
+            labels (bool): if need to use labels for resulting bins, `False` by default
+
+        Returns:
+            array-like
+        """
         X = to_ndarray(X)
 
         # if is not continuous
@@ -155,6 +216,15 @@ class Combiner(TransformerMixin):
         return bins
 
     def _raw_to_bin(self, X, splits):
+        """bin by splits
+
+        Args:
+            X (array-like): feature to be combined
+            splits (array-like): splits of `X`
+
+        Returns:
+            array-like
+        """
         # set default group to EMPTY_BIN
         bins = np.full(X.shape, EMPTY_BIN)
         for i in range(len(splits)):
@@ -183,6 +253,14 @@ class Combiner(TransformerMixin):
         return np.array(l)
 
     def set_rules(self, map):
+        """set rules for combiner
+
+        Args:
+            map (dict|array-like): map of splits
+
+        Returns:
+            self
+        """
         if not isinstance(map, dict):
             self.splits_ = np.array(map)
 
