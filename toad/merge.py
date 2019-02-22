@@ -244,7 +244,7 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
     Params:
         feature (array-like)
         target (array-like)
-        method (str): 'dt', 'chi', 'quality', 'step', 'kmeans' - the strategy to be used to merge feature
+        method (str): 'dt', 'chi', 'quantile', 'step', 'kmeans' - the strategy to be used to merge feature
         return_splits (bool): if needs to return splits
         n_bins (int): n groups that will be merged into
 
