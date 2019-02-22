@@ -117,7 +117,7 @@ def select_iv(quality,num,iv_threshold_value):
     else:
         quality.sort_values(by="iv", ascending=False)
         high_iv = quality[quality['iv'] > iv_threshold_value]
-        return high_iv if len(high_iv) >= num else quality[0, num]
+        return high_iv if len(high_iv) >= num else quality[0:num]
 
 
 # 合并长尾数据并进行等步长分组
