@@ -29,8 +29,9 @@ def test_woe_transformer_with_str():
     assert f[451] == -0.2198594761130199
 
 def test_woe_transformer_with_unknown_group():
-    f = WOETransformer().fit_transform(['Z'], target)
-    assert f[0] == -0.048009219186360606
+    transer = WOETransformer().fit(str_feat, target)
+    res = transer.transform(['Z'], default = 'min')
+    assert res[0] == -0.2198594761130199
 
 def test_woe_transformer_frame():
     res = WOETransformer().fit_transform(df, target)
