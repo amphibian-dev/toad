@@ -22,7 +22,7 @@ class WOETransformer(TransformerMixin):
         Args:
             X (DataFrame|array-like)
             y (str|array-like)
-            select_dtypes (str|numpy.dtypes): `'object'`, `'number'` etc. only selected dtypes will be transform, 
+            select_dtypes (str|numpy.dtypes): `'object'`, `'number'` etc. only selected dtypes will be transform,
         """
         if not isinstance(X, pd.DataFrame):
             self.values_, self.woe_ = self._fit_woe(X, y, **kwargs)
@@ -115,7 +115,7 @@ class WOETransformer(TransformerMixin):
 
 
 class Combiner(TransformerMixin):
-    def fit(self, X, y = None, **kwargs):
+    def fit(self, X, y = None, select_dtypes = None, **kwargs):
         """fit combiner
 
         Args:
@@ -136,6 +136,10 @@ class Combiner(TransformerMixin):
             y = X.pop(y)
 
         self.splits_ = dict()
+
+        if select_dtypes is not None:
+            X = X.select_dtypes(include = select_dtypes)
+        
         for col in X:
             self.splits_[col] = self._merge(X[col], y = y, **kwargs)
 

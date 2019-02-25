@@ -56,6 +56,10 @@ def test_combiner_frame():
     res = Combiner().fit_transform(df, target)
     assert res.iloc[404, 1] == 2
 
+def test_combiner_select_dtypes():
+    res = Combiner().fit_transform(df, target, select_dtypes = 'number')
+    assert res.loc[451, 'B'] == 'G'
+
 def test_combiner_export():
     combiner = Combiner().fit(df, target, method = 'chi', n_bins = 4)
     bins = combiner.export()
