@@ -2,9 +2,15 @@ from setuptools import setup, find_packages, Extension
 
 NAME = 'toad'
 
+def get_version():
+    ns = {}
+    with open(f'{NAME}/version.py') as f:
+        exec(f.read(), ns)
+    return ns['__version__']
+
 setup(
     name = NAME,
-    version = __import__(NAME).__version__,
+    version = get_version(),
     description = 'python utils for detect data',
     long_description = open('README.md').read(),
     long_description_content_type = 'text/markdown',
