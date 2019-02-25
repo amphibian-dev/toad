@@ -16,8 +16,13 @@ ELSE_GROUP = 'else'
 class WOETransformer(TransformerMixin):
     """WOE transformer
     """
-    def fit(self, X, y, **kwargs):
-        """
+    def fit(self, X, y, select_dtypes = None, **kwargs):
+        """fit WOE transformer
+
+        Args:
+            X (DataFrame|array-like)
+            y (str|array-like)
+            select_dtypes (str|numpy.dtypes): `'object'`, `'number'` etc. only selected dtypes will be transform, 
         """
         if not isinstance(X, pd.DataFrame):
             self.values_, self.woe_ = self._fit_woe(X, y, **kwargs)
@@ -28,6 +33,10 @@ class WOETransformer(TransformerMixin):
 
         self.values_ = dict()
         self.woe_ = dict()
+
+        if select_dtypes is not None:
+            X = X.select_dtypes(include = select_dtypes)
+
         for col in X:
             self.values_[col], self.woe_[col] = self._fit_woe(X[col], y)
 

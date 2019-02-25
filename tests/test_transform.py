@@ -36,6 +36,10 @@ def test_woe_transformer_frame():
     res = WOETransformer().fit_transform(df, target)
     assert res.iloc[451, 1] == -0.2198594761130199
 
+def test_woe_transformer_select_dtypes():
+    res = WOETransformer().fit_transform(df, target, select_dtypes = 'object')
+    assert res.loc[451, 'A'] == 3
+
 def test_combiner():
     f = Combiner().fit_transform(feature, target, method = 'chi')
     assert f[451] == 3
