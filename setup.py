@@ -1,10 +1,11 @@
 from setuptools import setup, find_packages, Extension
+from distutils.util import convert_path
 
 NAME = 'toad'
 
 def get_version():
     ns = {}
-    with open(f'{NAME}/version.py') as f:
+    with open(convert_path(f'{NAME}/version.py')) as f:
         exec(f.read(), ns)
     return ns['__version__']
 
