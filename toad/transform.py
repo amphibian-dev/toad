@@ -3,20 +3,34 @@ import json
 import copy
 import numpy as np
 import pandas as pd
-from .stats import WOE
+from functools import wraps
 from sklearn.base import TransformerMixin
 
-from .utils import to_ndarray, np_count, bin_by_splits
+from .stats import WOE
 from .merge import merge
+from .utils import to_ndarray, np_count, bin_by_splits
 
 EMPTY_BIN = -1
 ELSE_GROUP = 'else'
 
 
+def support_select_dtypes(fn):
+
+    @wraps(fn)
+    def func(self, X, *args, select_dtypes = None, **kwargs):
+        if select_dtypes is not None and isinstance(X, pd.DataFrame):
+            X = X.select_dtypes(include = select_dtypes)
+
+        return fn(self, X, *args, **kwargs)
+
+    return func
+
+
 class WOETransformer(TransformerMixin):
     """WOE transformer
     """
-    def fit(self, X, y, select_dtypes = None, **kwargs):
+    @support_select_dtypes
+    def fit(self, X, y, **kwargs):
         """fit WOE transformer
 
         Args:
@@ -35,9 +49,6 @@ class WOETransformer(TransformerMixin):
         self.values_ = dict()
         self.woe_ = dict()
 
-        if select_dtypes is not None:
-            X = X.select_dtypes(include = select_dtypes)
-
         for col in X:
             self.values_[col], self.woe_[col] = self._fit_woe(X[col], y)
 
@@ -45,7 +56,7 @@ class WOETransformer(TransformerMixin):
 
     def _fit_woe(self, X, y):
         X = to_ndarray(X)
-        
+
         t_counts_0 = np_count(y, 0, default = 1)
         t_counts_1 = np_count(y, 1, default = 1)
 
@@ -118,7 +129,8 @@ class WOETransformer(TransformerMixin):
 
 
 class Combiner(TransformerMixin):
-    def fit(self, X, y = None, select_dtypes = None, **kwargs):
+    @support_select_dtypes
+    def fit(self, X, y = None, **kwargs):
         """fit combiner
 
         Args:
@@ -139,10 +151,6 @@ class Combiner(TransformerMixin):
             y = X.pop(y)
 
         self.splits_ = dict()
-
-        if select_dtypes is not None:
-            X = X.select_dtypes(include = select_dtypes)
-
         for col in X:
             self.splits_[col] = self._merge(X[col], y = y, **kwargs)
 
