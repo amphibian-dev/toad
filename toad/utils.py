@@ -1,6 +1,7 @@
 import re
 import numpy as np
 import pandas as pd
+from functools import wraps
 
 from multiprocessing import Pool, current_process, cpu_count
 
@@ -175,7 +176,7 @@ def support_dataframe(require_target = True):
     """decorator for supporting dataframe
     """
     def decorator(fn):
-
+        @wraps(fn)
         def func(frame, *args, **kwargs):
             if not isinstance(frame, pd.DataFrame):
                 return fn(frame, *args, **kwargs)

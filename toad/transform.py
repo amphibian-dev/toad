@@ -26,9 +26,21 @@ def support_select_dtypes(fn):
     return func
 
 
+def support_exclude(fn):
+    @wraps(fn)
+    def func(self, X, *args, exclude = None, **kwargs):
+        if exclude is not None and isinstance(X, pd.DataFrame):
+            X = X.drop(columns = exclude)
+
+        return fn(self, X, *args, **kwargs)
+
+    return func
+
+
 class WOETransformer(TransformerMixin):
     """WOE transformer
     """
+    @support_exclude
     @support_select_dtypes
     def fit(self, X, y, **kwargs):
         """fit WOE transformer
@@ -129,6 +141,7 @@ class WOETransformer(TransformerMixin):
 
 
 class Combiner(TransformerMixin):
+    @support_exclude
     @support_select_dtypes
     def fit(self, X, y = None, **kwargs):
         """fit combiner

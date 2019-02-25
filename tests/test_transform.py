@@ -41,6 +41,10 @@ def test_woe_transformer_select_dtypes():
     res = WOETransformer().fit_transform(df, target, select_dtypes = 'object')
     assert res.loc[451, 'A'] == 3
 
+def test_woe_transformer_exclude():
+    res = WOETransformer().fit_transform(df, target, exclude = 'A')
+    assert res.loc[451, 'A'] == 3
+
 def test_combiner():
     f = Combiner().fit_transform(feature, target, method = 'chi')
     assert f[451] == 3
@@ -59,6 +63,10 @@ def test_combiner_frame():
 
 def test_combiner_select_dtypes():
     res = Combiner().fit_transform(df, target, select_dtypes = 'number')
+    assert res.loc[451, 'B'] == 'G'
+
+def test_combiner_exclude():
+    res = Combiner().fit_transform(df, target, exclude = 'B')
     assert res.loc[451, 'B'] == 'G'
 
 def test_combiner_export():
