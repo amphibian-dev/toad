@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages, Extension
 
+NAME = 'toad'
 
 setup(
-    name = 'toad',
-    version = '0.0.33',
+    name = NAME,
+    version = __import__(NAME).__version__,
     description = 'python utils for detect data',
     long_description = open('README.md').read(),
     long_description_content_type = 'text/markdown',
