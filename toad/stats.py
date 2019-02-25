@@ -370,6 +370,9 @@ def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs)
     Returns:
         Series: a list of quality with the feature's name
     """
+    feature = to_ndarray(feature)
+    target = to_ndarray(target)
+
     if not np.issubdtype(feature.dtype, np.number):
         feature = feature.astype(str)
 
@@ -410,7 +413,7 @@ def quality(dataframe, target = 'target', iv_only = False, **kwargs):
         if column == target:
             continue
 
-        r = pool.apply_async(column_quality, args = (dataframe[column].values, dataframe[target].values), kwds = {'name': column, 'iv_only': iv_only, **kwargs})
+        r = pool.apply_async(column_quality, args = (dataframe[column], dataframe[target]), kwds = {'name': column, 'iv_only': iv_only, **kwargs})
         res.append(r)
 
     pool.close()

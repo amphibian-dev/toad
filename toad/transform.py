@@ -44,6 +44,8 @@ class WOETransformer(TransformerMixin):
         return self
 
     def _fit_woe(self, X, y):
+        X = to_ndarray(X)
+        
         t_counts_0 = np_count(y, 0, default = 1)
         t_counts_1 = np_count(y, 1, default = 1)
 
