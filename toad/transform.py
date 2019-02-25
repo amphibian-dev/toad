@@ -29,6 +29,7 @@ class WOETransformer(TransformerMixin):
             return self
 
         if isinstance(y, str):
+            X = X.copy()
             y = X.pop(y)
 
         self.values_ = dict()
@@ -139,7 +140,7 @@ class Combiner(TransformerMixin):
 
         if select_dtypes is not None:
             X = X.select_dtypes(include = select_dtypes)
-        
+
         for col in X:
             self.splits_[col] = self._merge(X[col], y = y, **kwargs)
 
