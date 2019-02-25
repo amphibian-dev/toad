@@ -21,6 +21,7 @@ setup(
         'scipy',
         'sklearn',
         'statsmodels',
+        'seaborn',
     ],
     tests_require=[
         'pytest'
