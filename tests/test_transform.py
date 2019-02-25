@@ -69,6 +69,11 @@ def test_combiner_exclude():
     res = Combiner().fit_transform(df, target, exclude = 'B')
     assert res.loc[451, 'B'] == 'G'
 
+def test_combiner_labels():
+    combiner = Combiner().fit(df, target)
+    res = combiner.transform(df, labels = True)
+    assert res.loc[451, 'A'] == '3.[3 ~ 4)'
+
 def test_combiner_export():
     combiner = Combiner().fit(df, target, method = 'chi', n_bins = 4)
     bins = combiner.export()

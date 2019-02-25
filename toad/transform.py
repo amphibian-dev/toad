@@ -245,7 +245,7 @@ class Combiner(TransformerMixin):
                 bins = np.zeros(len(X), dtype = int)
 
         if labels:
-            formated = self._format_splits(splits)
+            formated = self._format_splits(splits, index = True)
             empty_mask = (bins == EMPTY_BIN)
             bins = formated[bins]
             bins[empty_mask] = EMPTY_BIN
@@ -274,7 +274,7 @@ class Combiner(TransformerMixin):
 
         return bins
 
-    def _format_splits(self, splits):
+    def _format_splits(self, splits, index = False):
         l = list()
         if np.issubdtype(splits.dtype, np.number):
             sp_l = [-np.inf] + splits.tolist() + [np.inf]
@@ -286,6 +286,10 @@ class Combiner(TransformerMixin):
                     l.append(keys)
                 else:
                     l.append(','.join(keys))
+
+        if index:
+            indexes = [i for i in range(len(l))]
+            l = ["{}.{}".format(ix, lab) for ix, lab in zip(indexes, l)]
 
         return np.array(l)
 
