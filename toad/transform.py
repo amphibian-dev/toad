@@ -190,10 +190,13 @@ class Combiner(TransformerMixin):
             # transform raw data by woe
             transer = WOETransformer()
             woe = transer.fit_transform(X, y)
-            uni_woe, ix_woe = np.unique(woe, return_index = True)
+            # find unique value and its woe value
+            uni_val, ix_val = np.unique(X, return_index = True)
+            uni_woe = woe[ix_val]
             # sort value by woe
             ix = np.argsort(uni_woe)
-            uni_val = X[ix_woe[ix]]
+            # sort unique value
+            uni_val = uni_val[ix]
             # replace X by sorted index
             X = self._raw_to_bin(X, uni_val)
 

@@ -265,6 +265,8 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
         splits = StepMerge(feature, **kwargs)
     elif method is 'kmeans':
         splits = KMeaMerge(feature, target = target, **kwargs)
+    else:
+        splits = np.empty(shape = (0,))
 
 
     if len(splits):
