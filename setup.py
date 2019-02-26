@@ -1,11 +1,16 @@
+import os
 from setuptools import setup, find_packages, Extension
 from distutils.util import convert_path
 
 NAME = 'toad'
 
+
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+VERSION_FILE = os.path.join(CURRENT_PATH, NAME, 'version.py')
+
 def get_version():
     ns = {}
-    with open(convert_path(f'{NAME}/version.py')) as f:
+    with open(VERSION_FILE) as f:
         exec(f.read(), ns)
     return ns['__version__']
 
