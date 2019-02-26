@@ -16,6 +16,41 @@ sns.set(font = myfont.get_family())
 HEATMAP_CMAP = sns.diverging_palette(240, 10, as_cmap = True)
 
 
+def get_axes():
+    _, ax = plt.subplots(figsize = (12, 6))
+    return ax
+
+def reset_legend(axes):
+    axes.legend(
+        loc='center left',
+        bbox_to_anchor=(1, 0.5),
+        framealpha = 0,
+        prop = myfont,
+    )
+
+    return axes
+
+def reset_ticklabels(axes):
+    labels = []
+    if axes.get_xticklabels():
+        labels += axes.get_xticklabels()
+
+    if axes.get_yticklabels():
+        labels += axes.get_yticklabels()
+
+    for label in labels:
+        label.set_fontproperties(myfont)
+
+    return axes
+
+def fix_axes(axes):
+    functions = [reset_ticklabels, reset_legend]
+
+    for func in functions:
+        func(axes)
+    return axes
+
+
 def badrate_plot(frame, x = None, target = 'target', by = None,
                 freq = None, format = None, return_counts = False, return_frame = False):
     """plot for badrate
@@ -48,27 +83,30 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     table = group[target].agg(['sum', 'count']).reset_index()
     table['badrate'] = table['sum'] / table['count']
 
-    rate_plot = sns.relplot(
+    rate_plot = sns.lineplot(
         x = x,
         y = 'badrate',
         hue = by,
+        legend = 'full',
         markers = True,
-        kind = 'line',
         data = table,
-        aspect = 2,
+        ax = get_axes(),
     )
 
+    rate_plot = fix_axes(rate_plot)
     res = (rate_plot,)
 
     if return_counts:
-        count_plot = sns.catplot(
+        count_plot = sns.barplot(
             x = x,
             y = 'count',
-            kind = 'bar',
             hue = by,
+            legend = 'full',
             data = table,
-            aspect = 2,
+            ax = get_axes(),
         )
+
+        count_plot = fix_axes(count_plot)
         res += (count_plot,)
 
     if return_frame:
