@@ -9,15 +9,16 @@ from .utils import unpack_tuple
 
 sns.set_palette('muted')
 
-FONTS_PATH = os.path.join(os.path.abspath(__file__), '../../fonts/pingfang.ttf')
+CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
+FONTS_PATH = os.path.join(CURRENT_PATH, '..', 'fonts', 'pingfang.ttf')
 myfont = FontProperties(fname = os.path.abspath(FONTS_PATH))
 sns.set(font = myfont.get_family())
 
 HEATMAP_CMAP = sns.diverging_palette(240, 10, as_cmap = True)
 
 
-def get_axes():
-    _, ax = plt.subplots(figsize = (12, 6))
+def get_axes(size = (12, 6)):
+    _, ax = plt.subplots(figsize = size)
     return ax
 
 def reset_legend(axes):
@@ -126,9 +127,7 @@ def corr_plot(frame):
     mask = np.zeros_like(corr, dtype = np.bool)
     mask[np.triu_indices_from(mask)] = True
 
-    _, ax = plt.subplots(figsize = (20, 15))
-
-    sns.heatmap(
+    map_plot = sns.heatmap(
         corr,
         mask = mask,
         cmap = HEATMAP_CMAP,
@@ -140,7 +139,9 @@ def corr_plot(frame):
         linewidths = .5,
         annot = True,
         fmt = '.2f',
-        ax = ax,
+        ax = get_axes(size = (20, 15)),
     )
 
-    return ax
+    map_plot = fix_axes(map_plot)
+
+    return map_plot

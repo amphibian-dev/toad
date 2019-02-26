@@ -4,7 +4,7 @@ import pandas as pd
 
 from toad.selection import drop_empty, drop_corr, drop_iv, drop_vif, select, stepwise
 
-from tests.generate_data import frame
+from generate_data import frame
 
 
 
