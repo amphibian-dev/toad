@@ -40,7 +40,7 @@ def test_quantilemerge():
 
 def test_quantilemerge_not_enough():
     splits = QuantileMerge(B, n_bins = 10)
-    assert len(splits) == 3
+    assert len(splits) == 2
 
 def test_stepmerge():
     splits = StepMerge(feature, n_bins = 10)

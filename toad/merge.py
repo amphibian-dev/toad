@@ -54,12 +54,12 @@ def QuantileMerge(feature, nan = -1, n_bins = None, q = None):
 
     if q is None:
         step = 1 / n_bins
-        q = np.arange(0, 1, step)[1:]
+        q = np.arange(0, 1, step)
 
     feature = fillna(feature, by = nan)
 
     splits = np.quantile(feature, q)
-    return np.unique(splits)
+    return np.unique(splits)[1:]
 
 
 def KMeansMerge(feature, target = None, nan = -1, n_bins = None, random_state = 1):
