@@ -229,7 +229,7 @@ class Combiner(TransformerMixin):
         X = to_ndarray(X)
 
         # if is not continuous
-        if not np.issubdtype(splits.dtype, np.number):
+        if splits.ndim > 1 or not np.issubdtype(splits.dtype, np.number):
             bins = self._raw_to_bin(X, splits)
 
         else:

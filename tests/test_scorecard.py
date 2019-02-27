@@ -104,3 +104,15 @@ def test_export_frame():
     card = ScoreCard(card = card_config)
     frame = card.export(to_frame = True)
     assert frame.loc[6, 'value'] == 'else'
+
+def test_card_without_combiner():
+    transer = WOETransformer()
+    woe_X = transer.fit_transform(df, target)
+
+    model = LogisticRegression()
+    model.fit(woe_X, target)
+
+    card = ScoreCard(transer = transer, model = model)
+    score, sub = card.predict(df, return_sub = True)
+
+    assert score[404] == 460.9789823549386

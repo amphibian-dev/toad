@@ -30,8 +30,7 @@ FACTOR_UNKNOWN = 'UNKNOWN'
 
 
 class ScoreCard(BaseEstimator):
-    def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750,
-                card = None, combiner = None, transer = None, model = None):
+    def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750, **kwargs):
         """
         """
         self.pdo = pdo
@@ -42,15 +41,10 @@ class ScoreCard(BaseEstimator):
         self.factor = pdo / np.log(rate)
         self.offset = base_score - self.factor * np.log(base_odds)
 
-        self.generate_card(
-            card = card,
-            combiner = combiner,
-            transer = transer,
-            model = model,
-        )
+        self.generate_card(**kwargs)
 
 
-    def generate_card(self, card = None, combiner = None, transer = None, model = None):
+    def generate_card(self, card = None, combiner = {}, transer = None, model = None):
         """
 
         Args:
@@ -66,25 +60,97 @@ class ScoreCard(BaseEstimator):
 
             return self.set_card(card)
 
-        if combiner is not None:
-            self.set_combiner(combiner)
+        if transer is None or model is None:
+            raise Exception('transer, model must be all set')
 
-        if transer is not None and model is not None:
-            map = self.generate_map(transer, model)
-            self.set_score(map)
+        rules = self._get_rules(combiner, transer)
+        self.set_combiner(rules)
+
+        map = self.generate_map(transer, model)
+        self.set_score(map)
 
         return self
 
 
-    def fit(self, X, y):
+    def fit(self, X, y, combiner = None, transer = None, model = None):
         """
         Args:
             X (2D array-like)
             Y (array-like)
-
         """
+        if combiner is None:
+            combiner = Combiner().fit(X, y)
+
+        bins_X = combiner.transform(X)
+
+        if transer is None:
+            transer = WOETransformer().fit(bins_X, y)
+
+        woe_X = transer.transform(bins_X)
+
+        if model is None:
+            from sklearn.linear_model import LogisticRegression
+            model = LogisticRegression()
+            model.fit(woe_X, y)
+
+        self.generate_card(
+            combiner = combiner,
+            transer = transer,
+            model = model,
+        )
 
         return self
+
+
+    def _transer_to_rules(self, transer):
+        c = dict()
+        for k in transer.values_:
+            c[k] = np.reshape(transer.values_[k], (-1, 1)).tolist()
+
+        return c
+
+
+    def _merge_combiner(self, cbs):
+        res = dict()
+        for item in cbs[::-1]:
+            if isinstance(item, Combiner):
+                item = item.export()
+
+            res.update(item)
+
+        return res
+
+
+    def _get_rules(self, combiner, transer):
+        transer_rules = self._transer_to_rules(transer)
+
+        if isinstance(combiner, list):
+            combiner = self._merge_combiner(combiner)
+        elif isinstance(combiner, Combiner):
+            combiner = combiner.export()
+
+        if self._check_rules(combiner, transer_rules):
+            transer_rules.update(combiner)
+
+        return transer_rules
+
+
+    def _check_rules(self, combiner, transer):
+        for col in combiner:
+            if col not in transer:
+                continue
+
+            l_c = len(combiner[col])
+            l_t = len(transer[col])
+
+            if isinstance(combiner[col][0], (int, float)):
+                if l_c != l_t - 1:
+                    raise Exception(f'{col} is not matched!')
+            else:
+                if l_c != l_t:
+                    raise Exception(f'{col} is not matched!')
+
+            return True
 
 
     def _parse_range(self, bins):
