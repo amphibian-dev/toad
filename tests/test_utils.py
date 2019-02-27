@@ -94,6 +94,7 @@ def test_generate_target():
     rate = t.sum() / len(t)
     assert rate == 0.3
 
+@pytest.fixture
 def test_generate_str():
     s = generate_str(size = 8)
     assert s == 'EPL5MTQK'
