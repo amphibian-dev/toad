@@ -8,6 +8,7 @@ from toad.utils import (
     diff_time_frame,
     bin_to_number,
     generate_target,
+    generate_str,
 )
 
 np.random.seed(1)
@@ -92,3 +93,7 @@ def test_generate_target():
     t = generate_target(len(feature), rate = 0.3, weight = feature)
     rate = t.sum() / len(t)
     assert rate == 0.3
+
+def test_generate_str():
+    s = generate_str(size = 8)
+    assert s == 'EPL5MTQK'

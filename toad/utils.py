@@ -1,4 +1,5 @@
 import re
+import string
 import numpy as np
 import pandas as pd
 from functools import wraps
@@ -133,6 +134,7 @@ def iter_df(dataframe, feature, target, splits):
         df.loc[df['source'] < v, feature] = 1
         yield df, v
 
+
 def inter_feature(feature, splits):
     splits.sort()
     bin = np.zeros(len(feature))
@@ -170,6 +172,10 @@ def unpack_tuple(x):
         return x[0]
     else:
         return x
+
+ALPHABET = string.ascii_uppercase + string.digits
+def generate_str(size = 6, chars = ALPHABET):
+    return ''.join(np.random.choice(list(chars), size = size))
 
 
 def support_dataframe(require_target = True):
