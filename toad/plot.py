@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
 
-from .utils import unpack_tuple
+from .utils import unpack_tuple, generate_str
 
 sns.set_palette('muted')
 
@@ -71,6 +71,11 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
 
     """
     frame = frame.copy()
+
+    if not isinstance(target, str):
+        temp_name = generate_str()
+        frame[temp_name] = target
+        target = temp_name
 
     grouper = x
     if freq is not None:
