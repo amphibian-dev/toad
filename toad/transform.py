@@ -6,7 +6,7 @@ import pandas as pd
 from functools import wraps
 from sklearn.base import TransformerMixin
 
-from .stats import WOE
+from .stats import WOE, probability
 from .merge import merge
 from .utils import to_ndarray, np_count, bin_by_splits
 
@@ -69,21 +69,12 @@ class WOETransformer(TransformerMixin):
     def _fit_woe(self, X, y):
         X = to_ndarray(X)
 
-        t_counts_0 = np_count(y, 0, default = 1)
-        t_counts_1 = np_count(y, 1, default = 1)
-
         values = np.unique(X)
         l = len(values)
         woe = np.zeros(l)
 
         for i in range(l):
-            sub_target = y[X == values[i]]
-
-            sub_0 = np_count(sub_target, 0, default = 1)
-            sub_1 = np_count(sub_target, 1, default = 1)
-
-            y_prob = sub_1 / t_counts_1
-            n_prob = sub_0 / t_counts_0
+            y_prob, n_prob = probability(y, mask = (X == values[i]))
 
             woe[i] = WOE(y_prob, n_prob)
 

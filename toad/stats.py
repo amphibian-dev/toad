@@ -221,6 +221,26 @@ def entropy_cond(feature, target):
     return best
 
 
+def probability(target, mask = None):
+    """get probability of target by mask
+    """
+    if mask is None:
+        return 1, 1
+
+    counts_0 = np_count(target, 0, default = 1)
+    counts_1 = np_count(target, 1, default = 1)
+
+    sub_target = target[mask]
+
+    sub_0 = np_count(sub_target, 0, default = 1)
+    sub_1 = np_count(sub_target, 1, default = 1)
+
+    y_prob = sub_1 / counts_1
+    n_prob = sub_0 / counts_0
+
+    return y_prob, n_prob
+
+
 def WOE(y_prob, n_prob):
     """get WOE of a group
 
@@ -247,20 +267,11 @@ def _IV(feature, target):
     feature = to_ndarray(feature)
     target = to_ndarray(target)
 
-    t_counts_0 = np_count(target, 0, default = 1)
-    t_counts_1 = np_count(target, 1, default = 1)
-
     value = 0
 
     for v in np.unique(feature):
-        sub_target = target[feature == v]
-
-        sub_0 = np_count(sub_target, 0, default = 1)
-        sub_1 = np_count(sub_target, 1, default = 1)
-
-        y_prob = sub_1 / t_counts_1
-        n_prob = sub_0 / t_counts_0
-
+        y_prob, n_prob = probability(target, mask = (feature == v))
+        
         value += (y_prob - n_prob) * WOE(y_prob, n_prob)
 
     return value
