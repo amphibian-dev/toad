@@ -32,7 +32,7 @@ setup(
         'numpy >= 1.15',
         'pandas',
         'scipy',
-        'sklearn',
+        'scikit-learn',
         'statsmodels',
         'seaborn',
     ],
