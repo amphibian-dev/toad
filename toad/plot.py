@@ -15,6 +15,7 @@ myfont = FontProperties(fname = os.path.abspath(FONTS_PATH))
 sns.set(font = myfont.get_family())
 
 HEATMAP_CMAP = sns.diverging_palette(240, 10, as_cmap = True)
+MAX_STYLE = 6
 
 
 def get_axes(size = (12, 6)):
@@ -89,6 +90,13 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     table = group[target].agg(['sum', 'count']).reset_index()
     table['badrate'] = table['sum'] / table['count']
 
+    markers = True
+    styles_count = tabel[by].nunique()
+
+    if styles_count > MAX_STYLE:
+        markers = ['o'] * styles_count
+
+
     rate_plot = sns.lineplot(
         x = x,
         y = 'badrate',
@@ -96,7 +104,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
         style = by,
         data = table,
         legend = 'full',
-        markers = True,
+        markers = markers,
         dashes = False,
         ax = get_axes(),
     )
