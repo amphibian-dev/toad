@@ -72,6 +72,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
 
     """
     frame = frame.copy()
+    markers = by
 
     if not isinstance(target, str):
         temp_name = generate_str()
@@ -86,15 +87,12 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     if by is not None:
         grouper = [by, grouper]
 
+        if frame[by].nunique() > MAX_STYLE:
+            markers = ['o'] * styles_count
+
     group = frame.groupby(grouper)
     table = group[target].agg(['sum', 'count']).reset_index()
     table['badrate'] = table['sum'] / table['count']
-
-    markers = True
-    styles_count = table[by].nunique()
-
-    if styles_count > MAX_STYLE:
-        markers = ['o'] * styles_count
 
 
     rate_plot = sns.lineplot(
