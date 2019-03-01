@@ -87,7 +87,8 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     if by is not None:
         grouper = [by, grouper]
 
-        if frame[by].nunique() > MAX_STYLE:
+        styles_count = frame[by].nunique()
+        if styles_count > MAX_STYLE:
             markers = ['o'] * styles_count
 
     group = frame.groupby(grouper)
