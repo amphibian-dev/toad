@@ -10,7 +10,7 @@ from .utils import unpack_tuple, generate_str
 sns.set_palette('muted')
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
-FONTS_PATH = os.path.join(CURRENT_PATH, '..', 'fonts', 'pingfang.ttf')
+FONTS_PATH = os.path.join(CURRENT_PATH, 'fonts', 'pingfang.ttf')
 myfont = FontProperties(fname = os.path.abspath(FONTS_PATH))
 sns.set(font = myfont.get_family())
 
