@@ -91,7 +91,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     table['badrate'] = table['sum'] / table['count']
 
     markers = True
-    styles_count = tabel[by].nunique()
+    styles_count = table[by].nunique()
 
     if styles_count > MAX_STYLE:
         markers = ['o'] * styles_count
