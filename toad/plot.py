@@ -72,7 +72,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
 
     """
     frame = frame.copy()
-    markers = by
+    markers = True
 
     if not isinstance(target, str):
         temp_name = generate_str()
