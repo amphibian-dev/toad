@@ -54,14 +54,15 @@ card = ScoreCard(
     model = model,
 )
 
-TEST_SCORE = 453.58201689869964
+FUZZ_THRESHOLD = 1e-4
+TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
 
 
 
 def test_proba_to_score():
     proba = model.predict_proba(woe)[:,1]
     score = card.proba_to_score(proba)
-    assert score[404] == 453.5820168986997
+    assert score[404] == TEST_SCORE
 
 def test_predict():
     score = card.predict(df)
@@ -82,7 +83,7 @@ def test_bin_to_score():
 
 def test_export_map():
     card_map = card.export()
-    assert card_map['B']['D'] == 159.2498541513114
+    assert card_map['B']['D'] == 159.25
 
 def test_card_map():
     config = card.export()

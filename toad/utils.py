@@ -1,4 +1,5 @@
 import re
+import json
 import string
 import numpy as np
 import pandas as pd
@@ -207,6 +208,33 @@ def support_dataframe(require_target = True):
         return func
 
     return decorator
+
+
+def save_json(contents, file, indent = 4):
+    """save json file
+
+    Args:
+        contents (dict): contents to save
+        file (str|IOBase): file to save
+    """
+    if isinstance(file, str):
+        file = open(file, 'w')
+
+    with file as f:
+        json.dump(contents, f, ensure_ascii = False, indent = indent)
+
+
+def read_json(file):
+    """read json file
+    """
+    if isinstance(file, str):
+        file = open(file)
+
+    with file as f:
+        res = json.load(f)
+
+    return res
+
 
 
 

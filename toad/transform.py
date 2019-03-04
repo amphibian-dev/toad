@@ -1,5 +1,4 @@
 import math
-import json
 import copy
 import numpy as np
 import pandas as pd
@@ -8,7 +7,7 @@ from sklearn.base import TransformerMixin
 
 from .stats import WOE, probability
 from .merge import merge
-from .utils import to_ndarray, np_count, bin_by_splits
+from .utils import to_ndarray, np_count, bin_by_splits, save_json
 
 EMPTY_BIN = -1
 ELSE_GROUP = 'else'
@@ -310,7 +309,7 @@ class Combiner(TransformerMixin):
 
         Args:
             format (bool): if True, bins will be replace with string label for values
-            to_json (IOBase): io to write json file
+            to_json (str|IOBase): io to write json file
 
         Returns:
             dict
@@ -332,8 +331,8 @@ class Combiner(TransformerMixin):
         if to_json is None:
             return bins
 
-        with to_json as f:
-            json.dump(bins, f, ensure_ascii = False)
+        save_json(bins, to_json)
+
 
     def _covert_splits(self, value, splits):
         """covert combine rules to array

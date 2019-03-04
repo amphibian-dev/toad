@@ -1,13 +1,11 @@
 import re
-import io
 import math
-import json
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
 
 from .transform import WOETransformer, Combiner, ELSE_GROUP, EMPTY_BIN
-from .utils import to_ndarray, bin_by_splits
+from .utils import to_ndarray, bin_by_splits, save_json, read_json
 
 
 RE_NUM = '-?\d+(.\d+)?'
@@ -48,15 +46,14 @@ class ScoreCard(BaseEstimator):
         """
 
         Args:
-            card (dict|IOBase): dict of card or io to read json
+            card (dict|str|IOBase): dict of card or io to read json
             combiner (toad.Combiner)
             transer (toad.WOETransformer)
             model (LogisticRegression)
         """
         if card is not None:
-            if isinstance(card, io.IOBase):
-                with card as f:
-                    card = json.load(f)
+            if not isinstance(card, dict):
+                card = read_json(card)
 
             return self.set_card(card)
 
@@ -328,12 +325,12 @@ class ScoreCard(BaseEstimator):
         return s_map
 
 
-    def export(self, to_frame = False, to_json = None, to_csv = None):
+    def export(self, to_frame = False, to_json = None, to_csv = None, decimal = 2):
         """generate a scorecard object
 
         Args:
             to_frame (bool): return DataFrame of card
-            to_json (IOBase): io to write json file
+            to_json (str|IOBase): io to write json file
             to_csv (filepath|IOBase): file to write csv
 
         Returns:
@@ -347,11 +344,10 @@ class ScoreCard(BaseEstimator):
             card[col] = dict()
 
             for i in range(len(bins)):
-                card[col][bins[i]] = self.score_map[col][i]
+                card[col][bins[i]] = round(self.score_map[col][i], decimal)
 
         if to_json is not None:
-            with to_json as f:
-                return json.dump(card, f, ensure_ascii = False)
+            save_json(card, to_json)
 
         if to_frame or to_csv is not None:
             rows = list()
