@@ -110,7 +110,10 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
                 if p_values[max_name] > p_value_enter:
                     selected.remove(max_name)
 
-    return frame[selected + [target]]
+    if isinstance(target, str):
+        selected += [target]
+
+    return frame[selected]
 
 
 def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
