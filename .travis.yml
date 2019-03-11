@@ -6,7 +6,7 @@ python:
 install:
     - sudo apt-get install -y graphviz
     - pip install pytest Cython
-    - python setup.py -e .
+    - pip install -e .
 script:
     - python -m pytest ./tests
 deploy:
