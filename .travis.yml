@@ -5,8 +5,8 @@ python:
     - "3.6"
 install:
     - sudo apt-get install -y graphviz
-    - python setup.py -e .
     - pip install pytest Cython
+    - python setup.py -e .
 script:
     - python -m pytest ./tests
 deploy:
