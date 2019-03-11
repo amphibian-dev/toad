@@ -5,7 +5,7 @@ python:
     - "3.6"
 install:
     - sudo apt-get install -y graphviz
-    - pip install tox-travis pytest
+    - pip install tox-travis pytest Cython
 script:
     - tox
 deploy:
