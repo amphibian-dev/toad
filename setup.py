@@ -36,6 +36,7 @@ setup(
     python_requires = '>=3.5',
     setup_requires = [
         'setuptools',
+        'Cython',
     ],
     install_requires = [
         'numpy >= 1.15',
