@@ -1,6 +1,8 @@
 import os
+import numpy as np
 from setuptools import setup, find_packages, Extension
 from Cython.Build import cythonize
+
 
 NAME = 'toad'
 
@@ -30,6 +32,7 @@ setup(
     author = 'ESC Team',
     author_email = 'secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
+    include_dirs = [np.get_include()],
     ext_modules = cythonize(extensions),
     include_package_data = True,
     python_requires = '>=3.5',
