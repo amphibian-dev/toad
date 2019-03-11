@@ -1,6 +1,7 @@
 import os
 from setuptools import setup, find_packages, Extension
-from distutils.util import convert_path
+from Cython.Build import cythonize
+import numpy as np
 
 NAME = 'toad'
 
@@ -14,6 +15,12 @@ def get_version():
         exec(f.read(), ns)
     return ns['__version__']
 
+
+extensions = [
+    Extension('toad.c_utils', sources = ['toad/c_utils.pyx']),
+    Extension('toad.merge', sources = ['toad/merge.pyx']),
+]
+
 setup(
     name = NAME,
     version = get_version(),
@@ -24,6 +31,7 @@ setup(
     author = 'ESC Team',
     author_email = 'secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
+    ext_modules = cythonize(extensions),
     include_package_data = True,
     python_requires = '>=3.5',
     setup_requires = [

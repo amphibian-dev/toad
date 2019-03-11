@@ -2,6 +2,10 @@ import pytest
 import numpy as np
 import pandas as pd
 
+import pyximport
+
+pyximport.install(setup_args={"include_dirs": np.get_include()})
+
 from toad.transform import WOETransformer, Combiner
 
 np.random.seed(1)

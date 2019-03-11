@@ -1,11 +1,18 @@
+# cython: infer_types = True
+
 import numpy as np
+cimport numpy as np
+cimport cython
+
 import pandas as pd
-
-
 from sklearn.tree import DecisionTreeClassifier, _tree
 from sklearn.cluster import KMeans
-
 from .utils import fillna, bin_by_splits, to_ndarray, support_dataframe, clip
+
+from cython.parallel import prange
+from .c_utils cimport c_min, c_sum, c_sum_axis_0, c_sum_axis_1
+
+
 
 DEFAULT_BINS = 20
 
@@ -49,7 +56,7 @@ def QuantileMerge(feature, nan = -1, n_bins = None, q = None):
     Returns:
         array: split points of feature
     """
-    if n_bins is None and quantile is None:
+    if n_bins is None and q is None:
         n_bins = DEFAULT_BINS
 
     if q is None:
@@ -127,7 +134,10 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
 
 
 
-def ChiMerge(feature, target, n_bins = None, min_samples = None,
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef ChiMerge(feature, target, n_bins = None, min_samples = None,
             min_threshold = None, nan = -1, balance = True):
     """Chi-Merge
 
@@ -152,18 +162,27 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None,
     feature = fillna(feature, by = nan)
     target = to_ndarray(target)
 
+
     target_unique = np.unique(target)
     feature_unique = np.unique(feature)
     len_f = len(feature_unique)
     len_t = len(target_unique)
 
-    grouped = np.zeros((len_f, len_t))
+    cdef double [:,:] grouped = np.zeros((len_f, len_t), dtype=np.float)
 
-    for i in range(len_f):
-        tmp = target[feature == feature_unique[i]]
-        for j in range(len_t):
-            grouped[i,j] = (tmp == target_unique[j]).sum()
+    for r in range(len_f):
+        tmp = target[feature == feature_unique[r]]
+        for c in range(len_t):
+            grouped[r, c] = (tmp == target_unique[c]).sum()
 
+
+    cdef double [:,:] couple
+    cdef double [:] cols, rows, chi_list
+    # cdef long [:] min_ix, drop_ix
+    # cdef long[:] chi_ix
+    cdef double chi, chi_min, total, e
+    cdef int l, retain_ix, ix
+    cdef Py_ssize_t i, j, k, p
 
     while(True):
         # break loop when reach n_bins
@@ -171,20 +190,20 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None,
             break
 
         # break loop if min samples of groups is greater than threshold
-        if min_samples and np.sum(grouped, axis = 1).min() > min_samples:
+        if min_samples and c_min(c_sum_axis_1(grouped)) > min_samples:
             break
 
         # Calc chi square for each group
         l = len(grouped) - 1
-        chi_list = np.zeros(l)
+        chi_list = np.zeros(l, dtype=np.float)
         chi_min = np.inf
-        chi_ix = []
+        # chi_ix = []
         for i in range(l):
             chi = 0
             couple = grouped[i:i+2,:]
-            total = np.sum(couple)
-            cols = np.sum(couple, axis = 0)
-            rows = np.sum(couple, axis = 1)
+            total = c_sum(couple)
+            cols = c_sum_axis_0(couple)
+            rows = c_sum_axis_1(couple)
 
             for j in range(couple.shape[0]):
                 for k in range(couple.shape[1]):
@@ -206,12 +225,19 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None,
                 chi_min = chi
                 chi_ix = [i]
 
+            # if chi < chi_min:
+            #     chi_min = chi
+
+
+
+
         # break loop when the minimun chi greater the threshold
         if min_threshold and chi_min > min_threshold:
             break
 
         # get indexes of the groups who has the minimun chi
         min_ix = np.array(chi_ix)
+        # min_ix = np.where(chi_list == chi_min)[0]
 
         # get the indexes witch needs to drop
         drop_ix = min_ix + 1
@@ -226,7 +252,9 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None,
                 retain_ix = ix
 
             # combine all contiguous indexes into one group
-            grouped[retain_ix] = grouped[retain_ix] + grouped[ix + 1]
+            for p in range(grouped.shape[1]):
+                grouped[retain_ix, p] = grouped[retain_ix, p] + grouped[ix + 1, p]
+
             last_ix = ix
 
 
@@ -236,6 +264,7 @@ def ChiMerge(feature, target, n_bins = None, min_samples = None,
 
 
     return feature_unique[1:]
+
 
 @support_dataframe(require_target = False)
 def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs):
@@ -264,7 +293,7 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
     elif method is 'step':
         splits = StepMerge(feature, **kwargs)
     elif method is 'kmeans':
-        splits = KMeaMerge(feature, target = target, **kwargs)
+        splits = KMeansMerge(feature, target = target, **kwargs)
     else:
         splits = np.empty(shape = (0,))
 
