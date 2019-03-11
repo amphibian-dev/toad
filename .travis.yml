@@ -2,12 +2,12 @@ dist: trusty
 sudo: false
 language: python
 python:
-    - "3.6"
+    - "3.7"
 install:
     - sudo apt-get install -y graphviz
-    - pip install tox-travis pytest Cython
+    - pip install pytest Cython
 script:
-    - tox
+    - python -m pytest ./tests
 deploy:
   provider: pypi
   skip_cleanup: true
