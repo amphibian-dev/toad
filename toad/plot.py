@@ -55,7 +55,8 @@ def fix_axes(axes):
 
 
 def badrate_plot(frame, x = None, target = 'target', by = None,
-                freq = None, format = None, return_counts = False, return_frame = False):
+                freq = None, format = None, return_counts = False,
+                return_proportion = False, return_frame = False):
     """plot for badrate
 
     Args:
@@ -123,6 +124,25 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
 
         count_plot = fix_axes(count_plot)
         res += (count_plot,)
+
+
+    if return_proportion:
+        table['prop'] = 0
+        for v in table[x].unique():
+            mask = (table[x] == v)
+            table.loc[mask, 'prop'] = table[mask]['count'] / table[mask]['count'].sum()
+
+        prop_plot = sns.barplot(
+            x = x,
+            y = 'prop',
+            hue = by,
+            data = table,
+            ax = get_axes(),
+        )
+
+        prop_plot = fix_axes(prop_plot)
+        res += (prop_plot,)
+
 
     if return_frame:
         res += (table,)
