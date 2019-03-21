@@ -61,9 +61,12 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
     bad_total = df['bad'].sum()
     good_total = df['good'].sum()
 
+    df['bucket'] = 0
     if bucket is False:
         df['bucket'] = score
-    else:
+    elif isinstance(bucket, (list, np.ndarray, pd.Series)):
+        df['bucket'] = bucket
+    elif isinstance(bucket, int):
         df['bucket'] = merge(score, n_bins = bucket, method = method, **kwargs)
 
     grouped = df.groupby('bucket', as_index = False)
@@ -271,7 +274,7 @@ def _IV(feature, target):
 
     for v in np.unique(feature):
         y_prob, n_prob = probability(target, mask = (feature == v))
-        
+
         value += (y_prob - n_prob) * WOE(y_prob, n_prob)
 
     return value
