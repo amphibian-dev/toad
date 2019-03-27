@@ -1,5 +1,4 @@
 import re
-import math
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
@@ -420,8 +419,8 @@ class ScoreCard(BaseEstimator):
         for i in range(len(cols)):
             l = lens[i]
             # generate indexes of value in column
-            ix = list(np.arange(l)) * math.ceil(size / l)
-            stacks[cols[i]] = values[i][ix[:size]]
+            ix = np.arange(size) % l
+            stacks[cols[i]] = values[i][ix]
 
         return pd.DataFrame(stacks)
 
