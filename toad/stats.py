@@ -39,13 +39,14 @@ def KS(score, target):
     return max(abs(df['ks']))
 
 
-def KS_bucket(score, target, bucket = 10):
+def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
     """calculate ks value by bucket
 
     Args:
         score (array-like): list of score or probability that the model predict
         target (array-like): list of real target
         bucket (int): n groups that will bin into
+        method (str): method to bin score. `quantile` (default), `step`
 
     Returns:
         DataFrame
@@ -56,7 +57,18 @@ def KS_bucket(score, target, bucket = 10):
     })
 
     df['good'] = 1 - df['bad']
-    df['bucket'] = pd.qcut(df['score'], bucket, duplicates = 'drop')
+
+    bad_total = df['bad'].sum()
+    good_total = df['good'].sum()
+
+    df['bucket'] = 0
+    if bucket is False:
+        df['bucket'] = score
+    elif isinstance(bucket, (list, np.ndarray, pd.Series)):
+        df['bucket'] = bucket
+    elif isinstance(bucket, int):
+        df['bucket'] = merge(score, n_bins = bucket, method = method, **kwargs)
+
     grouped = df.groupby('bucket', as_index = False)
 
     agg1 = pd.DataFrame()
@@ -67,9 +79,23 @@ def KS_bucket(score, target, bucket = 10):
     agg1['total'] = agg1['bads'] + agg1['goods']
 
     agg2 = (agg1.sort_values(by = 'min')).reset_index(drop = True)
-    agg2['bad_rate'] = (agg2['bads'] / agg2['total']).apply('{0:.2%}'.format)
 
-    agg2['ks'] = np.round((agg2['bads'] / agg2['bads'].sum()).cumsum() - (agg2['goods'] / agg2['goods'].sum()).cumsum(), 4) * 100
+    agg2['bad_rate'] = agg2['bads'] / agg2['total']
+    agg2['good_rate'] = agg2['goods'] / agg2['total']
+
+    agg2['odds'] = agg2['bads'] / agg2['goods']
+
+    agg2['bad_prop'] = agg2['bads'] / bad_total
+    agg2['good_prop'] = agg2['goods'] / good_total
+
+    agg2['cum_bads'] = agg2['bads'].cumsum()
+    agg2['cum_goods'] = agg2['goods'].cumsum()
+
+    agg2['cum_bads_prop'] = agg2['cum_bads'] / bad_total
+    agg2['cum_goods_prop'] = agg2['cum_goods'] / good_total
+
+
+    agg2['ks'] = agg2['cum_bads_prop'] - agg2['cum_goods_prop']
 
     return agg2
 
@@ -198,6 +224,26 @@ def entropy_cond(feature, target):
     return best
 
 
+def probability(target, mask = None):
+    """get probability of target by mask
+    """
+    if mask is None:
+        return 1, 1
+
+    counts_0 = np_count(target, 0, default = 1)
+    counts_1 = np_count(target, 1, default = 1)
+
+    sub_target = target[mask]
+
+    sub_0 = np_count(sub_target, 0, default = 1)
+    sub_1 = np_count(sub_target, 1, default = 1)
+
+    y_prob = sub_1 / counts_1
+    n_prob = sub_0 / counts_0
+
+    return y_prob, n_prob
+
+
 def WOE(y_prob, n_prob):
     """get WOE of a group
 
@@ -224,19 +270,10 @@ def _IV(feature, target):
     feature = to_ndarray(feature)
     target = to_ndarray(target)
 
-    t_counts_0 = np_count(target, 0, default = 1)
-    t_counts_1 = np_count(target, 1, default = 1)
-
     value = 0
 
     for v in np.unique(feature):
-        sub_target = target[feature == v]
-
-        sub_0 = np_count(sub_target, 0, default = 1)
-        sub_1 = np_count(sub_target, 1, default = 1)
-
-        y_prob = sub_1 / t_counts_1
-        n_prob = sub_0 / t_counts_0
+        y_prob, n_prob = probability(target, mask = (feature == v))
 
         value += (y_prob - n_prob) * WOE(y_prob, n_prob)
 
@@ -261,6 +298,17 @@ def IV(feature, target, **kwargs):
 
     return _IV(feature, target)
 
+
+def badrate(target):
+    """calculate badrate
+
+    Args:
+        target (array-like): target array which `1` is bad
+
+    Returns:
+        float
+    """
+    return np.sum(target) / len(target)
 
 
 def F1(score, target):
@@ -336,6 +384,9 @@ def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs)
     Returns:
         Series: a list of quality with the feature's name
     """
+    feature = to_ndarray(feature)
+    target = to_ndarray(target)
+
     if not np.issubdtype(feature.dtype, np.number):
         feature = feature.astype(str)
 
@@ -372,11 +423,11 @@ def quality(dataframe, target = 'target', iv_only = False, **kwargs):
     res = []
     pool = Pool(cpu_count())
 
-    for column in dataframe:
-        if column == target:
+    for name, series in dataframe.iteritems():
+        if name == target:
             continue
 
-        r = pool.apply_async(column_quality, args = (dataframe[column].values, dataframe[target].values), kwds = {'name': column, 'iv_only': iv_only, **kwargs})
+        r = pool.apply_async(column_quality, args = (series, dataframe[target]), kwds = {'name': name, 'iv_only': iv_only, **kwargs})
         res.append(r)
 
     pool.close()

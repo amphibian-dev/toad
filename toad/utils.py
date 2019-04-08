@@ -1,12 +1,24 @@
 import re
+import json
+import string
 import numpy as np
 import pandas as pd
+from functools import wraps
 
 from multiprocessing import Pool, current_process, cpu_count
 
 
 CONTINUOUS_NUM = 20
 FEATURE_THRESHOLD = 1e-7
+
+NAN_LIST = [
+    'nan',
+    'Nan',
+    'null',
+    'None',
+    None,
+    np.nan,
+]
 
 
 class Parallel:
@@ -71,7 +83,10 @@ def fillna(feature, by = -1):
     # copy array
     copied = np.copy(feature)
 
-    copied[np.isnan(copied)] = by
+    mask = pd.isna(copied)
+
+    copied[mask] = by
+
     return copied
 
 def bin_by_splits(feature, splits):
@@ -120,6 +135,7 @@ def iter_df(dataframe, feature, target, splits):
         df.loc[df['source'] < v, feature] = 1
         yield df, v
 
+
 def inter_feature(feature, splits):
     splits.sort()
     bin = np.zeros(len(feature))
@@ -158,12 +174,16 @@ def unpack_tuple(x):
     else:
         return x
 
+ALPHABET = string.ascii_uppercase + string.digits
+def generate_str(size = 6, chars = ALPHABET):
+    return ''.join(np.random.choice(list(chars), size = size))
+
 
 def support_dataframe(require_target = True):
     """decorator for supporting dataframe
     """
     def decorator(fn):
-
+        @wraps(fn)
         def func(frame, *args, **kwargs):
             if not isinstance(frame, pd.DataFrame):
                 return fn(frame, *args, **kwargs)
@@ -188,6 +208,33 @@ def support_dataframe(require_target = True):
         return func
 
     return decorator
+
+
+def save_json(contents, file, indent = 4):
+    """save json file
+
+    Args:
+        contents (dict): contents to save
+        file (str|IOBase): file to save
+    """
+    if isinstance(file, str):
+        file = open(file, 'w')
+
+    with file as f:
+        json.dump(contents, f, ensure_ascii = False, indent = indent)
+
+
+def read_json(file):
+    """read json file
+    """
+    if isinstance(file, str):
+        file = open(file)
+
+    with file as f:
+        res = json.load(f)
+
+    return res
+
 
 
 
@@ -221,6 +268,9 @@ def clip(series, value = None, std = None, quantile = None):
 
         min = None if min is None else np.quantile(series, min)
         max = None if max is None else np.quantile(series, max)
+
+    else:
+        return series
 
     return np.clip(series, min, max)
 

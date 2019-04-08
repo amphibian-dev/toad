@@ -1,6 +1,7 @@
 include README.md
 include setup.py
 include toad/*.pyx
+include toad/fonts/*
 
 include CONTRIBUTORS
 include LICENSE

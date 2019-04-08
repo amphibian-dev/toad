@@ -5,9 +5,10 @@ python:
     - "3.6"
 install:
     - sudo apt-get install -y graphviz
-    - pip install tox-travis
+    - pip install numpy pytest Cython
+    - pip install -e .
 script:
-    - tox
+    - python -m pytest ./tests
 deploy:
   provider: pypi
   skip_cleanup: true

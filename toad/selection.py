@@ -110,7 +110,10 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
                 if p_values[max_name] > p_value_enter:
                     selected.remove(max_name)
 
-    return frame[selected + [target]]
+    if isinstance(target, str):
+        selected += [target]
+
+    return frame[selected]
 
 
 def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
@@ -185,7 +188,7 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
 
     f, t = split_target(df, target)
 
-    corr = f.corr()
+    corr = f.corr().abs()
 
     drops = []
 
@@ -315,7 +318,7 @@ def drop_vif(frame, threshold = 6, return_drop = False, exclude = None):
         array: list of feature names that has been dropped
     """
     from statsmodels.stats.outliers_influence import variance_inflation_factor
-    
+
     df = frame.copy()
 
     if exclude is not None:

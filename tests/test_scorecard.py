@@ -1,4 +1,4 @@
-import unittest
+import pytest
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
@@ -16,6 +16,8 @@ str_feat = ab[np.random.choice(7, 500)]
 df = pd.DataFrame({
     'A': feature,
     'B': str_feat,
+    'C': ab[np.random.choice(2, 500)],
+    'D': np.ones(500),
 })
 
 card_config = {
@@ -29,6 +31,10 @@ card_config = {
         ','.join(list('ABCD')): 200,
         ','.join(list('EF')): 400,
         'else': 500,
+    },
+    'C': {
+        'A': 200,
+        'B': 100,
     },
 }
 
@@ -48,44 +54,66 @@ card = ScoreCard(
     model = model,
 )
 
+FUZZ_THRESHOLD = 1e-4
+TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
 
-class TestScoreCard(unittest.TestCase):
-    def setUp(self):
-        pass
 
-    def test_proba_to_score(self):
-        proba = model.predict_proba(woe)[:,1]
-        score = card.proba_to_score(proba)
-        self.assertEqual(score[404], 456.66402014254516)
 
-    def test_predict(self):
-        score = card.predict(df)
-        self.assertEqual(score[404], 456.66402014254516)
+def test_proba_to_score():
+    proba = model.predict_proba(woe)[:,1]
+    score = card.proba_to_score(proba)
+    assert score[404] == TEST_SCORE
 
-    def test_predict_sub_score(self):
-        score, sub = card.predict(df, return_sub = True)
-        self.assertEqual(sub.iloc[250, 1], 235.0048506817883)
+def test_predict():
+    score = card.predict(df)
+    assert score[404] == TEST_SCORE
 
-    def test_woe_to_score(self):
-        score = card.woe_to_score(woe)
-        score = np.sum(score, axis = 1)
-        self.assertEqual(score[404], 456.66402014254516)
+def test_predict_sub_score():
+    score, sub = card.predict(df, return_sub = True)
+    assert sub.iloc[250, 1] == 162.08878336572937
 
-    def test_bin_to_score(self):
-        score = card.bin_to_score(bins)
-        self.assertEqual(score[404], 456.66402014254516)
+def test_woe_to_score():
+    score = card.woe_to_score(woe)
+    score = np.sum(score, axis = 1)
+    assert score[404] == TEST_SCORE
 
-    def test_export_map(self):
-        card_map = card.export_map()
-        self.assertEqual(card_map['B']['D'], 232.18437983377214)
+def test_bin_to_score():
+    score = card.bin_to_score(bins)
+    assert score[404] == TEST_SCORE
 
-    def test_card_map(self):
-        config = card.export_map()
-        card_from_map = ScoreCard(card = config)
-        score = card_from_map.predict(df)
-        self.assertEqual(score[404], 456.66402014254516)
+def test_export_map():
+    card_map = card.export()
+    assert card_map['B']['D'] == 159.25
 
-    def test_card_map_with_else(self):
-        card_from_map = ScoreCard(card = card_config)
-        score = card_from_map.predict(df)
-        self.assertEqual(score[80], 800)
+def test_card_map():
+    config = card.export()
+    card_from_map = ScoreCard(card = config)
+    score = card_from_map.predict(df)
+    assert score[404] == TEST_SCORE
+
+def test_card_map_with_else():
+    card_from_map = ScoreCard(card = card_config)
+    score = card_from_map.predict(df)
+    assert score[80] == 1000
+
+def test_generate_testing_frame():
+    card = ScoreCard(card = card_config)
+    frame = card.testing_frame()
+    assert frame.loc[4, 'B'] == 'E'
+
+def test_export_frame():
+    card = ScoreCard(card = card_config)
+    frame = card.export(to_frame = True)
+    assert frame.loc[6, 'value'] == 'else'
+
+def test_card_without_combiner():
+    transer = WOETransformer()
+    woe_X = transer.fit_transform(df, target)
+
+    model = LogisticRegression()
+    model.fit(woe_X, target)
+
+    card = ScoreCard(transer = transer, model = model)
+    score, sub = card.predict(df, return_sub = True)
+
+    assert score[404] == 460.9789823549386

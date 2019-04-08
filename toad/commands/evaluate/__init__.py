@@ -29,7 +29,7 @@ def func(args):
         'overdue_days': args.overdue,
     }
 
-    evaluate(test_date, **arguments)
+    evaluate(test_data, **arguments)
 
 
 ARGS = {
