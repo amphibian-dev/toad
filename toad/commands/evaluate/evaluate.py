@@ -16,10 +16,10 @@ def rename_columns(index_list, bins, is_float=False):
     list = [int(x) for x in index_list]
     bins_list = []
     left = '[0,'
-    if -1 in list:
-        list.remove(-1)
-        bins_list.append('[-1,-1]')
-        left = '(-1,'
+    if -9999999 in list:
+        list.remove(-9999999)
+        bins_list.append('[-9999999,-9999999]')
+        left = '(-9999999,'
     for i in range(len(list)):
         if i == 0:
             bins_list.append(left + str(float('%.2f' % bins[list[0]]) if is_float else int(bins[list[0]])) + ')')
@@ -123,8 +123,8 @@ def select_iv(quality,num,iv_threshold_value):
 # 合并长尾数据并进行等步长分组
 def merger_data(data, var, unique_num,is_merge_high=True):
     if is_numeric_dtype(data[var]) and data[var].nunique() > unique_num:
-        data_miss = data[data[var] == -1]
-        data_nomiss = data[data[var] != -1]
+        data_miss = data[data[var] == -9999999]
+        data_nomiss = data[data[var] != -9999999]
         merge_high_data = data_nomiss[var]
         if is_merge_high:
             merge_high_data = toad.utils.clip(data_nomiss[var], quantile=(None, .99))
