@@ -18,8 +18,8 @@ def get_version():
 
 
 extensions = [
-    Extension('toad.c_utils', sources = ['toad/c_utils.pyx']),
-    Extension('toad.merge', sources = ['toad/merge.pyx']),
+    Extension('toad.c_utils', sources = ['toad/c_utils.pyx'], include_dirs = [np.get_include()]),
+    Extension('toad.merge', sources = ['toad/merge.pyx'], include_dirs = [np.get_include()]),
 ]
 
 setup(
