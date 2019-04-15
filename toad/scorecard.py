@@ -18,7 +18,6 @@ RE_RANGE = '\[{begin}\s*{sep}\s*{end}\)'.format(
 )
 
 
-BORDER_THRESHOLD = 1e-6
 NUMBER_EMPTY = -9999999
 NUMBER_INF = 1e10
 FACTOR_EMPTY = 'MISSING'
@@ -368,11 +367,12 @@ class ScoreCard(BaseEstimator):
 
 
 
-    def _generate_testing_frame(self, size = 'max', mishap = True):
+    def _generate_testing_frame(self, size = 'max', mishap = True, gap = 1e-2):
         """
         Args:
             size (int|str): size of frame. 'max' (default), 'lcm'
             mishap (bool): is need to add mishap patch to test frame
+            gap (float): size of gap for testing border
 
         Returns:
             DataFrame
@@ -387,7 +387,7 @@ class ScoreCard(BaseEstimator):
         for k, v in c_map.items():
             v = np.array(v)
             if np.issubdtype(v.dtype, np.number):
-                items = np.concatenate((v, v - BORDER_THRESHOLD))
+                items = np.concatenate((v, v - gap))
                 patch = number_patch
             else:
                 # remove else group
