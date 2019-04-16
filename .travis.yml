@@ -9,6 +9,9 @@ install:
     - pip install -e .
 script:
     - python -m pytest ./tests
+
+before_deploy:
+    - make build
 deploy:
   provider: pypi
   skip_cleanup: true
