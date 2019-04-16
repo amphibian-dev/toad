@@ -3,9 +3,9 @@ sudo: false
 language: python
 matrix:
   include:
-    - name: "Python 3.7.1 on Linux"
+    - name: "Python 3.6 on Linux"
       os: linux
-      python: 3.7
+      python: 3.6
       before_install:
           - sudo apt-get install -y graphviz
     - name: "Python 3.7.2 on macOS"
@@ -18,7 +18,8 @@ matrix:
       os: windows
       language: shell
       before_install:
-          - choco install python graphviz
+          - choco install python
+          - choco install graphviz
       env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
 install:
     - pip3 install numpy pytest Cython
