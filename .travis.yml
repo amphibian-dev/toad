@@ -24,7 +24,7 @@ install:
     - pip3 install numpy pytest Cython
     - pip3 install -e .
 script:
-    - python -m pytest ./tests
+    - python3 -m pytest ./tests
 
 before_deploy:
     - make build
