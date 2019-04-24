@@ -304,6 +304,29 @@ class Combiner(TransformerMixin):
 
         return self
 
+
+    @property
+    def dtypes(self):
+        """get the dtypes which is combiner used
+
+        Returns:
+            (str|dict)
+        """
+        if not isinstance(self.splits_, dict):
+            return self._get_dtype(self.splits_)
+
+        t = {}
+        for n, v in self.splits_.items():
+            t[n] = self._get_dtype(v)
+        return t
+
+    def _get_dtype(self, split):
+        if np.issubdtype(split.dtype, np.number):
+            return 'numeric'
+
+        return 'object'
+
+
     def export(self, format = False, to_json = None):
         """export combine rules for score card
 
