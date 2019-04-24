@@ -172,19 +172,15 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
         DataFrame: selected dataframe
         array: list of feature names that has been dropped
     """
-    if not isinstance(by, str):
-        by = to_ndarray(by)
+    if not isinstance(by, (str, pd.Series)):
+        by = pd.Series(by, index = frame.columns)
 
     df = frame.copy()
 
     if exclude is not None:
         exclude = exclude if isinstance(exclude, (list, np.ndarray)) else [exclude]
-        drop_ix = np.argwhere(df.columns.isin(exclude)).flatten()
         df = df.drop(columns = exclude)
 
-        # drop exclude weight
-        if not isinstance(by, str):
-            by = np.delete(by, drop_ix)
 
     f, t = split_target(df, target)
 
@@ -206,8 +202,8 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
         weights = np.zeros(len(corr.index))
 
 
-        if isinstance(by, np.ndarray):
-            weights = by
+        if isinstance(by, pd.Series):
+            weights = by[corr.index].values
         elif by.upper() == 'IV':
             for ix in uni:
                 weights[ix] = IV(df[corr.index[ix]], target = t)
@@ -380,9 +376,7 @@ def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7,
         weights = 'IV'
 
         if iv is not False:
-            ix = frame.columns.tolist()
-            ix.remove(target)
-            weights = iv_list.reindex(ix)
+            weights = iv_list
 
         frame, corr_drop = drop_corr(frame, target = target, threshold = corr, by = weights, return_drop = True, exclude = exclude)
 

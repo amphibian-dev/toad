@@ -56,6 +56,7 @@ class ScoreCard(BaseEstimator):
             return self.set_card(card)
 
         if transer is None or model is None:
+            return
             raise Exception('transer, model must be all set')
 
         rules = self._get_rules(combiner, transer)
@@ -73,8 +74,11 @@ class ScoreCard(BaseEstimator):
             X (2D array-like)
             Y (array-like)
         """
+        from .selection import select
+        X = select(X, target = y)
+
         if combiner is None:
-            combiner = Combiner().fit(X, y)
+            combiner = Combiner().fit(X, y, n_bins = 3)
 
         bins_X = combiner.transform(X)
 
