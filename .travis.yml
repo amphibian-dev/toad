@@ -7,6 +7,7 @@ matrix:
       sudo: false
       before_install:
           - sudo apt-get install -y graphviz
+          - pip install setuptools twine
       dist: trusty
 
     - name: "Python 3.7.2 on macOS"
@@ -15,6 +16,7 @@ matrix:
       language: shell
       before_install:
           - brew install python3 graphviz
+          - pip install setuptools twine
 
     - name: "Python 3.7.3 on Windows"
       os: windows
