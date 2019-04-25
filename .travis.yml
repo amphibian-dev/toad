@@ -7,8 +7,14 @@ matrix:
       sudo: false
       before_install:
           - sudo apt-get install -y graphviz
-          - pip install setuptools twine
       dist: trusty
+      deploy:
+        skip_cleanup: true
+        provider: script
+        script: make publish
+        on:
+          tags: true
+          repo: amphibian-dev/toad
 
     - name: "Python 3.7.2 on macOS"
       os: osx
@@ -16,7 +22,6 @@ matrix:
       language: shell
       before_install:
           - brew install python3 graphviz
-          - pip install setuptools twine
 
     - name: "Python 3.7.3 on Windows"
       os: windows
@@ -26,7 +31,7 @@ matrix:
           - choco install python3
           - choco install graphviz
           - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
-          - python3 -m pip install --upgrade pip wheel setuptools twine
+          - python3 -m pip install --upgrade pip
   allow_failures:
     - os: windows
 
@@ -37,11 +42,12 @@ script:
     - python3 -m pytest ./tests
 
 before_deploy:
-    - make build
+    - pip install wheel setuptools twine
+
 deploy:
   skip_cleanup: true
   provider: script
-  script: make publish
+  script: make publish_wheel
   on:
     tags: true
     repo: amphibian-dev/toad

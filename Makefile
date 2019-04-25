@@ -21,8 +21,12 @@ test:
 	$(PYTHON) -m pytest -x ./tests
 
 publish: build
-	$(PYTHON) setup.py sdist bdist_wheel --universal
-	twine upload dist/*  -u $TWINE_USER -p $TWINE_PASS
+	$(PYTHON) setup.py sdist
+	twine upload dist/*  -u $(TWINE_USER) -p $(TWINE_PASS)
+
+publish_wheel: build
+	$(PYTHON) setup.py bdist_wheel --universal
+	twine upload dist/*  -u $(TWINE_USER) -p $(TWINE_PASS)
 
 clean:
 	@rm -rf build/ dist/ *.egg-info/
