@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from .stats import IV
+from .stats import IV, VIF
 from .utils import split_target, unpack_tuple, to_ndarray
 
 
@@ -313,8 +313,6 @@ def drop_vif(frame, threshold = 6, return_drop = False, exclude = None):
         DataFrame: selected dataframe
         array: list of feature names that has been dropped
     """
-    from statsmodels.stats.outliers_influence import variance_inflation_factor
-
     df = frame.copy()
 
     if exclude is not None:
@@ -322,20 +320,16 @@ def drop_vif(frame, threshold = 6, return_drop = False, exclude = None):
 
     drop_list = []
     while(True):
-        l = len(df.columns)
-        vif = np.zeros(l)
-        for i in range(l):
-            vif[i] = variance_inflation_factor(df.values, i)
+        vif = VIF(df)
 
         ix = np.argmax(vif)
         max = vif[ix]
 
         if max < threshold:
             break
-
-        col = df.columns[ix]
-        df = df.drop(columns = col)
-        drop_list.append(col)
+        
+        df = df.drop(columns = ix)
+        drop_list.append(ix)
 
 
     r = frame.drop(columns = drop_list)

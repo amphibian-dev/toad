@@ -311,6 +311,31 @@ def badrate(target):
     return np.sum(target) / len(target)
 
 
+def VIF(frame):
+    """calculate vif
+
+    Args:
+        frame (ndarray|DataFrame)
+
+    Returns:
+        Series
+    """
+    index = None
+    if isinstance(frame, pd.DataFrame):
+        index = frame.columns
+        frame = frame.values
+
+    from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+    l = frame.shape[1]
+    vif = np.zeros(l)
+    for i in range(l):
+        vif[i] = variance_inflation_factor(frame, i)
+
+    return pd.Series(vif, index = index)
+
+
+
 def F1(score, target):
     """calculate f1 value
 

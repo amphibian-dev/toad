@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from toad import IV, WOE, gini, gini_cond, entropy_cond, quality, KS_bucket
-from toad.stats import _IV
+from toad.stats import _IV, VIF
 from toad.utils import feature_splits
 
 np.random.seed(1)
@@ -86,3 +86,7 @@ def test_KS_bucket_use_step():
 def test_KS_bucket_for_all_score():
     result = KS_bucket(feature, target, bucket = False)
     assert len(result) == 500
+
+def test_vif():
+    vif = VIF(df)
+    assert vif['A'] == 2.9693364426401105
