@@ -34,4 +34,4 @@ def test_stepwise():
 
 def test_drop_vif():
     df = drop_vif(frame.fillna(-1), exclude = 'target')
-    assert ['C', 'E', 'F', 'target'] == df.columns.tolist()
+    assert ['C', 'F', 'target'] == df.columns.tolist()
