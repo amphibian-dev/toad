@@ -300,7 +300,7 @@ def drop_iv(frame, target = 'target', threshold = 0.02, return_drop = False,
     return unpack_tuple(res)
 
 
-def drop_vif(frame, threshold = 6, return_drop = False, exclude = None):
+def drop_vif(frame, threshold = 3, return_drop = False, exclude = None):
     """variance inflation factor
 
     Args:
@@ -327,7 +327,7 @@ def drop_vif(frame, threshold = 6, return_drop = False, exclude = None):
 
         if max < threshold:
             break
-        
+
         df = df.drop(columns = ix)
         drop_list.append(ix)
 
