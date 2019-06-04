@@ -43,7 +43,7 @@ setup(
     install_requires = [
         'numpy >= 1.15',
         'pandas',
-        'scipy',
+        'scipy == 1.2.0',
         'scikit-learn',
         'statsmodels',
         'seaborn',
