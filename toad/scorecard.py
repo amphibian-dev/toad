@@ -7,11 +7,11 @@ from .transform import WOETransformer, Combiner, ELSE_GROUP, EMPTY_BIN
 from .utils import to_ndarray, bin_by_splits, save_json, read_json
 
 
-RE_NUM = '-?\d+(.\d+)?'
-RE_SEP = '[~-]'
-RE_BEGIN = '(-inf|{num})'.format(num = RE_NUM)
-RE_END = '(inf|{num})'.format(num = RE_NUM)
-RE_RANGE = '\[{begin}\s*{sep}\s*{end}\)'.format(
+RE_NUM = r'-?\d+(.\d+)?'
+RE_SEP = r'[~-]'
+RE_BEGIN = r'(-inf|{num})'.format(num = RE_NUM)
+RE_END = r'(inf|{num})'.format(num = RE_NUM)
+RE_RANGE = r'\[{begin}\s*{sep}\s*{end}\)'.format(
     begin = RE_BEGIN,
     end = RE_END,
     sep = RE_SEP,
@@ -371,9 +371,10 @@ class ScoreCard(BaseEstimator):
 
 
 
-    def _generate_testing_frame(self, size = 'max', mishap = True, gap = 1e-2):
+    def _generate_testing_frame(self, maps, size = 'max', mishap = True, gap = 1e-2):
         """
         Args:
+            maps (dict): map of values or splits to generate frame
             size (int|str): size of frame. 'max' (default), 'lcm'
             mishap (bool): is need to add mishap patch to test frame
             gap (float): size of gap for testing border
@@ -381,14 +382,12 @@ class ScoreCard(BaseEstimator):
         Returns:
             DataFrame
         """
-        c_map = self.combiner.export()
-
         number_patch = np.array([NUMBER_EMPTY, NUMBER_INF])
         factor_patch = np.array([FACTOR_EMPTY, FACTOR_UNKNOWN])
 
         values = []
         cols = []
-        for k, v in c_map.items():
+        for k, v in maps.items():
             v = np.array(v)
             if np.issubdtype(v.dtype, np.number):
                 items = np.concatenate((v, v - gap))
@@ -434,7 +433,9 @@ class ScoreCard(BaseEstimator):
         Returns:
             DataFrame: testing frame with score
         """
-        frame = self._generate_testing_frame(**kwargs)
+        maps = self.combiner.export()
+
+        frame = self._generate_testing_frame(maps, **kwargs)
         frame['score'] = self.predict(frame)
 
         return frame
