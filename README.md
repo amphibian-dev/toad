@@ -10,7 +10,7 @@
 [![Build Status][travis-image]][travis-url]
 
 
-ESC Team's data-detector for credit risk
+ESC Team's scorecard tools
 
 ## Install
 
