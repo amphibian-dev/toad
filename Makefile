@@ -20,7 +20,7 @@ test:
 	$(PYTHON) -m pytest -x ./tests
 
 build_deps:
-	$(PIP) install wheel setuptools twine==1.12.0
+	$(PIP) install -U wheel setuptools twine
 
 build: build_deps
 	$(PYTHON) setup.py build_ext --inplace

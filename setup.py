@@ -51,6 +51,7 @@ setup(
     tests_require=[
         'pytest'
     ],
+    license = 'MIT',
     classifiers = [
         'Operating System :: POSIX',
         'Operating System :: Microsoft :: Windows',
