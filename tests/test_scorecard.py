@@ -116,4 +116,4 @@ def test_card_without_combiner():
     card = ScoreCard(transer = transer, model = model)
     score, sub = card.predict(df, return_sub = True)
 
-    assert score[404] == 460.9789823549386
+    assert score[404] == pytest.approx(460.9789823549386, FUZZ_THRESHOLD)

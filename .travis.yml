@@ -15,6 +15,9 @@ matrix:
       os: osx
       osx_image: xcode10.2
       language: shell
+      env:
+          - PYTHON=python3
+          - PIP=pip3
       before_install:
           - brew install python3 graphviz
       before_deploy:
@@ -22,21 +25,22 @@ matrix:
 
     - name: "Python 3.7.3 on Windows"
       os: windows
-      language: sh
+      language: shell
       python: "3.7"
-      install:
-          - choco install python3
+      env:
+          - PATH=/c/Python37:/c/Python37/Scripts:$PATH
+      before_install:
+          - choco install python
           - choco install graphviz
-          - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
-          - python3 -m pip install --upgrade pip
-          - pip3 install numpy pytest Cython
-          - pip3 install -e .
+          - choco install make
+      before_deploy:
+          - make dist_wheel
+
   allow_failures:
     - os: windows
 
 install:
-    - pip3 install numpy pytest Cython
-    - pip3 install -e .
+    - make install
 script:
     - make test
 

@@ -317,7 +317,7 @@ def bin_to_number(reg = None):
         function: func(string) -> number
     """
     if reg is None:
-        reg = '\d+'
+        reg = r'\d+'
 
     def func(x):
         if pd.isnull(x):

@@ -1,7 +1,14 @@
 .PHONY: build test
 
-PYTHON = python3
-PIP = pip3
+
+ifeq ($(PYTHON),)
+PYTHON = python
+endif
+
+ifeq ($(PIP),)
+PIP = pip
+endif
+
 SPHINXOPTS =
 SPHINXBUILD = sphinx-build
 SPHINXPROJ = toad
@@ -11,7 +18,8 @@ BUILDDIR = $(DOCSDIR)/build
 
 
 install:
-	$(PYTHON) setup.py install --record files.txt
+	$(PIP) install numpy pytest Cython
+	$(PIP) install -e .
 
 uninstall:
 	cat files.txt | xargs rm -rf
@@ -33,7 +41,7 @@ dist_wheel: build
 
 upload:
 	twine check dist/*
-	twine upload dist/*  -u $(TWINE_USER) -p $(TWINE_PASS)
+	@twine upload dist/*  -u $(TWINE_USER) -p $(TWINE_PASS)
 
 clean:
 	@rm -rf build/ dist/ *.egg-info/
