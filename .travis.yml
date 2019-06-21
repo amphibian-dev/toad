@@ -46,6 +46,7 @@ matrix:
           - choco install python --version 3.6.8
           - choco install graphviz
           - choco install make
+          - pip install -U patsy
       before_deploy:
           - make dist_wheel
 
