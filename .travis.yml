@@ -36,6 +36,19 @@ matrix:
       before_deploy:
           - make dist_wheel
 
+    - name: "Python 3.6.3 on Windows"
+      os: windows
+      language: shell
+      python: "3.6"
+      env:
+          - PATH=/c/Python36:/c/Python36/Scripts:$PATH
+      before_install:
+          - choco install python --version 3.6.8
+          - choco install graphviz
+          - choco install make
+      before_deploy:
+          - make dist_wheel
+
   allow_failures:
     - os: windows
 
