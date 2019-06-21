@@ -9,6 +9,7 @@ from .merge import merge
 
 from .utils import (
     np_count,
+    np_unique,
     to_ndarray,
     feature_splits,
     is_continuous,
@@ -133,7 +134,7 @@ def _gini_cond(feature, target):
     size = feature.size
 
     value = 0
-    for v, c in zip(*np.unique(feature, return_counts = True)):
+    for v, c in zip(*np_unique(feature, return_counts = True)):
         target_series = target[feature == v]
         value += c / size * gini(target_series)
 
@@ -191,7 +192,7 @@ def _entropy_cond(feature, target):
     size = len(feature)
 
     value = 0
-    for v, c in zip(*np.unique(feature, return_counts = True)):
+    for v, c in zip(*np_unique(feature, return_counts = True)):
         target_series = target[feature == v]
         value += c/size * entropy(target_series)
 
@@ -415,7 +416,7 @@ def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs)
     if not np.issubdtype(feature.dtype, np.number):
         feature = feature.astype(str)
 
-    c = len(np.unique(feature))
+    c = len(np_unique(feature))
     iv = g = e = '--'
 
     # skip when unique is too much

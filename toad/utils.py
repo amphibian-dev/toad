@@ -10,6 +10,8 @@ from multiprocessing import Pool, current_process, cpu_count
 
 CONTINUOUS_NUM = 20
 FEATURE_THRESHOLD = 1e-7
+NAN_REPLACEMENT = -2e10
+
 
 NAN_LIST = [
     'nan',
@@ -58,6 +60,34 @@ def np_count(arr, value, default = None):
         return default
 
     return c
+
+
+def _replace_nan(arr):
+    a = np.copy(arr)
+    a[a == NAN_REPLACEMENT] = np.nan
+    return a
+
+
+def has_nan(arr):
+    return np.any(pd.isna(arr))
+
+
+def np_unique(arr, **kwargs):
+    arr = to_ndarray(arr)
+
+    if not has_nan(arr):
+        return np.unique(arr, **kwargs)
+
+    arr[np.isnan(arr)] = NAN_REPLACEMENT
+
+    res = np.unique(arr, **kwargs)
+
+    if isinstance(res, tuple):
+        u = _replace_nan(res[0])
+        return (u, *res[1:])
+
+    return _replace_nan(res)
+
 
 def to_ndarray(s, dtype = None):
     """

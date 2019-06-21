@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 
 from toad.utils import (
+    np_unique,
     fillna,
     clip,
     diff_time_frame,
@@ -20,6 +21,11 @@ target = np.random.randint(2, size = 500)
 def test_fillna():
     res = fillna(np.array([1, 2, 3, np.nan, 4, 5]))
     assert res[3] == -1
+
+
+def test_np_unique():
+    res = np_unique(np.array([np.nan, np.nan, np.nan]))
+    assert len(res) == 1
 
 
 def test_clip():
