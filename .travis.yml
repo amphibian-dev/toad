@@ -19,7 +19,8 @@ matrix:
           - PYTHON=python3
           - PIP=pip3
       before_install:
-          - brew install python3 graphviz
+          - brew install python3
+          - brew install graphviz
       before_deploy:
           - make dist_wheel
 
