@@ -283,6 +283,7 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
         array: list of split points
     """
     feature = to_ndarray(feature)
+    method = method.lower()
 
     if method is 'dt':
         splits = DTMerge(feature, target, **kwargs)
