@@ -18,6 +18,7 @@ matrix:
       env:
           - PYTHON=python3
           - PIP=pip3
+          - PIP_USER=true
       before_install:
           - brew install graphviz
       before_deploy:

@@ -1,25 +1,28 @@
 .PHONY: build test
 
 
-ifeq ($(PYTHON),)
-PYTHON = python
-endif
-
-ifeq ($(PIP),)
-PIP = pip
-endif
+PYTHON ?= python
+PIP ?= pip
+PIP_USER ?=
 
 SPHINXOPTS =
 SPHINXBUILD = sphinx-build
 SPHINXPROJ = toad
 DOCSDIR = docs
-SOURCEDIR = $(DOCSDIR)/source
-BUILDDIR = $(DOCSDIR)/build
+SOURCEDIR := $(DOCSDIR)/source
+BUILDDIR := $(DOCSDIR)/build
+
+PIP_INSTALL := $(PIP) install
+
+ifdef PIP_USER
+PIP_INSTALL += --user
+endif
+
 
 
 install:
-	$(PIP) install --user numpy pytest Cython
-	$(PIP) install --user -e .
+	$(PIP_INSTALL) numpy pytest Cython
+	$(PIP_INSTALL) -e .
 
 uninstall:
 	cat files.txt | xargs rm -rf
@@ -28,7 +31,7 @@ test:
 	$(PYTHON) -m pytest -x ./tests
 
 build_deps:
-	$(PIP) install -U wheel setuptools twine
+	$(PIP_INSTALL) -U wheel setuptools twine
 
 build: build_deps
 	$(PYTHON) setup.py build_ext --inplace
