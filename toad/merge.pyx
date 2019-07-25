@@ -285,15 +285,15 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
     feature = to_ndarray(feature)
     method = method.lower()
 
-    if method is 'dt':
+    if method == 'dt':
         splits = DTMerge(feature, target, **kwargs)
-    elif method is 'chi':
+    elif method == 'chi':
         splits = ChiMerge(feature, target, **kwargs)
-    elif method is 'quantile':
+    elif method == 'quantile':
         splits = QuantileMerge(feature, **kwargs)
-    elif method is 'step':
+    elif method == 'step':
         splits = StepMerge(feature, **kwargs)
-    elif method is 'kmeans':
+    elif method == 'kmeans':
         splits = KMeansMerge(feature, target = target, **kwargs)
     else:
         splits = np.empty(shape = (0,))
