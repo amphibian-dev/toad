@@ -18,8 +18,8 @@ BUILDDIR = $(DOCSDIR)/build
 
 
 install:
-	$(PIP) install numpy pytest Cython
-	$(PIP) install -e .
+	$(PIP) install --user numpy pytest Cython
+	$(PIP) install --user -e .
 
 uninstall:
 	cat files.txt | xargs rm -rf
