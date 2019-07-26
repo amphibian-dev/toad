@@ -75,18 +75,6 @@ def test_quality_object_type_array_with_nan():
     result = quality(df)
     assert result.loc['feature', 'iv'] == 0.01637933818053033
 
-def test_KS_bucket():
-    result = KS_bucket(feature, target)
-    assert result.loc[4, 'ks'] == 0.028036335090276976
-
-def test_KS_bucket_use_step():
-    result = KS_bucket(feature, target, method = 'step', clip_q = 0.01)
-    assert result.loc[4, 'ks'] == 0.0422147102645028
-
-def test_KS_bucket_for_all_score():
-    result = KS_bucket(feature, target, bucket = False)
-    assert len(result) == 500
-
 def test_vif():
     vif = VIF(df)
     assert vif['A'] == 2.9693364426401105
