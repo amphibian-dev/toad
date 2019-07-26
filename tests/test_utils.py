@@ -10,6 +10,7 @@ from toad.utils import (
     bin_to_number,
     generate_target,
     generate_str,
+    get_dummies,
 )
 
 np.random.seed(1)
@@ -104,3 +105,13 @@ def test_generate_target():
 def test_generate_str():
     s = generate_str(size = 8)
     assert s == 'EPL5MTQK'
+
+def test_get_dummies_binary():
+    ab = np.array(list('ABCDEFG'))
+    df = pd.DataFrame({
+        'binary': ab[np.random.choice(2, 500)],
+        'multiple': ab[np.random.choice(5, 500)],
+    })
+    data = get_dummies(df, binary_drop = True)
+    
+    assert 'binary_A' not in data.columns

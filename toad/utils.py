@@ -393,13 +393,28 @@ def generate_target(size, rate = 0.5, weight = None, reverse = False):
     return res
 
 
-def get_dummies(dataframe, exclude = None):
+def get_dummies(dataframe, exclude = None, binary_drop = False, **kwargs):
     """get dummies
     """
     columns = dataframe.select_dtypes(exclude = 'number').columns
 
+    if len(columns) == 0:
+        return dataframe
+
     if exclude is not None:
         columns = columns.difference(exclude)
 
-    data = pd.get_dummies(dataframe, columns = columns)
+    if binary_drop:
+        mask = dataframe[columns].nunique(dropna = False) == 2
+
+        if mask.sum() != 0:
+            dataframe = pd.get_dummies(
+                dataframe,
+                columns = columns[mask],
+                drop_first = True,
+                **kwargs,
+            )
+            columns = columns[~mask]
+
+    data = pd.get_dummies(dataframe, columns = columns, **kwargs)
     return data
