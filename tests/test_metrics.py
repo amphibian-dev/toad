@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.metrics import KS, KS_bucket
+from toad.metrics import KS, KS_bucket, F1
 
 np.random.seed(1)
 
@@ -25,3 +25,11 @@ def test_KS_bucket_use_step():
 def test_KS_bucket_for_all_score():
     result = KS_bucket(feature, target, bucket = False)
     assert len(result) == 500
+
+def test_F1():
+    result, split = F1(feature, target, return_split = True)
+    assert result == 0.6844207723035951
+
+def test_F1_split():
+    result = F1(feature, target, split = 0.5)
+    assert result == 0.51417004048583

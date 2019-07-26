@@ -130,7 +130,7 @@ def BIC(y_pred, y, k, n):
     return np.log(n) * k - 2 * np.log(sse)
 
 
-def F1(score, target):
+def F1(score, target, split = 'best', return_split = False):
     """calculate f1 value
 
     Args:
@@ -146,15 +146,22 @@ def F1(score, target):
         'target': target,
     })
 
-    # find best split for score
-    splits = feature_splits(dataframe['score'], dataframe['target'])
+    if split == 'best':
+        # find best split for score
+        splits = feature_splits(dataframe['score'], dataframe['target'])
+    else:
+        splits = [split]
+
     best = 0
-    split = None
+    sp = None
     for df, pointer in iter_df(dataframe, 'score', 'target', splits):
         v = f1_score(df['target'], df['score'])
 
         if v > best:
             best = v
-            split = pointer
+            sp = pointer
 
-    return best, split
+    if return_split:
+        return best, sp
+
+    return best
