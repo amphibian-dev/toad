@@ -14,8 +14,8 @@ BUILDDIR := $(DOCSDIR)/build
 
 PIP_INSTALL := $(PIP) install
 
-ifdef PIP_USER
-PIP_INSTALL += --user
+ifdef PIP_SUDO
+PIP_INSTALL := sudo $(PIP_INSTALL)
 endif
 
 
