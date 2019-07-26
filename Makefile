@@ -3,7 +3,7 @@
 
 PYTHON ?= python
 PIP ?= pip
-PIP_USER ?=
+SUDO ?=
 
 SPHINXOPTS =
 SPHINXBUILD = sphinx-build
@@ -12,17 +12,11 @@ DOCSDIR = docs
 SOURCEDIR := $(DOCSDIR)/source
 BUILDDIR := $(DOCSDIR)/build
 
-PIP_INSTALL := $(PIP) install
-
-ifdef PIP_SUDO
-PIP_INSTALL := sudo $(PIP_INSTALL)
-endif
-
 
 
 install:
-	$(PIP_INSTALL) numpy pytest Cython
-	$(PIP_INSTALL) -e .
+	$(SUDO) $(PIP) install numpy pytest Cython
+	$(SUDO) $(PIP) install -e .
 
 uninstall:
 	cat files.txt | xargs rm -rf
@@ -31,16 +25,16 @@ test:
 	$(PYTHON) -m pytest -x ./tests
 
 build_deps:
-	$(PIP_INSTALL) -U wheel setuptools twine
+	$(SUDO) $(PIP) install -U wheel setuptools twine
 
 build: build_deps
 	$(PYTHON) setup.py build_ext --inplace
 
 dist: build
-	$(PYTHON) setup.py sdist
+	$(SUDO) $(PYTHON) setup.py sdist
 
 dist_wheel: build
-	$(PYTHON) setup.py bdist_wheel --universal
+	$(SUDO) $(PYTHON) setup.py bdist_wheel --universal
 
 upload:
 	twine check dist/*

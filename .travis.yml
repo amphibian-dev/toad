@@ -18,7 +18,7 @@ matrix:
       env:
           - PYTHON=python3
           - PIP=pip3
-          - PIP_SUDO=true
+          - SUDO=sudo
       before_install:
           - brew install graphviz
       before_deploy:
@@ -51,8 +51,6 @@ matrix:
       before_deploy:
           - make dist_wheel
 
-  allow_failures:
-    - os: windows
 
 install:
     - make install
