@@ -17,9 +17,9 @@ sns.set(font = myfont.get_family())
 
 HEATMAP_CMAP = sns.diverging_palette(240, 10, as_cmap = True)
 MAX_STYLE = 6
+FIG_SIZE = (12, 6)
 
-
-def get_axes(size = (12, 6)):
+def get_axes(size = FIG_SIZE):
     _, ax = plt.subplots(figsize = size)
     return ax
 
@@ -52,6 +52,33 @@ def fix_axes(axes):
     for func in functions:
         func(axes)
     return axes
+
+
+class Tadpole:
+    def __getattr__(self, name):
+        t = getattr(sns, name)
+        if callable(t):
+            return self.wrapsns(t)
+
+        return t
+
+    def wrapsns(self, f):
+        def wrapper(*args, figure_size = FIG_SIZE, **kwargs):
+            kw = kwargs.copy()
+            if 'ax' not in kw:
+                kw['ax'] = get_axes(size = figure_size)
+
+            try:
+                a = f(*args, **kw)
+                a = fix_axes(a)
+                return a
+            except:
+                return f(*args, **kwargs)
+
+        return wrapper
+
+
+tpl = Tadpole()
 
 
 def badrate_plot(frame, x = None, target = 'target', by = None,
@@ -98,7 +125,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     table['badrate'] = table['sum'] / table['count']
 
 
-    rate_plot = sns.lineplot(
+    rate_plot = tpl.lineplot(
         x = x,
         y = 'badrate',
         hue = by,
@@ -107,22 +134,16 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
         legend = 'full',
         markers = markers,
         dashes = False,
-        ax = get_axes(),
     )
-
-    rate_plot = fix_axes(rate_plot)
     res = (rate_plot,)
 
     if return_counts:
-        count_plot = sns.barplot(
+        count_plot = tpl.barplot(
             x = x,
             y = 'count',
             hue = by,
             data = table,
-            ax = get_axes(),
         )
-
-        count_plot = fix_axes(count_plot)
         res += (count_plot,)
 
 
@@ -132,15 +153,12 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
             mask = (table[x] == v)
             table.loc[mask, 'prop'] = table[mask]['count'] / table[mask]['count'].sum()
 
-        prop_plot = sns.barplot(
+        prop_plot = tpl.barplot(
             x = x,
             y = 'prop',
             hue = by,
             data = table,
-            ax = get_axes(),
         )
-
-        prop_plot = fix_axes(prop_plot)
         res += (prop_plot,)
 
 
@@ -150,7 +168,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     return unpack_tuple(res)
 
 
-def corr_plot(frame):
+def corr_plot(frame, figure_size = (20, 15)):
     """plot for correlation
 
     Args:
@@ -161,7 +179,7 @@ def corr_plot(frame):
     mask = np.zeros_like(corr, dtype = np.bool)
     mask[np.triu_indices_from(mask)] = True
 
-    map_plot = sns.heatmap(
+    map_plot = tpl.heatmap(
         corr,
         mask = mask,
         cmap = HEATMAP_CMAP,
@@ -173,9 +191,7 @@ def corr_plot(frame):
         linewidths = .5,
         annot = True,
         fmt = '.2f',
-        ax = get_axes(size = (20, 15)),
+        figure_size = figure_size,
     )
-
-    map_plot = fix_axes(map_plot)
 
     return map_plot
