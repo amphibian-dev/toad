@@ -117,3 +117,47 @@ def test_card_without_combiner():
     score, sub = card.predict(df, return_sub = True)
 
     assert score[404] == pytest.approx(460.9789823549386, FUZZ_THRESHOLD)
+
+
+def test_card_combiner_number_not_match():
+    c = combiner.export()
+    c['A'] = [0, 3, 6, 8]
+    com = Combiner().set_rules(c)
+    bins = com.transform(df)
+    woe_transer = WOETransformer()
+    woe = woe_transer.fit_transform(bins, target)
+
+    model = LogisticRegression()
+    model.fit(woe, target)
+
+    with pytest.raises(Exception) as e:
+        # will raise an exception when create a card
+        card = ScoreCard(
+            combiner = com,
+            transer = woe_transer,
+            model = model,
+        )
+
+    assert '\'A\' is not matched' in str(e.value)
+
+
+def test_card_combiner_str_not_match():
+    c = combiner.export()
+    c['C'] = [['A'], ['B'], ['C']]
+    com = Combiner().set_rules(c)
+    bins = com.transform(df)
+    woe_transer = WOETransformer()
+    woe = woe_transer.fit_transform(bins, target)
+
+    model = LogisticRegression()
+    model.fit(woe, target)
+
+    with pytest.raises(Exception) as e:
+        # will raise an exception when create a card
+        card = ScoreCard(
+            combiner = com,
+            transer = woe_transer,
+            model = model,
+        )
+
+    assert '\'C\' is not matched' in str(e.value)

@@ -142,14 +142,17 @@ class ScoreCard(BaseEstimator):
             l_c = len(combiner[col])
             l_t = len(transer[col])
 
+            if l_c == 0:
+                continue
+
             if isinstance(combiner[col][0], (int, float)):
                 if l_c != l_t - 1:
-                    raise Exception(f'{col} is not matched!')
+                    raise Exception(f'column \'{col}\' is not matched, assert {l_t} bins but given {l_c + 1}')
             else:
                 if l_c != l_t:
-                    raise Exception(f'{col} is not matched!')
+                    raise Exception(f'column \'{col}\' is not matched, assert {l_t} bins but given {l_c}')
 
-            return True
+        return True
 
 
     def _parse_range(self, bins):
