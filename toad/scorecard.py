@@ -56,7 +56,6 @@ class ScoreCard(BaseEstimator):
             return self.set_card(card)
 
         if transer is None or model is None:
-            return
             raise Exception('transer, model must be all set')
 
         rules = self._get_rules(combiner, transer)
