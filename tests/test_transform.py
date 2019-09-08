@@ -49,6 +49,16 @@ def test_woe_transformer_exclude():
     res = WOETransformer().fit_transform(df, target, exclude = 'A')
     assert res.loc[451, 'A'] == 3
 
+def test_woe_transformer_export_single():
+    transer = WOETransformer().fit(feature, target)
+    t = transer.export()
+    assert t[5] == 0.3938235330926786
+
+def test_woe_transformer_export():
+    transer = WOETransformer().fit(df, target)
+    t = transer.export()
+    assert t['C'][1] == 0
+
 def test_combiner():
     f = Combiner().fit_transform(feature, target, method = 'chi')
     assert f[451] == 3

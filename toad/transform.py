@@ -36,6 +36,20 @@ def support_exclude(fn):
     return func
 
 
+def support_save_to_json(fn):
+    @wraps(fn)
+    def func(self, *args, to_json = None, **kwargs):
+        res = fn(self, *args, **kwargs)
+
+        if to_json is None:
+            return res
+
+        save_json(res, to_json)
+
+    return func
+
+
+
 class WOETransformer(TransformerMixin):
     """WOE transformer
     """
@@ -128,6 +142,19 @@ class WOETransformer(TransformerMixin):
             res[X == value[i]] = woe[i]
 
         return res
+
+
+    @support_save_to_json
+    def export(self):
+        if not isinstance(self.values_, dict):
+            return dict(zip(self.values_, self.woe_))
+
+        d = dict()
+        for col in self.values_:
+            d[col] = dict(zip(self.values_[col], self.woe_[col]))
+
+        return d
+
 
 
 class Combiner(TransformerMixin):
@@ -327,7 +354,8 @@ class Combiner(TransformerMixin):
         return 'object'
 
 
-    def export(self, format = False, to_json = None):
+    @support_save_to_json
+    def export(self, format = False):
         """export combine rules for score card
 
         Args:
@@ -351,10 +379,7 @@ class Combiner(TransformerMixin):
         else:
             bins = {k: v.tolist() for k, v in splits.items()}
 
-        if to_json is None:
-            return bins
-
-        save_json(bins, to_json)
+        return bins
 
 
     def _covert_splits(self, value, splits):
