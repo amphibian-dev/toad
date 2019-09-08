@@ -16,6 +16,7 @@ from .utils import (
     support_dataframe,
 )
 
+STATS_EMPTY = np.nan
 
 def gini(target):
     """get gini index of a feature
@@ -265,7 +266,7 @@ def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs)
         feature = feature.astype(str)
 
     c = len(np_unique(feature))
-    iv = g = e = '--'
+    iv = g = e = STATS_EMPTY
 
     # skip when unique is too much
     if is_continuous(feature) or c / len(feature) < 0.5:

@@ -63,7 +63,7 @@ def test_quality():
 
 def test_quality_iv_only():
     result = quality(df, 'target', iv_only = True)
-    assert result.loc['feature', 'gini'] == '--'
+    assert np.isnan(result.loc['feature', 'gini'])
 
 def test_quality_object_type_array_with_nan():
     feature = np.array([np.nan, 'A', 'B', 'C', 'D', 'E', 'F', 'G'], dtype = 'O')[mask]
