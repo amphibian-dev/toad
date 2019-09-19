@@ -54,6 +54,8 @@ exclude_patterns = [
     'toad/commands',
 ]
 
+master_doc = 'index'
+
 
 # -- Options for HTML output -------------------------------------------------
 
