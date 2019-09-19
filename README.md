@@ -44,7 +44,7 @@ toad.IV(feature, target, method = 'dt', min_samples = 0.1)
 
 ## Documents
 
-A simple API [docs](docs/API.rst)
+A simple API [docs](https://toad.readthedocs.io/en/latest/)
 
 
 [pypi-image]: https://img.shields.io/pypi/v/toad.svg?style=flat-square

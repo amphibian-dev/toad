@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information -----------------------------------------------------
 
 project = 'toad'
-copyright = '2019, Secbone'
-author = 'Secbone'
+copyright = '2019, ESC Team'
+author = 'ESC Team'
 
 
 import toad
