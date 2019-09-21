@@ -270,7 +270,7 @@ cpdef ChiMerge(feature, target, n_bins = None, min_samples = None,
 def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs):
     """merge feature into groups
 
-    Params:
+    Args:
         feature (array-like)
         target (array-like)
         method (str): 'dt', 'chi', 'quantile', 'step', 'kmeans' - the strategy to be used to merge feature
