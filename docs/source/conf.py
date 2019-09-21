@@ -29,7 +29,9 @@ release = version
 
 
 # -- General configuration ---------------------------------------------------
+import recommonmark
 import sphinx_rtd_theme
+from recommonmark.transform import AutoStructify
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
@@ -41,6 +43,7 @@ extensions = [
     'sphinx.ext.autodoc',
     "sphinx.ext.autosummary",
     'sphinx.ext.napoleon',
+    'recommonmark',
     'sphinx_rtd_theme',
 ]
 
@@ -68,3 +71,18 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+
+
+def setup(app):
+    app.add_config_value(
+        'recommonmark_config',
+        {
+            'enable_eval_rst': True,
+            'enable_auto_toc_tree': True,
+            'auto_toc_tree_section': 'Contents',
+        },
+        True,
+    )
+
+    app.add_transform(AutoStructify)
