@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, roc_auc_score
 
 from .merge import merge
 from .transform import Combiner
@@ -167,6 +167,20 @@ def F1(score, target, split = 'best', return_split = False):
         return best, sp
 
     return best
+
+
+def AUC(score, target):
+    """AUC Score
+
+    Args:
+        score (array-like): list of score or probability that the model predict
+        target (array-like): list of real target
+
+    Returns:
+        float: auc score
+    """
+
+    return roc_auc_score(target, score)
 
 
 def _PSI(test, base):
