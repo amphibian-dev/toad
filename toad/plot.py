@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
 from matplotlib.font_manager import FontProperties
 
 from .utils import unpack_tuple, generate_str
@@ -242,3 +243,26 @@ def proportion_plot(x = None, keys = None):
     )
 
     return prop_plot
+
+
+def roc_plot(score, target):
+    """plot for roc
+
+    Args:
+        score (array-like): predicted score
+        target (array-like): true target
+
+    Returns:
+        Axes
+    """
+
+    fpr, tpr, thresholds = roc_curve(target, score)
+
+    ax = tpl.lineplot(
+        x = fpr,
+        y = tpr,
+    )
+
+    ax = ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
+
+    return ax
