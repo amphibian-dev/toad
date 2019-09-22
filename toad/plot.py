@@ -98,7 +98,10 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
         return_frame (bool): if need return frame
 
     Returns:
-
+        Axes: badrate plot
+        Axes: counts plot
+        Axes: proportion plot
+        Dataframe: grouping detail data
     """
     frame = frame.copy()
     markers = True
@@ -173,6 +176,8 @@ def corr_plot(frame, figure_size = (20, 15)):
 
     Args:
         frame (DataFrame): frame to draw plot
+    Returns:
+        Axes
     """
     corr = frame.corr()
 
@@ -195,3 +200,45 @@ def corr_plot(frame, figure_size = (20, 15)):
     )
 
     return map_plot
+
+
+def proportion_plot(x = None, keys = None):
+    """plot for proportion
+
+    Args:
+        x (Series|list): series or list of series data for plot
+        keys (str|list): keys for each data
+
+    Returns:
+        Axes
+    """
+    if not isinstance(x, list):
+        x = [x]
+
+    if keys is None:
+        keys = [
+            x[ix].name
+            if hasattr(x[ix], 'name') and x[ix].name is not None
+            else ix
+            for ix in range(len(x))
+        ]
+    elif isinstance(keys, str):
+        keys = [keys]
+
+    x = map(pd.Series, x)
+    data = pd.concat(x, keys = keys, names = ['keys']).reset_index()
+    data = data.rename(columns = {data.columns[2]: 'value'})
+
+    prop_data = data.groupby('keys')['value'].value_counts(
+        normalize = True,
+        dropna = False,
+    ).rename('proportion').reset_index()
+
+    prop_plot = tpl.barplot(
+        x = 'value',
+        y = 'proportion',
+        hue = 'keys',
+        data = prop_data,
+    )
+
+    return prop_plot
