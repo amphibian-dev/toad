@@ -10,6 +10,15 @@ feature = np.random.rand(500)
 target = np.random.randint(2, size = 500)
 base_feature = np.random.rand(500)
 
+test_df = pd.DataFrame({
+    'A': np.random.rand(500),
+    'B': np.random.rand(500),
+})
+base_df = pd.DataFrame({
+    'A': np.random.rand(500),
+    'B': np.random.rand(500),
+})
+
 
 def test_KS():
     result = KS(feature, target)
@@ -44,18 +53,9 @@ def test_PSI():
     assert result == 0.018630024627491467
 
 def test_PSI_frame():
-    test = pd.DataFrame({
-        'A': np.random.rand(500),
-        'B': np.random.rand(500),
-    })
-    base = pd.DataFrame({
-        'A': np.random.rand(500),
-        'B': np.random.rand(500),
-    })
-
     result = PSI(
-        test,
-        base,
+        test_df,
+        base_df,
         combiner = {
             'A': [0.3, 0.5, 0.7],
             'B': [0.4, 0.8],
