@@ -2,12 +2,13 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.metrics import KS, KS_bucket, F1
+from toad.metrics import KS, KS_bucket, F1, PSI
 
 np.random.seed(1)
 
 feature = np.random.rand(500)
 target = np.random.randint(2, size = 500)
+base_feature = np.random.rand(500)
 
 
 def test_KS():
@@ -33,3 +34,28 @@ def test_F1():
 def test_F1_split():
     result = F1(feature, target, split = 0.5)
     assert result == 0.51417004048583
+
+def test_PSI():
+    result = PSI(feature, base_feature, combiner = [0.3, 0.5, 0.7])
+    assert result == 0.018630024627491467
+
+def test_PSI_frame():
+    test = pd.DataFrame({
+        'A': np.random.rand(500),
+        'B': np.random.rand(500),
+    })
+    base = pd.DataFrame({
+        'A': np.random.rand(500),
+        'B': np.random.rand(500),
+    })
+
+    result = PSI(
+        test,
+        base,
+        combiner = {
+            'A': [0.3, 0.5, 0.7],
+            'B': [0.4, 0.8],
+        },
+    )
+    
+    assert result['B'] == 0.014528279995858708

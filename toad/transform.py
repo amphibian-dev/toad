@@ -324,6 +324,7 @@ class Combiner(TransformerMixin):
         """
         if not isinstance(map, dict):
             self.splits_ = np.array(map)
+            return self
 
         self.splits_ = dict()
         for col in map:

@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 
 from sklearn.metrics import f1_score
+
 from .merge import merge
+from .transform import Combiner
 
 from .utils import (
     feature_splits,
@@ -165,3 +167,40 @@ def F1(score, target, split = 'best', return_split = False):
         return best, sp
 
     return best
+
+
+def _PSI(test, base):
+    test_prop = pd.Series(test).value_counts(normalize = True, dropna = False)
+    base_prop = pd.Series(base).value_counts(normalize = True, dropna = False)
+
+    return np.sum((test_prop - base_prop) * np.log(test_prop / base_prop))
+
+
+def PSI(test, base, combiner = None, return_prob = False):
+    """calculate PSI
+
+    Args:
+        test (array-like): data to test PSI
+        base (array-like): base data for calculate PSI
+        combiner (Combiner|list|dict): combiner to combine data
+
+    Returns:
+        float|Series
+    """
+
+    if combiner is not None:
+        if isinstance(combiner, (dict, list)):
+            combiner = Combiner().set_rules(combiner)
+
+        test = combiner.transform(test, labels = True)
+        base = combiner.transform(base, labels = True)
+
+    if not isinstance(test, pd.DataFrame):
+        return _PSI(test, base)
+
+
+    res = dict()
+    for col in test:
+        res[col] = _PSI(test[col], base[col])
+
+    return pd.Series(res)
