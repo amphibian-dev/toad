@@ -63,3 +63,16 @@ def test_PSI_frame():
     )
 
     assert result['B'] == 0.014528279995858708
+
+def test_PSI_return_frame():
+    result, frame = PSI(
+        test_df,
+        base_df,
+        combiner = {
+            'A': [0.3, 0.5, 0.7],
+            'B': [0.4, 0.8],
+        },
+        return_frame = True,
+    )
+
+    assert frame.loc[4, 'test'] == 0.38

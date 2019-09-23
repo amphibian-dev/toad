@@ -9,6 +9,7 @@ from .transform import Combiner
 from .utils import (
     feature_splits,
     iter_df,
+    unpack_tuple,
 )
 
 
@@ -187,16 +188,26 @@ def _PSI(test, base):
     test_prop = pd.Series(test).value_counts(normalize = True, dropna = False)
     base_prop = pd.Series(base).value_counts(normalize = True, dropna = False)
 
-    return np.sum((test_prop - base_prop) * np.log(test_prop / base_prop))
+    psi = np.sum((test_prop - base_prop) * np.log(test_prop / base_prop))
+
+    frame = pd.DataFrame({
+        'test': test_prop,
+        'base': base_prop,
+    })
+    frame.index.name = 'value'
+    
+    return psi, frame.reset_index()
+    
 
 
-def PSI(test, base, combiner = None, return_prob = False):
+def PSI(test, base, combiner = None, return_frame = False):
     """calculate PSI
 
     Args:
         test (array-like): data to test PSI
         base (array-like): base data for calculate PSI
         combiner (Combiner|list|dict): combiner to combine data
+        return_frame (bool): if need to return frame of proportion
 
     Returns:
         float|Series
@@ -209,12 +220,30 @@ def PSI(test, base, combiner = None, return_prob = False):
         test = combiner.transform(test, labels = True)
         base = combiner.transform(base, labels = True)
 
-    if not isinstance(test, pd.DataFrame):
-        return _PSI(test, base)
+    psi = list()
+    frame = list()
+    
+    if isinstance(test, pd.DataFrame):
+        for col in test:
+            p, f = _PSI(test[col], base[col])
+            psi.append(p)
+            frame.append(f)
+
+        psi = pd.Series(psi, index = test.columns)
+        
+        frame = pd.concat(
+            frame,
+            keys = test.columns,
+            names = ['columns', 'id'],
+        ).reset_index()
+        frame = frame.drop(columns = 'id')
+    else:
+        psi, frame = _PSI(test, base)
 
 
-    res = dict()
-    for col in test:
-        res[col] = _PSI(test[col], base[col])
+    res = (psi,)
 
-    return pd.Series(res)
+    if return_frame:
+        res += (frame,)
+
+    return unpack_tuple(res)
