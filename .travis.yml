@@ -63,4 +63,5 @@ deploy:
   script: make upload
   on:
     tags: true
+    branch: release
     repo: amphibian-dev/toad
