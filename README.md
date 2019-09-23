@@ -10,7 +10,9 @@
 [![Build Status][travis-image]][travis-url]
 
 
-ESC Team's scorecard tools
+Toad is developed to facilitate the model development work - especially credit risk scorecard. It provides intuitive tools for (1) data handling, (2) feature selection and WOE binning, (3) model selection, and (4) model evaluation.
+
+Contributed by the **ESC Team**
 
 ## Install
 
