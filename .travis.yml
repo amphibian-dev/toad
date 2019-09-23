@@ -58,10 +58,14 @@ script:
     - make test
 
 deploy:
-  skip_cleanup: true
-  provider: script
-  script: make upload
-  on:
-    tags: true
-    branch: release
-    repo: amphibian-dev/toad
+  - skip_cleanup: true
+    provider: script
+    script: make upload
+    on:
+      tags: true
+
+  - skip_cleanup: true
+    provider: script
+    script: make upload
+    on:
+      branch: release
