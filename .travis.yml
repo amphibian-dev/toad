@@ -7,6 +7,9 @@ matrix:
       sudo: false
       before_install:
           - sudo apt-get install -y graphviz
+      after_script:
+          - make dist_manylinux
+          - make upload
       dist: trusty
       before_deploy:
           - make dist

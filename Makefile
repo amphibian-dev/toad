@@ -36,6 +36,11 @@ dist: build
 dist_wheel: build
 	$(SUDO) $(PYTHON) setup.py bdist_wheel --universal
 
+dist_manylinux: build
+	$(SUDO) $(PIP) -U install auditwheel
+	$(SUDO) $(PYTHON) setup.py sdist bdist_wheel --universal
+	auditwheel repair dist/*.whl
+
 upload:
 	twine check dist/*
 	@twine upload dist/*  -u $(TWINE_USER) -p $(TWINE_PASS)
