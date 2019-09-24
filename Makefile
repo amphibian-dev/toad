@@ -12,7 +12,6 @@ DOCSDIR = docs
 SOURCEDIR := $(DOCSDIR)/source
 BUILDDIR := $(DOCSDIR)/build
 
-TEMPDIR = temp_download
 PATCHELF_VERSION = 0.10
 
 
@@ -39,13 +38,10 @@ dist_wheel: build
 	$(SUDO) $(PYTHON) setup.py bdist_wheel --universal
 
 patchelf:
-	mkdir $(TEMPDIR)
-	cd $(TEMPDIR)
 	wget http://nixos.org/releases/patchelf/patchelf-$(PATCHELF_VERSION)/patchelf-$(PATCHELF_VERSION).tar.bz2
 	tar xf patchelf-$(PATCHELF_VERSION).tar.bz2
 	cd patchelf-$(PATCHELF_VERSION)
 	./configure && sudo make install
-	cd ../..
 
 dist_manylinux: build patchelf
 	$(SUDO) $(PIP) install -U auditwheel
