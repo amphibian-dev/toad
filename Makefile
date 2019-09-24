@@ -40,8 +40,7 @@ dist_wheel: build
 patchelf:
 	wget http://nixos.org/releases/patchelf/patchelf-$(PATCHELF_VERSION)/patchelf-$(PATCHELF_VERSION).tar.bz2
 	tar xf patchelf-$(PATCHELF_VERSION).tar.bz2
-	cd patchelf-$(PATCHELF_VERSION)
-	./configure && sudo make install
+	cd patchelf-$(PATCHELF_VERSION) && ./configure && sudo make install
 
 dist_manylinux: build patchelf
 	$(SUDO) $(PIP) install -U auditwheel
