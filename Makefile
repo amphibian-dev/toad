@@ -37,7 +37,7 @@ dist_wheel: build
 	$(SUDO) $(PYTHON) setup.py bdist_wheel --universal
 
 dist_manylinux: build
-	$(SUDO) $(PIP) -U install auditwheel
+	$(SUDO) $(PIP) install -U auditwheel
 	$(SUDO) $(PYTHON) setup.py sdist bdist_wheel --universal
 	auditwheel repair dist/*.whl
 
