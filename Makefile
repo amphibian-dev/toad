@@ -37,7 +37,7 @@ dist_wheel: build
 	$(SUDO) $(PYTHON) setup.py bdist_wheel --universal
 
 dist_manylinux: build
-	sudo apt-get -y install patchelf
+	sudo apt-get -y install libatlas-dev
 	$(SUDO) $(PIP) install -U auditwheel
 	$(SUDO) $(PYTHON) setup.py sdist bdist_wheel --universal
 	auditwheel repair dist/*.whl
