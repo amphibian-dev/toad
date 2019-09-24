@@ -9,7 +9,7 @@ matrix:
           - sudo apt-get install -y graphviz
       dist: trusty
       before_deploy:
-          - make dist
+          - make dist_manylinux
 
     - name: "Python 3.7 on macOS"
       os: osx
