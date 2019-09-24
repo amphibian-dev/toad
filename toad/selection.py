@@ -125,7 +125,7 @@ def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
         threshold (number): drop the features whose empty num is greater than threshold. if threshold is float, it will be use as percentage
         nan (any): values will be look like empty
         return_drop (bool): if need to return features' name who has been dropped
-        exclude (array-like): ist of feature name that will not drop
+        exclude (array-like): list of feature names that will not be dropped
 
     Returns:
         DataFrame: selected dataframe
@@ -166,7 +166,7 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
         threshold (float): drop features that has the smallest weight in each groups whose correlation is greater than threshold
         by (array-like): weight of features that will be used to drop the features
         return_drop (bool): if need to return features' name who has been dropped
-        exclude (array-like): ist of feature name that will not drop
+        exclude (array-like): list of feature names that will not be dropped
 
     Returns:
         DataFrame: selected dataframe
@@ -265,7 +265,7 @@ def drop_iv(frame, target = 'target', threshold = 0.02, return_drop = False,
         threshold (float): drop the features whose IV is less than threshold
         return_drop (bool): if need to return features' name who has been dropped
         return_iv (bool): if need to return features' IV
-        exclude (array-like): ist of feature name that will not drop
+        exclude (array-like): list of feature names that will not be dropped
 
     Returns:
         DataFrame: selected dataframe
@@ -307,7 +307,7 @@ def drop_vif(frame, threshold = 3, return_drop = False, exclude = None):
         frame (DataFrame)
         threshold (float): drop features until all vif is less than threshold
         return_drop (bool): if need to return features' name who has been dropped
-        exclude (array-like): ist of feature name that will not drop
+        exclude (array-like): list of feature names that will not be dropped
 
     Returns:
         DataFrame: selected dataframe
@@ -352,7 +352,7 @@ def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7,
         iv (float): drop the features whose IV is less than threshold
         corr (float): drop features that has the smallest IV in each groups which correlation is greater than threshold
         return_drop (bool): if need to return features' name who has been dropped
-        exclude (array-like): list of feature name that will not drop
+        exclude (array-like): list of feature name that will not be dropped
 
     Returns:
         DataFrame: selected dataframe
