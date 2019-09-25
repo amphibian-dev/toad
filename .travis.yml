@@ -4,7 +4,12 @@ matrix:
       os: linux
       language: python
       python: "3.6"
-      sudo: false
+      sudo: required
+      services:
+        - docker
+      env:
+        - DOCKER_IMAGE=quay.io/pypa/manylinux1_x86_64
+        - PLAT=manylinux1_x86_64
       before_install:
           - sudo apt-get install -y graphviz
       after_script:

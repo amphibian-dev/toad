@@ -42,11 +42,11 @@ patchelf:
 	tar xf patchelf-$(PATCHELF_VERSION).tar.bz2
 	cd patchelf-$(PATCHELF_VERSION) && ./configure && sudo make install
 
-dist_manylinux: build patchelf
-	$(SUDO) $(PIP) install -U auditwheel
-	$(SUDO) $(PYTHON) setup.py sdist bdist_wheel --universal
-	auditwheel show dist/*.whl
-	auditwheel repair --plat manylinux1_x86_64 dist/*.whl
+manylinux_docker:
+	docker pull $DOCKER_IMAGE
+
+dist_manylinux: build dist manylinux_docker
+	docker run --rm -e PLAT=$PLAT -v $(shell pwd):/io $DOCKER_IMAGE $PRE_CMD /io/scripts/build_wheels.sh
 
 upload:
 	twine check dist/*
