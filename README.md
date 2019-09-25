@@ -12,6 +12,8 @@
 
 **Toad is developed to facilitate the model development work - especially credit risk scorecard.**
  It provides intuitive tools for (1) data handling, (2) feature selection and WOE binning, (3) model selection (4) results evaluation and model validation, and (5) scorecard transformation.
+ 
+A [basic tutorial](https://github.com/amphibian-dev/toad/blob/onefless-patch-1/tutorial/Basic%20tutorial.ipynb) is provided. If an error occurs when loading the tutorial, you may download the .html or .ipynb file.
 
 By the **ESC Team**
 
