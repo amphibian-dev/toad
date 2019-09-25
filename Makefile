@@ -43,7 +43,7 @@ patchelf:
 	cd patchelf-$(PATCHELF_VERSION) && ./configure && sudo make install
 
 manylinux_docker:
-	docker pull $DOCKER_IMAGE
+	docker pull $(DOCKER_IMAGE)
 
 dist_manylinux: build dist manylinux_docker
 	docker run --rm -e PLAT=$(PLAT) -v $(shell pwd):/io $(DOCKER_IMAGE) $(PRE_CMD) /io/scripts/build_wheels.sh
