@@ -45,7 +45,8 @@ patchelf:
 dist_manylinux: build patchelf
 	$(SUDO) $(PIP) install -U auditwheel
 	$(SUDO) $(PYTHON) setup.py sdist bdist_wheel --universal
-	auditwheel repair dist/*.whl
+	auditwheel show dist/*.whl
+	auditwheel repair --plat manylinux1_x86_64 dist/*.whl
 
 upload:
 	twine check dist/*

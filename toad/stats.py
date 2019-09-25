@@ -310,4 +310,7 @@ def quality(dataframe, target = 'target', iv_only = False, **kwargs):
 
     rows = [r.get() for r in res]
 
-    return pd.DataFrame(rows)
+    return pd.DataFrame(rows).sort_values(
+        by = 'iv',
+        ascending = False,
+    )
