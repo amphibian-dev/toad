@@ -30,7 +30,23 @@ def test_select_exclude():
 
 def test_stepwise():
     df = stepwise(frame.fillna(-1), target = 'target')
-    assert ['E', 'C', 'F', 'target'] == df.columns.tolist()
+    assert ['C', 'E', 'F', 'target'] == df.columns.tolist()
+
+def test_stepwise_backward():
+    df = stepwise(frame.fillna(-1), target = 'target', direction = 'backward')
+    assert ['C', 'E', 'F', 'target'] == df.columns.tolist()
+
+def test_stepwise_forward():
+    df = stepwise(frame.fillna(-1), target = 'target', direction = 'forward')
+    assert ['C', 'E', 'F', 'target'] == df.columns.tolist()
+
+def test_stepwise_exclude():
+    df = stepwise(frame.fillna(-1), target = 'target', exclude = 'B')
+    assert ['B', 'C', 'E', 'F', 'target'] == df.columns.tolist()
+
+def test_stepwise_return_drop():
+    df, drop_list = stepwise(frame.fillna(-1), target = 'target', return_drop = True)
+    assert ['B', 'A', 'D'] == drop_list
 
 def test_drop_vif():
     df = drop_vif(frame.fillna(-1), exclude = 'target')

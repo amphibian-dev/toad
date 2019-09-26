@@ -18,8 +18,9 @@ def stats_features(X, y, intercept = False):
     return res
 
 
-def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_enter = 0,
-            p_remove = 0.01, intercept = False, p_value_enter = 0.2, max_iter = None, exclude=None):
+def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_enter = 0.01,
+            p_remove = 0.01, intercept = False, p_value_enter = 0.2, max_iter = None,
+            return_drop = False, exclude = None):
     """stepwise to select features
 
     Args:
@@ -32,22 +33,21 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
         intercept (bool): if have intercept
         p_value_enter (float): threshold that will be used in 'both' to remove features
         max_iter (int): maximum number of iterate
+        return_drop (bool): if need to return features' name who has been dropped
         exclude (array-like): list of feature names that will not be dropped
 
     Returns:
         DataFrame:
     """
     df, y = split_target(frame, target)
-    
+
     if exclude is not None:
         df = df.drop(columns = exclude)
 
+    drop_list = []
     remaining = df.columns.tolist()
 
-    if direction is 'backward':
-        selected = remaining
-    else:
-        selected = []
+    selected = []
 
     best_res = stats_features(
         df[remaining[0]],
@@ -78,10 +78,11 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
             curr_ix = np.argmin(test_score)
             curr_score = test_score[curr_ix]
 
-            name = remaining.pop(curr_ix)
-
             if best_score - curr_score < p_remove:
                 break
+
+            name = remaining.pop(curr_ix)
+            drop_list.append(name)
 
             best_score = curr_score
 
@@ -100,8 +101,13 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
 
             name = remaining.pop(curr_ix)
             if best_score - curr_score < p_enter:
+                drop_list.append(name)
+
                 # early stop
-                if selected: break
+                if selected:
+                    drop_list += remaining
+                    break
+
                 continue
 
             selected.append(name)
@@ -113,11 +119,15 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
                 max_name = p_values.idxmax()
                 if p_values[max_name] > p_value_enter:
                     selected.remove(max_name)
+                    drop_list.append(max_name)
 
-    if isinstance(target, str):
-        selected += [target]
+    r = frame.drop(columns = drop_list)
 
-    return frame[selected]
+    res = (r,)
+    if return_drop:
+        res += (drop_list,)
+
+    return unpack_tuple(res)
 
 
 def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
