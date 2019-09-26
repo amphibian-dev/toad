@@ -25,7 +25,7 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
     Args:
         frame (DataFrame): dataframe that will be use to select
         target (str): target name in frame
-        direction (str): direction of stepwise, support 'forward', 'backward' and 'both'
+        direction (str): direction of stepwise, support 'forward', 'backward' and 'both', suggest 'both'
         criterion (str): criterion to statistic model, support 'aic', 'bic'
         p_enter (float): threshold that will be used in 'forward' and 'both' to keep features
         p_remove (float): threshold that will be used in 'backward' to remove features
