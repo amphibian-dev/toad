@@ -19,7 +19,7 @@ def stats_features(X, y, intercept = False):
 
 
 def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_enter = 0,
-            p_remove = 0.01, intercept = False, p_value_enter = 0.2, max_iter = None):
+            p_remove = 0.01, intercept = False, p_value_enter = 0.2, max_iter = None, exclude=None):
     """stepwise to select features
 
     Args:
@@ -32,11 +32,15 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
         intercept (bool): if have intercept
         p_value_enter (float): threshold that will be used in 'both' to remove features
         max_iter (int): maximum number of iterate
+        exclude (array-like): list of feature names that will not be dropped
 
     Returns:
         DataFrame:
     """
     df, y = split_target(frame, target)
+    
+    if exclude is not None:
+        df = df.drop(columns = exclude)
 
     remaining = df.columns.tolist()
 
