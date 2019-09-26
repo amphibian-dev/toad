@@ -53,6 +53,11 @@ def support_save_to_json(fn):
 class WOETransformer(TransformerMixin):
     """WOE transformer
     """
+    def __init__(self):
+        self.values_ = dict()
+        self.woe_ = dict()
+    
+
     @support_exclude
     @support_select_dtypes
     def fit(self, X, y, **kwargs):
@@ -158,6 +163,13 @@ class WOETransformer(TransformerMixin):
 
 
 class Combiner(TransformerMixin):
+    """Combiner for merge data
+    """
+
+    def __init__(self):
+        self.splits_ = dict()
+
+
     @support_exclude
     @support_select_dtypes
     def fit(self, X, y = None, **kwargs):
@@ -313,11 +325,12 @@ class Combiner(TransformerMixin):
 
         return np.array(l)
 
-    def set_rules(self, map):
+    def set_rules(self, map, reset = False):
         """set rules for combiner
 
         Args:
             map (dict|array-like): map of splits
+            reset (bool): if need to reset combiner
 
         Returns:
             self
@@ -326,7 +339,9 @@ class Combiner(TransformerMixin):
             self.splits_ = np.array(map)
             return self
 
-        self.splits_ = dict()
+        if reset:
+            self.splits_ = dict()
+        
         for col in map:
             self.splits_[col] = np.array(map[col])
 
