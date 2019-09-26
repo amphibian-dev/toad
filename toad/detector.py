@@ -119,7 +119,7 @@ def detect(dataframe):
         nblank, pblank = countBlank(series)
 
         row = pd.Series(
-            index = ['type', 'size', 'blank', 'unique'] + details_index,
+            index = ['type', 'size', 'missing', 'unique'] + details_index,
             data = [series.dtype, series.size, pblank, series.nunique()] + details
         )
 
