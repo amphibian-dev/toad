@@ -31,12 +31,12 @@ def test_iv_priv():
     assert value == 0.010385942643745353
 
 def test_iv():
-    value = IV(df['feature'], df['target'])
-    assert value == 0.5313391779453922
+    value = IV(df['feature'], df['target'], n_bins = 10, method = 'dt')
+    assert value == 0.273591770774362
 
 def test_iv_frame():
-    res = IV(df, 'target')
-    assert res.loc[0, 'A'] == 0.3427835694491965
+    res = IV(df, 'target', n_bins = 10, method = 'chi')
+    assert res.loc[0, 'A'] == 0.226363832867123
 
 def test_gini():
     value = gini(df['target'])
@@ -56,7 +56,7 @@ def test_entropy_cond():
 
 def test_quality():
     result = quality(df, 'target')
-    assert result.loc['feature', 'iv'] == 0.5313391779453922
+    assert result.loc['feature', 'iv'] == 0.273591770774362
     assert result.loc['A', 'gini'] == 0.49284164671885444
     assert result.loc['B', 'entropy'] == 0.6924956879070063
     assert result.loc['feature', 'unique'] == 500

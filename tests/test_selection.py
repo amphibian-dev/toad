@@ -14,19 +14,19 @@ def test_drop_empty():
 
 def test_drop_corr():
     df = drop_corr(frame, target = 'target')
-    assert ['B', 'D', 'E', 'target'] == df.columns.tolist()
+    assert ['D', 'E', 'F', 'target'] == df.columns.tolist()
 
 def test_drop_iv():
-    df = drop_iv(frame, target = 'target', threshold = 0.42)
-    assert 'C' not in df
+    df = drop_iv(frame, target = 'target', threshold = 0.25)
+    assert 'B' not in df
 
 def test_select():
-    df = select(frame, target = 'target', empty = 0.8, iv = 0.42, corr = 0.7)
-    assert ['B', 'D', 'target'] == df.columns.tolist()
+    df = select(frame, target = 'target', empty = 0.8, iv = 0.2, corr = 0.7)
+    assert ['D', 'F', 'target'] == df.columns.tolist()
 
 def test_select_exclude():
-    df = select(frame, target = 'target', empty = 0.8, iv = 0.42, corr = 0.7, exclude = ['A'])
-    assert ['A', 'B', 'D', 'target'] == df.columns.tolist()
+    df = select(frame, target = 'target', empty = 0.8, iv = 0.2, corr = 0.7, exclude = ['A'])
+    assert ['A', 'D', 'F', 'target'] == df.columns.tolist()
 
 def test_stepwise():
     df = stepwise(frame.fillna(-1), target = 'target')
