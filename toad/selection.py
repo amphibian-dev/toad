@@ -32,7 +32,7 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
         intercept (bool): if have intercept
         p_value_enter (float): threshold that will be used in 'both' to remove features
         max_iter (int): maximum number of iterate
-        exclude (
+        exclude (array-like): list of feature names that will not be dropped
 
     Returns:
         DataFrame:
