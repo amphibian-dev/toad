@@ -46,6 +46,7 @@ extensions = [
     "sphinx.ext.autosummary",
     'sphinx.ext.linkcode',
     'sphinx.ext.napoleon',
+    'nbsphinx',
     'recommonmark',
     'sphinx_rtd_theme',
 ]
@@ -58,6 +59,8 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
     'toad/commands',
+    '_build',
+    '**.ipynb_checkpoints',
 ]
 
 master_doc = 'index'

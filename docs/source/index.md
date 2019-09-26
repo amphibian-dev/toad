@@ -14,6 +14,10 @@ via source code
 python setup.py install
 ```
 
+## Tutorial
+
+A [basic tutorial](tutorial) is provided.
+
 
 ## Contents
 
