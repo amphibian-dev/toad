@@ -1,8 +1,8 @@
 .PHONY: build test
 
 
-PYTHON ?= python
-PIP ?= pip
+PYTHON = python3
+PIP = pip3
 SUDO ?=
 
 SPHINXOPTS =
@@ -13,6 +13,14 @@ SOURCEDIR := $(DOCSDIR)/source
 BUILDDIR := $(DOCSDIR)/build
 
 PATCHELF_VERSION = 0.10
+
+ifeq ('$(shell type -P python3)','')
+    PYTHON = python
+endif
+
+ifeq ('$(shell type -P pip3)','')
+    PIP = pip
+endif
 
 
 install:

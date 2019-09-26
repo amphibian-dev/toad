@@ -21,9 +21,7 @@ matrix:
       osx_image: xcode10.2
       language: shell
       env:
-          - PYTHON=python3
-          - PIP=pip3
-          - SUDO=sudo
+        - SUDO=sudo
       before_install:
           - brew install graphviz
       before_deploy:
