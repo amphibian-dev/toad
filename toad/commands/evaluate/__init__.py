@@ -74,7 +74,7 @@ ARGS = {
             'flag': ('--unique',),
             'type': int,
             'help': '将连续变量合并成 n 组进行分析',
-            'default': 20,
+            'default': 10,
         },
         {
             'flag': ('--name',),

@@ -8,7 +8,7 @@ from functools import wraps
 from multiprocessing import Pool, current_process, cpu_count
 
 
-CONTINUOUS_NUM = 20
+CONTINUOUS_NUM = 10
 FEATURE_THRESHOLD = 1e-7
 NAN_REPLACEMENT = -2e10
 
@@ -181,7 +181,7 @@ def is_continuous(series):
         return False
 
     n = len(np.unique(series))
-    return n > 20 or n / series.size > 0.5
+    return n > CONTINUOUS_NUM or n / series.size > 0.5
     # return n / series.size > 0.5
 
 

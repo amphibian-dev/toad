@@ -14,7 +14,7 @@ from .c_utils cimport c_min, c_sum, c_sum_axis_0, c_sum_axis_1
 
 
 
-DEFAULT_BINS = 20
+DEFAULT_BINS = 10
 
 
 def StepMerge(feature, nan = None, n_bins = None, clip_v = None, clip_std = None, clip_q = None):
