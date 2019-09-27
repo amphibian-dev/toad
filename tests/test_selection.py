@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.selection import drop_empty, drop_corr, drop_iv, drop_vif, select, stepwise
+from toad.selection import drop_empty, drop_var, drop_corr, drop_iv, drop_vif, select, stepwise
 
 from generate_data import frame
 
@@ -11,6 +11,14 @@ from generate_data import frame
 def test_drop_empty():
     df = drop_empty(frame, threshold = 0.8)
     assert 'E' not in df
+
+def test_drop_var():
+    df = drop_var(frame, threshold = 0.1)
+    assert 'A' not in df
+
+def test_drop_var_exclude():
+    df = drop_var(frame, threshold = 0.1, exclude = 'A')
+    assert 'A' in df
 
 def test_drop_corr():
     df = drop_corr(frame, target = 'target')

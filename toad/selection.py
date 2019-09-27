@@ -37,7 +37,8 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
         exclude (array-like): list of feature names that will not be dropped
 
     Returns:
-        DataFrame:
+        DataFrame: selected dataframe
+        array: list of feature names that has been dropped
     """
     df, y = split_target(frame, target)
 
@@ -169,6 +170,40 @@ def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
         res += (np.array(drop_list),)
 
     return unpack_tuple(res)
+
+
+def drop_var(frame, threshold = 0, return_drop = False, exclude = None):
+    """drop columns by variance
+    
+    Args:
+        frame (DataFrame): dataframe that will be used
+        threshold (float): drop features whose variance is less than threshold
+        return_drop (bool): if need to return features' name who has been dropped
+        exclude (array-like): list of feature names that will not be dropped
+    
+    Returns:
+        DataFrame: selected dataframe
+        array: list of feature names that has been dropped
+    """
+    df = frame.copy()
+    
+    if exclude is not None:
+        df = df.drop(columns = exclude)
+
+    # numeric features only
+    df = df.select_dtypes(include = 'number')
+
+    variances = np.var(df, axis = 0)
+    drop_list = df.columns[variances <= threshold]
+    
+    r = frame.drop(columns = drop_list)
+    
+    res = (r,)
+    if return_drop:
+        res += (drop_list)
+    
+    return unpack_tuple(res)
+
 
 def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
             return_drop = False, exclude = None):
