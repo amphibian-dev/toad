@@ -1,31 +1,117 @@
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 from .stats import IV, VIF
+from .metrics import MSE, AIC, BIC, KS, AUC
 from .utils import split_target, unpack_tuple, to_ndarray
 
 
-def stats_features(X, y, intercept = False):
-    """
-    """
-    import statsmodels.api as sm
-
-    if intercept:
-        X = sm.add_constant(X)
-
-    res = sm.OLS(y, X).fit()
-
-    return res
+INTERCEPT_COLS = 'intercept'
 
 
-def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_enter = 0.01,
-            p_remove = 0.01, intercept = False, p_value_enter = 0.2, max_iter = None,
-            return_drop = False, exclude = None):
+class StatsModel:
+    def __init__(self, estimator = 'ols', criterion = 'aic', intercept = False):
+        if isinstance(estimator, str):
+            Est = self.get_estimator(estimator)
+            estimator = Est(fit_intercept = intercept,)  
+        
+        self.estimator = estimator
+        self.intercept = intercept
+        self.criterion = criterion
+    
+
+    def get_estimator(self, name):
+        from sklearn.linear_model import (
+            LinearRegression,
+            LogisticRegression,
+            Lasso,
+            Ridge,
+        )
+
+        ests = {
+            'ols': LinearRegression,
+            'lr': LogisticRegression,
+            'lasso': Lasso,
+            'ridge': Ridge,
+        }
+
+        if name in ests:
+            return ests[name]
+        
+        raise Exception(f'estimator {estimator} is not supported')
+
+    
+
+    def stats(self, X, y):
+        """
+        """
+        X = X.copy()
+
+        if isinstance(X, pd.Series):
+            X = X.to_frame()
+        
+        self.estimator.fit(X, y)
+
+        pre = self.estimator.predict(X)
+
+        coef = self.estimator.coef_
+
+        if self.intercept:
+            coef = np.append(coef, self.estimator.intercept_)
+            X[INTERCEPT_COLS] = np.ones(X.shape[0])
+        
+        n, k = X.shape
+
+        t_value = self.t_value(pre, y, X, coef)
+        p_value = self.p_value(t_value, n)
+        c = self.get_criterion(pre, y, k)
+
+        return {
+            't_value': pd.Series(t_value, index = X.columns),
+            'p_value': pd.Series(p_value, index = X.columns),
+            'criterion': c
+        }
+    
+    def get_criterion(self, pre, y, k):
+        if self.criterion == 'aic':
+            lf = self.likelihood(pre, y, k)
+            return AIC(pre, y, k, lf = lf)
+        
+        if self.criterion == 'bic':
+            lf = self.likelihood(pre, y, k)
+            return BIC(pre, y, k, lf = lf)
+        
+        if self.criterion == 'ks':
+            return KS(pre, y)
+        
+        if self.criterion == 'auc':
+            return AUC(pre, y)
+    
+    def t_value(self, pre, y, X, coef):
+        n, k = X.shape
+        mse = sum((y - pre) ** 2) / float(n - k)
+        std_e = np.sqrt(mse * (np.linalg.inv(np.dot(X.T, X)).diagonal()))
+        return coef / std_e
+    
+    def p_value(self, t, n):
+        return stats.t.sf(np.abs(t), n - 1) * 2
+    
+    def likelihood(self, pre, y, k):
+        n = len(y)
+        mse = MSE(pre, y)
+        return (2 * np.pi * mse * np.e) ** (-n / 2)
+
+
+def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', criterion = 'aic',
+            p_enter = 0.01, p_remove = 0.01, p_value_enter = 0.2, intercept = False,
+            max_iter = None, return_drop = False, exclude = None):
     """stepwise to select features
 
     Args:
         frame (DataFrame): dataframe that will be use to select
         target (str): target name in frame
+        estimator (str): model to use for stats
         direction (str): direction of stepwise, support 'forward', 'backward' and 'both', suggest 'both'
         criterion (str): criterion to statistic model, support 'aic', 'bic'
         p_enter (float): threshold that will be used in 'forward' and 'both' to keep features
@@ -50,12 +136,13 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
 
     selected = []
 
-    best_res = stats_features(
+    sm = StatsModel(estimator = estimator, criterion = criterion, intercept = intercept)
+
+    best_res = sm.stats(
         df[remaining[0]],
         y,
-        intercept = intercept,
     )
-    best_score = getattr(best_res, criterion)
+    best_score = best_res['criterion']
 
     iter = -1
     while remaining:
@@ -69,12 +156,11 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
 
         if direction is 'backward':
             for i in range(l):
-                test_res[i] = stats_features(
+                test_res[i] = sm.stats(
                     df[ remaining[:i] + remaining[i+1:] ],
                     y,
-                    intercept = intercept,
                 )
-                test_score[i] = getattr(test_res[i], criterion)
+                test_score[i] = test_res[i]['criterion']
 
             curr_ix = np.argmin(test_score)
             curr_score = test_score[curr_ix]
@@ -90,12 +176,11 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
         # forward and both
         else:
             for i in range(l):
-                test_res[i] = stats_features(
+                test_res[i] = sm.stats(
                     df[ selected + [remaining[i]] ],
                     y,
-                    intercept = intercept,
                 )
-                test_score[i] = getattr(test_res[i], criterion)
+                test_score[i] = test_res[i]['criterion']
 
             curr_ix = np.argmin(test_score)
             curr_score = test_score[curr_ix]
@@ -115,8 +200,7 @@ def stepwise(frame, target = 'target', direction = 'both', criterion = 'aic', p_
             best_score = curr_score
 
             if direction is 'both':
-                p_values = getattr(test_res[curr_ix], 'pvalues')
-
+                p_values = test_res[curr_ix]['p_value']
                 max_name = p_values.idxmax()
                 if p_values[max_name] > p_value_enter:
                     selected.remove(max_name)

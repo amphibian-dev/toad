@@ -108,29 +108,41 @@ def SSE(y_pred, y):
     return np.sum((y_pred - y) ** 2)
 
 
-def AIC(y_pred, y, k):
+def MSE(y_pred, y):
+    """mean of squares due to error
+    """
+    return np.mean((y_pred - y) ** 2)
+
+
+def AIC(y_pred, y, k, lf = None):
     """Akaike Information Criterion
 
     Args:
         y_pred (array-like)
         y (array-like)
         k (int): number of featuers
+        lf (float): result of likelihood function
     """
-    sse = SSE(y_pred, y)
-    return 2 * k - 2 * np.log(sse)
+    if lf is None:
+        lf = SSE(y_pred, y)
+    
+    return 2 * k - 2 * np.log(lf)
 
 
-def BIC(y_pred, y, k, n):
+def BIC(y_pred, y, k, lf = None):
     """Bayesian Information Criterion
 
     Args:
         y_pred (array-like)
         y (array-like)
         k (int): number of featuers
-        n (int): number of samples
+        lf (float): result of likelihood function
     """
-    sse = SSE(y_pred, y)
-    return np.log(n) * k - 2 * np.log(sse)
+    n = len(y)
+    if lf is None:
+        lf = SSE(y_pred, y)
+    
+    return np.log(n) * k - 2 * np.log(lf)
 
 
 def F1(score, target, split = 'best', return_split = False):
