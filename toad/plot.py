@@ -1,85 +1,10 @@
-import os
 import numpy as np
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve
-from matplotlib.font_manager import FontProperties
 
+from .tadpole import tadpole
+from .tadpole.utils import HEATMAP_CMAP, add_annotate
 from .utils import unpack_tuple, generate_str
-
-sns.set_palette('muted')
-
-CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
-FONT_FILE = 'NotoSansCJKsc-Regular.otf'
-FONTS_PATH = os.path.join(CURRENT_PATH, 'fonts', FONT_FILE)
-myfont = FontProperties(fname = os.path.abspath(FONTS_PATH))
-sns.set(font = myfont.get_family())
-
-HEATMAP_CMAP = sns.diverging_palette(240, 10, as_cmap = True)
-MAX_STYLE = 6
-FIG_SIZE = (12, 6)
-
-def get_axes(size = FIG_SIZE):
-    _, ax = plt.subplots(figsize = size)
-    return ax
-
-def reset_legend(axes):
-    axes.legend(
-        loc='center left',
-        bbox_to_anchor=(1, 0.5),
-        framealpha = 0,
-        prop = myfont,
-    )
-
-    return axes
-
-def reset_ticklabels(axes):
-    labels = []
-    if axes.get_xticklabels():
-        labels += axes.get_xticklabels()
-
-    if axes.get_yticklabels():
-        labels += axes.get_yticklabels()
-
-    for label in labels:
-        label.set_fontproperties(myfont)
-
-    return axes
-
-def fix_axes(axes):
-    functions = [reset_ticklabels, reset_legend]
-
-    for func in functions:
-        func(axes)
-    return axes
-
-
-class Tadpole:
-    def __getattr__(self, name):
-        t = getattr(sns, name)
-        if callable(t):
-            return self.wrapsns(t)
-
-        return t
-
-    def wrapsns(self, f):
-        def wrapper(*args, figure_size = FIG_SIZE, **kwargs):
-            kw = kwargs.copy()
-            if 'ax' not in kw:
-                kw['ax'] = get_axes(size = figure_size)
-
-            try:
-                a = f(*args, **kw)
-                a = fix_axes(a)
-                return a
-            except:
-                return f(*args, **kwargs)
-
-        return wrapper
-
-
-tpl = Tadpole()
 
 
 def badrate_plot(frame, x = None, target = 'target', by = None,
@@ -129,7 +54,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     table['badrate'] = table['sum'] / table['count']
 
 
-    rate_plot = tpl.lineplot(
+    rate_plot = tadpole.lineplot(
         x = x,
         y = 'badrate',
         hue = by,
@@ -142,7 +67,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     res = (rate_plot,)
 
     if return_counts:
-        count_plot = tpl.barplot(
+        count_plot = tadpole.barplot(
             x = x,
             y = 'count',
             hue = by,
@@ -157,7 +82,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
             mask = (table[x] == v)
             table.loc[mask, 'prop'] = table[mask]['count'] / table[mask]['count'].sum()
 
-        prop_plot = tpl.barplot(
+        prop_plot = tadpole.barplot(
             x = x,
             y = 'prop',
             hue = by,
@@ -185,7 +110,7 @@ def corr_plot(frame, figure_size = (20, 15)):
     mask = np.zeros_like(corr, dtype = np.bool)
     mask[np.triu_indices_from(mask)] = True
 
-    map_plot = tpl.heatmap(
+    map_plot = tadpole.heatmap(
         corr,
         mask = mask,
         cmap = HEATMAP_CMAP,
@@ -235,7 +160,7 @@ def proportion_plot(x = None, keys = None):
         dropna = False,
     ).rename('proportion').reset_index()
 
-    prop_plot = tpl.barplot(
+    prop_plot = tadpole.barplot(
         x = 'value',
         y = 'proportion',
         hue = 'keys',
@@ -258,7 +183,7 @@ def roc_plot(score, target):
 
     fpr, tpr, thresholds = roc_curve(target, score)
 
-    ax = tpl.lineplot(
+    ax = tadpole.lineplot(
         x = fpr,
         y = tpr,
     )
@@ -266,3 +191,40 @@ def roc_plot(score, target):
     ax = ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
 
     return ax
+
+
+def bin_plot(frame, x = None, target = 'target'):
+    """plot for bins
+    """
+    group = frame.groupby(x)
+    
+    table = group[target].agg(['sum', 'count']).reset_index()
+    table['badrate'] = table['sum'] / table['count']
+    table['prop'] = table['count'] / table['count'].sum()
+
+    prop_ax = tadpole.barplot(
+        x = x,
+        y = 'prop',
+        data = table,
+        color = '#82C6E2',
+    )
+
+    prop_ax = add_annotate(prop_ax)
+
+    badrate_ax = prop_ax.twinx()
+    badrate_ax.grid(False)
+
+    badrate_ax = tadpole.lineplot(
+        x = x,
+        y = 'badrate',
+        data = table,
+        color = '#D65F5F',
+        ax = badrate_ax,
+    )
+    
+    badrate_ax = add_annotate(badrate_ax)
+
+    return prop_ax
+
+
+    
