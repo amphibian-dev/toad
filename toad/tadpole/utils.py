@@ -69,3 +69,60 @@ def tadpole_axes(fn):
         return r
 
     return func
+
+
+
+def annotate(ax, x, y, space = 5, label = "{:.2f}"):
+    """
+    """
+    va = 'bottom'
+    
+    if y < 0:
+        space *= -1
+        va = 'top'
+
+    ax.annotate(
+        label.format(y),
+        (x, y),
+        xytext = (0, space),
+        textcoords = "offset points",
+        ha = 'center',
+        va = va,
+    )
+
+
+
+def add_bar_annotate(ax, space = 5):
+    """
+    """
+    for rect in ax.patches:
+        y_value = rect.get_height()
+        x_value = rect.get_x() + rect.get_width() / 2
+
+        annotate(ax, x_value, y_value)
+    
+    return ax
+
+
+def add_line_annotate(ax, space = 5):
+    """
+    """
+    for line in ax.lines:
+        points = line.get_xydata()
+        
+        for point in points:
+            annotate(ax, point[0], point[1])
+    
+    return ax
+
+
+def add_annotate(ax):
+    if len(ax.lines) > 0:
+        add_line_annotate(ax)
+    
+    if len(ax.patches) > 0:
+        add_bar_annotate(ax)
+    
+    return ax
+
+

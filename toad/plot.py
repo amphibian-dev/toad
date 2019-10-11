@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.metrics import roc_curve
 
 from .tadpole import tadpole
-from .tadpole.utils import HEATMAP_CMAP
+from .tadpole.utils import HEATMAP_CMAP, add_annotate
 from .utils import unpack_tuple, generate_str
 
 
@@ -191,3 +191,40 @@ def roc_plot(score, target):
     ax = ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
 
     return ax
+
+
+def bin_plot(frame, x = None, target = 'target'):
+    """plot for bins
+    """
+    group = frame.groupby(x)
+    
+    table = group[target].agg(['sum', 'count']).reset_index()
+    table['badrate'] = table['sum'] / table['count']
+    table['prop'] = table['count'] / table['count'].sum()
+
+    prop_ax = tadpole.barplot(
+        x = x,
+        y = 'prop',
+        data = table,
+        color = '#82C6E2',
+    )
+
+    prop_ax = add_annotate(prop_ax)
+
+    badrate_ax = prop_ax.twinx()
+    badrate_ax.grid(False)
+
+    badrate_ax = tadpole.lineplot(
+        x = x,
+        y = 'badrate',
+        data = table,
+        color = '#D65F5F',
+        ax = badrate_ax,
+    )
+    
+    badrate_ax = add_annotate(badrate_ax)
+
+    return prop_ax
+
+
+    
