@@ -2,7 +2,13 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.plot import badrate_plot, corr_plot, proportion_plot, roc_plot
+from toad.plot import (
+    badrate_plot,
+    corr_plot,
+    proportion_plot,
+    roc_plot,
+    bin_plot,
+)
 
 from generate_data import frame
 
@@ -26,3 +32,7 @@ def test_proportion_plot():
 
 def test_roc_plot():
     g = roc_plot(frame['B'], frame['target'])
+
+
+def test_bin_plot():
+    g = bin_plot(frame, x = 'B', target = 'target')
