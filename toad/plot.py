@@ -201,9 +201,11 @@ def bin_plot(frame, x = None, target = 'target'):
     table = group[target].agg(['sum', 'count']).reset_index()
     table['badrate'] = table['sum'] / table['count']
     table['prop'] = table['count'] / table['count'].sum()
-
+    
+    iv_values = stats.iv(frame[x],frame[target])
+    
     prop_ax = tadpole.barplot(
-        x = x,
+        x = x+': '+str(iv_values),
         y = 'prop',
         data = table,
         color = '#82C6E2',
@@ -215,7 +217,7 @@ def bin_plot(frame, x = None, target = 'target'):
     badrate_ax.grid(False)
 
     badrate_ax = tadpole.lineplot(
-        x = x,
+        x = x+': '+str(iv_values),
         y = 'badrate',
         data = table,
         color = '#D65F5F',
