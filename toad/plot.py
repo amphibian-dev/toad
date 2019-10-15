@@ -2,10 +2,10 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_curve
 
-from .tadpole import tadpole
-from .tadpole.utils import HEATMAP_CMAP, add_annotate
-from .utils import unpack_tuple, generate_str
 from .stats import IV
+from .tadpole import tadpole
+from .tadpole.utils import HEATMAP_CMAP, MAX_STYLE, add_annotate, add_text, reset_ylim
+from .utils import unpack_tuple, generate_str
 
 def badrate_plot(frame, x = None, target = 'target', by = None,
                 freq = None, format = None, return_counts = False,
@@ -193,21 +193,17 @@ def roc_plot(score, target):
     return ax
 
 
-def bin_plot(frame, x = None, target = 'target'):
+def bin_plot(frame, x = None, target = 'target', iv = True):
     """plot for bins
     """
     group = frame.groupby(x)
-    
+
     table = group[target].agg(['sum', 'count']).reset_index()
     table['badrate'] = table['sum'] / table['count']
     table['prop'] = table['count'] / table['count'].sum()
-    
-    iv_values = format(IV(frame[x],frame[target]),'.5f')
-    x_iv= x+ ":" + str(iv_values)
-    table=table.rename(columns={x:x_iv})
-    
+
     prop_ax = tadpole.barplot(
-        x = x_iv,
+        x = x,
         y = 'prop',
         data = table,
         color = '#82C6E2',
@@ -219,16 +215,17 @@ def bin_plot(frame, x = None, target = 'target'):
     badrate_ax.grid(False)
 
     badrate_ax = tadpole.lineplot(
-        x = x_iv,
+        x = x,
         y = 'badrate',
         data = table,
         color = '#D65F5F',
         ax = badrate_ax,
     )
-    
+
     badrate_ax = add_annotate(badrate_ax)
 
+    if iv:
+        prop_ax = reset_ylim(prop_ax)
+        prop_ax = add_text(prop_ax, 'IV: {:.5f}'.format(IV(frame[x],frame[target])))
+
     return prop_ax
-
-
-    

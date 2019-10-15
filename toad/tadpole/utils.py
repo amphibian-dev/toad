@@ -44,6 +44,18 @@ def reset_ticklabels(axes):
 
     return axes
 
+
+def reset_ylim(axes):
+    # for axes and twins
+    for ax in axes.figure.axes:
+        if ax.bbox.bounds == axes.bbox.bounds:
+            bottom, top = ax.get_ylim()
+            top += (top - bottom) * 0.1
+            ax.set_ylim(bottom, top)
+
+    return axes
+
+
 def fix_axes(axes):
     if not isinstance(axes, Axes):
         return axes
@@ -61,11 +73,11 @@ def tadpole_axes(fn):
 
         if not isinstance(res, tuple):
             return fix_axes(res)
-        
+
         r = tuple()
         for i in res:
             r += (fix_axes(i),)
-        
+
         return r
 
     return func
@@ -76,7 +88,7 @@ def annotate(ax, x, y, space = 5, label = "{:.2f}"):
     """
     """
     va = 'bottom'
-    
+
     if y < 0:
         space *= -1
         va = 'top'
@@ -100,7 +112,7 @@ def add_bar_annotate(ax, space = 5):
         x_value = rect.get_x() + rect.get_width() / 2
 
         annotate(ax, x_value, y_value)
-    
+
     return ax
 
 
@@ -109,20 +121,39 @@ def add_line_annotate(ax, space = 5):
     """
     for line in ax.lines:
         points = line.get_xydata()
-        
+
         for point in points:
             annotate(ax, point[0], point[1])
-    
+
     return ax
 
 
 def add_annotate(ax):
     if len(ax.lines) > 0:
         add_line_annotate(ax)
-    
+
     if len(ax.patches) > 0:
         add_bar_annotate(ax)
-    
+
     return ax
 
 
+def add_text(ax, text, loc = 'top left', offset = (0.01, 0.04)):
+    x_min, x_max = ax.get_xlim()
+    y_min, y_max = ax.get_ylim()
+
+    x_offset = (x_max - x_min) * offset[0]
+    y_offset = (y_max - y_min) * offset[1]
+
+    if loc == 'top left':
+        loc = (x_min + x_offset, y_max - y_offset)
+    elif loc == 'top right':
+        loc = (x_max - x_offset, y_max - y_offset)
+    elif loc == 'bottom left':
+        loc = (x_min + x_offset, y_min + y_offset)
+    elif loc == 'bottom right':
+        loc = (x_max - x_offset, y_min + y_offset)
+
+    ax.text(*loc, text, fontsize = 'large')
+
+    return ax
