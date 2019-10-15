@@ -34,7 +34,7 @@ matrix:
       env:
           - PATH=/c/Python37:/c/Python37/Scripts:$PATH
       before_install:
-          - choco install python
+          - choco install python --version 3.7.2
           - choco install graphviz
           - choco install make
       before_deploy:
