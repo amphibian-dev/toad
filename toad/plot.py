@@ -5,7 +5,7 @@ from sklearn.metrics import roc_curve
 from .tadpole import tadpole
 from .tadpole.utils import HEATMAP_CMAP, add_annotate
 from .utils import unpack_tuple, generate_str
-
+from .stats import IV
 
 def badrate_plot(frame, x = None, target = 'target', by = None,
                 freq = None, format = None, return_counts = False,
@@ -201,9 +201,13 @@ def bin_plot(frame, x = None, target = 'target'):
     table = group[target].agg(['sum', 'count']).reset_index()
     table['badrate'] = table['sum'] / table['count']
     table['prop'] = table['count'] / table['count'].sum()
-
+    
+    iv_values = format(IV(frame[x],frame[target]),'.5f')
+    x_iv= x+ ":" + str(iv_values)
+    table=table.rename(columns={x:x_iv})
+    
     prop_ax = tadpole.barplot(
-        x = x,
+        x = x_iv,
         y = 'prop',
         data = table,
         color = '#82C6E2',
@@ -215,7 +219,7 @@ def bin_plot(frame, x = None, target = 'target'):
     badrate_ax.grid(False)
 
     badrate_ax = tadpole.lineplot(
-        x = x,
+        x = x_iv,
         y = 'badrate',
         data = table,
         color = '#D65F5F',
