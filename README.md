@@ -11,8 +11,15 @@
 
 
 **Toad is developed to facilitate the model development work - especially credit risk scorecard.**
- It provides intuitive tools for (1) data handling, (2) feature selection and WOE binning, (3) model selection (4) results evaluation and model validation, and (5) scorecard transformation.
- 
+
+It provides intuitive tools for
+
+- data handling
+- feature selection and WOE binning
+- model selection
+- results evaluation and model validation
+- scorecard transformation.
+
 A [basic tutorial](https://toad.readthedocs.io/en/latest/tutorial.html) is provided on readthedocs.
 
 By the **ESC Team**

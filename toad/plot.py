@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_curve,roc_auc_score
+from sklearn.metrics import roc_curve, roc_auc_score
 
 from .stats import IV
 from .tadpole import tadpole
@@ -180,15 +180,17 @@ def roc_plot(score, target):
     Returns:
         Axes
     """
-    fpr, tpr, thresholds = roc_curve(target,score)
-    auc = roc_auc_score(target,score)
+    fpr, tpr, thresholds = roc_curve(target, score)
+
     ax = tadpole.lineplot(
         x = fpr,
-        y = tpr
+        y = tpr,
     )
 
-    ax = add_text(ax,text='AUC: {:.5f}'.format(auc))
     ax = ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
+
+    auc = roc_auc_score(target, score)
+    ax = add_text(ax, 'AUC: {:.5f}'.format(auc))
 
     return ax
 
