@@ -187,7 +187,7 @@ def roc_plot(score, target):
         y = tpr,
     )
 
-    ax = ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
+    ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
 
     auc = roc_auc_score(target, score)
     ax = add_text(ax, 'AUC: {:.5f}'.format(auc))
