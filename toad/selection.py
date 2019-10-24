@@ -55,7 +55,7 @@ class StatsModel:
 
         pre = self.estimator.predict(X)
 
-        coef = self.estimator.coef_
+        coef = self.estimator.coef_.reshape(-1)
 
         if self.intercept:
             coef = np.append(coef, self.estimator.intercept_)

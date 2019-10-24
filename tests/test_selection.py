@@ -56,6 +56,10 @@ def test_stepwise_return_drop():
     df, drop_list = stepwise(frame.fillna(-1), target = 'target', return_drop = True)
     assert ['B', 'A', 'D'] == drop_list
 
+def test_stepwise_lr():
+    df = stepwise(frame.fillna(-1), target = 'target', estimator = 'lr', direction = 'forward')
+    assert ['A', 'B', 'C', 'E', 'target'] == df.columns.tolist()
+
 def test_drop_vif():
     df = drop_vif(frame.fillna(-1), exclude = 'target')
     assert ['C', 'F', 'target'] == df.columns.tolist()
