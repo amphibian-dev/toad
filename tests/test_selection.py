@@ -60,6 +60,14 @@ def test_stepwise_lr():
     df = stepwise(frame.fillna(-1), target = 'target', estimator = 'lr', direction = 'forward')
     assert ['A', 'B', 'C', 'E', 'target'] == df.columns.tolist()
 
+def test_stepwise_zero():
+    df = pd.DataFrame({
+        'X': np.zeros(500),
+        'Y': np.random.randint(2, size = 500),
+    })
+    df = stepwise(df, target = 'Y')
+    print(df)
+
 def test_drop_vif():
     df = drop_vif(frame.fillna(-1), exclude = 'target')
     assert ['C', 'F', 'target'] == df.columns.tolist()

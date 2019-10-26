@@ -14,12 +14,12 @@ class StatsModel:
     def __init__(self, estimator = 'ols', criterion = 'aic', intercept = False):
         if isinstance(estimator, str):
             Est = self.get_estimator(estimator)
-            estimator = Est(fit_intercept = intercept,)  
-        
+            estimator = Est(fit_intercept = intercept,)
+
         self.estimator = estimator
         self.intercept = intercept
         self.criterion = criterion
-    
+
 
     def get_estimator(self, name):
         from sklearn.linear_model import (
@@ -38,10 +38,10 @@ class StatsModel:
 
         if name in ests:
             return ests[name]
-        
+
         raise Exception(f'estimator {estimator} is not supported')
 
-    
+
 
     def stats(self, X, y):
         """
@@ -50,7 +50,7 @@ class StatsModel:
 
         if isinstance(X, pd.Series):
             X = X.to_frame()
-        
+
         self.estimator.fit(X, y)
 
         pre = self.estimator.predict(X)
@@ -60,7 +60,7 @@ class StatsModel:
         if self.intercept:
             coef = np.append(coef, self.estimator.intercept_)
             X[INTERCEPT_COLS] = np.ones(X.shape[0])
-        
+
         n, k = X.shape
 
         t_value = self.t_value(pre, y, X, coef)
@@ -72,35 +72,40 @@ class StatsModel:
             'p_value': pd.Series(p_value, index = X.columns),
             'criterion': c
         }
-    
+
     def get_criterion(self, pre, y, k):
         if self.criterion == 'aic':
-            lf = self.likelihood(pre, y, k)
-            return AIC(pre, y, k, lf = lf)
-        
+            llf = self.loglikelihood(pre, y, k)
+            return AIC(pre, y, k, llf = llf)
+
         if self.criterion == 'bic':
-            lf = self.likelihood(pre, y, k)
-            return BIC(pre, y, k, lf = lf)
-        
+            llf = self.loglikelihood(pre, y, k)
+            return BIC(pre, y, k, llf = llf)
+
         if self.criterion == 'ks':
             return KS(pre, y)
-        
+
         if self.criterion == 'auc':
             return AUC(pre, y)
-    
+
     def t_value(self, pre, y, X, coef):
         n, k = X.shape
         mse = sum((y - pre) ** 2) / float(n - k)
-        std_e = np.sqrt(mse * (np.linalg.inv(np.dot(X.T, X)).diagonal()))
+        nx = np.dot(X.T, X)
+
+        if np.linalg.det(nx) == 0:
+            return np.nan
+
+        std_e = np.sqrt(mse * (np.linalg.inv(nx).diagonal()))
         return coef / std_e
-    
+
     def p_value(self, t, n):
         return stats.t.sf(np.abs(t), n - 1) * 2
-    
-    def likelihood(self, pre, y, k):
+
+    def loglikelihood(self, pre, y, k):
         n = len(y)
         mse = MSE(pre, y)
-        return (2 * np.pi * mse * np.e) ** (-n / 2)
+        return (-n / 2) * np.log(2 * np.pi * mse * np.e)
 
 
 def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', criterion = 'aic',
@@ -258,19 +263,19 @@ def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
 
 def drop_var(frame, threshold = 0, return_drop = False, exclude = None):
     """drop columns by variance
-    
+
     Args:
         frame (DataFrame): dataframe that will be used
         threshold (float): drop features whose variance is less than threshold
         return_drop (bool): if need to return features' name who has been dropped
         exclude (array-like): list of feature names that will not be dropped
-    
+
     Returns:
         DataFrame: selected dataframe
         array: list of feature names that has been dropped
     """
     df = frame.copy()
-    
+
     if exclude is not None:
         df = df.drop(columns = exclude)
 
@@ -279,13 +284,13 @@ def drop_var(frame, threshold = 0, return_drop = False, exclude = None):
 
     variances = np.var(df, axis = 0)
     drop_list = df.columns[variances <= threshold]
-    
+
     r = frame.drop(columns = drop_list)
-    
+
     res = (r,)
     if return_drop:
         res += (drop_list)
-    
+
     return unpack_tuple(res)
 
 
