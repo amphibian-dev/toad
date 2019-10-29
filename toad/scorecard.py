@@ -146,10 +146,10 @@ class ScoreCard(BaseEstimator):
 
             if isinstance(combiner[col][0], (int, float)):
                 if l_c != l_t - 1:
-                    raise Exception(f'column \'{col}\' is not matched, assert {l_t} bins but given {l_c + 1}')
+                    raise Exception('column \'{col}\' is not matched, assert {l_t} bins but given {l_c}'.format(col = col, l_t = l_t, l_c = l_c + 1))
             else:
                 if l_c != l_t:
-                    raise Exception(f'column \'{col}\' is not matched, assert {l_t} bins but given {l_c}')
+                    raise Exception('column \'{col}\' is not matched, assert {l_t} bins but given {l_c}'.format(col = col, l_t = l_t, l_c = l_c))
 
         return True
 

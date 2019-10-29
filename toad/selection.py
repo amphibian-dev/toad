@@ -39,7 +39,7 @@ class StatsModel:
         if name in ests:
             return ests[name]
 
-        raise Exception(f'estimator {estimator} is not supported')
+        raise Exception('estimator {name} is not supported'.format(name = name))
 
 
 
