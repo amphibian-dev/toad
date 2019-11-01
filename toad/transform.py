@@ -4,6 +4,9 @@ import numpy as np
 import pandas as pd
 from functools import wraps
 from sklearn.base import TransformerMixin
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.ensemble import GradientBoostingClassifier
+
 
 from .stats import WOE, probability
 from .merge import merge
@@ -417,3 +420,55 @@ class Combiner(TransformerMixin):
         l.append(value[start:])
 
         return np.array(l)
+
+
+
+
+
+class GBDTTransformer(TransformerMixin):
+    """GBDT transformer
+    """
+    def __init__(self):
+        self.gbdt = None
+        self.onehot = None
+    
+
+    @support_exclude
+    @support_select_dtypes
+    def fit(self, X, y, **kwargs):
+        """fit GBDT transformer
+
+        Args:
+            X (DataFrame|array-like)
+            y (str|array-like)
+            select_dtypes (str|numpy.dtypes): `'object'`, `'number'` etc. only selected dtypes will be transform,
+        """
+
+        if isinstance(y, str):
+            X = X.copy()
+            y = X.pop(y)
+
+        self.gbdt = GradientBoostingClassifier(**kwargs)
+        self.gbdt.fit(X, y)
+
+        X = self.gbdt.apply(X)
+        X = X.reshape(-1, X.shape[1])
+
+        self.onehot = OneHotEncoder().fit(X)
+
+        return self
+
+
+    def transform(self, X):
+        """transform woe
+
+        Args:
+            X (DataFrame|array-like)
+            default (str): 'min'(default), 'max' - the strategy to be used for unknown group
+
+        Returns:
+            array-like
+        """
+        X = self.gbdt.apply(X)
+        res = self.onehot.transform(X).toarray()
+        return res
