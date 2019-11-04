@@ -43,16 +43,14 @@ bins = combiner.fit_transform(df, target, n_bins = 5)
 woe_transer = WOETransformer()
 woe = woe_transer.fit_transform(bins, target)
 
-model = LogisticRegression()
-# fit model by woe
-model.fit(woe, target)
+
 
 # create a score card
 card = ScoreCard(
     combiner = combiner,
     transer = woe_transer,
-    model = model,
 )
+card.fit(woe, target)
 
 FUZZ_THRESHOLD = 1e-4
 TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
@@ -60,6 +58,9 @@ TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
 
 
 def test_proba_to_score():
+    model = LogisticRegression()
+    model.fit(woe, target)
+
     proba = model.predict_proba(woe)[:,1]
     score = card.proba_to_score(proba)
     assert score[404] == TEST_SCORE
@@ -110,10 +111,8 @@ def test_card_without_combiner():
     transer = WOETransformer()
     woe_X = transer.fit_transform(df, target)
 
-    model = LogisticRegression()
-    model.fit(woe_X, target)
-
-    card = ScoreCard(transer = transer, model = model)
+    card = ScoreCard(transer = transer)
+    card.fit(woe_X, target)
     score, sub = card.predict(df, return_sub = True)
 
     assert score[404] == pytest.approx(460.9789823549386, FUZZ_THRESHOLD)
@@ -127,16 +126,14 @@ def test_card_combiner_number_not_match():
     woe_transer = WOETransformer()
     woe = woe_transer.fit_transform(bins, target)
 
-    model = LogisticRegression()
-    model.fit(woe, target)
+    card = ScoreCard(
+        combiner = com,
+        transer = woe_transer,
+    )
 
     with pytest.raises(Exception) as e:
-        # will raise an exception when create a card
-        card = ScoreCard(
-            combiner = com,
-            transer = woe_transer,
-            model = model,
-        )
+        # will raise an exception when fitting a card
+        card.fit(woe, target)
 
     assert '\'A\' is not matched' in str(e.value)
 
@@ -149,15 +146,13 @@ def test_card_combiner_str_not_match():
     woe_transer = WOETransformer()
     woe = woe_transer.fit_transform(bins, target)
 
-    model = LogisticRegression()
-    model.fit(woe, target)
+    card = ScoreCard(
+        combiner = com,
+        transer = woe_transer,
+    )
 
     with pytest.raises(Exception) as e:
-        # will raise an exception when create a card
-        card = ScoreCard(
-            combiner = com,
-            transer = woe_transer,
-            model = model,
-        )
+        # will raise an exception when fitting a card
+        card.fit(woe, target)
 
     assert '\'C\' is not matched' in str(e.value)

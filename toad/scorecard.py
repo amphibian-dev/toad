@@ -2,6 +2,7 @@ import re
 import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator
+from sklearn.linear_model import LogisticRegression
 
 from .transform import WOETransformer, Combiner, ELSE_GROUP, EMPTY_BIN
 from .utils import to_ndarray, bin_by_splits, save_json, read_json
@@ -26,7 +27,8 @@ FACTOR_UNKNOWN = 'UNKNOWN'
 
 
 class ScoreCard(BaseEstimator):
-    def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750, **kwargs):
+    def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750,
+        card = None, combiner = {}, transer = None, **kwargs):
         """
         """
         self.pdo = pdo
@@ -37,10 +39,15 @@ class ScoreCard(BaseEstimator):
         self.factor = pdo / np.log(rate)
         self.offset = base_score - self.factor * np.log(base_odds)
 
-        self.generate_card(**kwargs)
+        self.combiner = combiner
+        self.transer = transer
+        self.model = LogisticRegression(**kwargs)
+
+        if card is not None:
+            self.generate_card(card = card)
 
 
-    def generate_card(self, card = None, combiner = {}, transer = None, model = None):
+    def generate_card(self, card = None):
         """
 
         Args:
@@ -55,47 +62,31 @@ class ScoreCard(BaseEstimator):
 
             return self.set_card(card)
 
-        if transer is None or model is None:
-            raise Exception('transer, model must be all set')
 
-        rules = self._get_rules(combiner, transer)
+        rules = self._get_rules(self.combiner, self.transer)
         self.set_combiner(rules)
 
-        map = self.generate_map(transer, model)
+        map = self.generate_map(self.transer, self.model)
         self.set_score(map)
 
         return self
 
 
-    def fit(self, X, y, combiner = None, transer = None, model = None):
+    def fit(self, X, y):
         """
         Args:
-            X (2D array-like)
+            X (2D DataFrame)
             Y (array-like)
         """
-        from .selection import select
-        X = select(X, target = y)
+        self.features_ = X.columns.tolist()
 
-        if combiner is None:
-            combiner = Combiner().fit(X, y, n_bins = 3)
+        for f in self.features_:
+            if f not in self.transer.values_:
+                raise Exception('column \'{f}\' is not in transer'.format(f = f))
 
-        bins_X = combiner.transform(X)
+        self.model.fit(X, y)
 
-        if transer is None:
-            transer = WOETransformer().fit(bins_X, y)
-
-        woe_X = transer.transform(bins_X)
-
-        if model is None:
-            from sklearn.linear_model import LogisticRegression
-            model = LogisticRegression()
-            model.fit(woe_X, y)
-
-        self.generate_card(
-            combiner = combiner,
-            transer = transer,
-            model = model,
-        )
+        self.generate_card()
 
         return self
 
@@ -314,10 +305,8 @@ class ScoreCard(BaseEstimator):
         """
         self.set_model(model)
 
-        keys = list(transer.values_.keys())
-
         s_map = dict()
-        for i, k in enumerate(keys):
+        for i, k in enumerate(self.features_):
             weight = self.weight[i]
             # skip feature whose weight is 0
             if weight == 0:
