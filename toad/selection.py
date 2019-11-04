@@ -460,7 +460,7 @@ def drop_vif(frame, threshold = 3, return_drop = False, exclude = None):
     while(True):
         vif = VIF(df)
 
-        ix = np.argmax(vif)
+        ix = vif.idxmax()
         max = vif[ix]
 
         if max < threshold:
