@@ -30,6 +30,11 @@ class ScoreCard(BaseEstimator):
     def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750,
         card = None, combiner = {}, transer = None, **kwargs):
         """
+
+        Args:
+            card (dict|str|IOBase): dict of card or io to read json
+            combiner (toad.Combiner)
+            transer (toad.WOETransformer)
         """
         self.pdo = pdo
         self.rate = rate
@@ -52,9 +57,6 @@ class ScoreCard(BaseEstimator):
 
         Args:
             card (dict|str|IOBase): dict of card or io to read json
-            combiner (toad.Combiner)
-            transer (toad.WOETransformer)
-            model (LogisticRegression)
         """
         if card is not None:
             if not isinstance(card, dict):
