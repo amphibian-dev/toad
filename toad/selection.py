@@ -53,7 +53,10 @@ class StatsModel:
 
         self.estimator.fit(X, y)
 
-        pre = self.estimator.predict(X)
+        if hasattr(self.estimator, 'predict_proba'):
+            pre = self.estimator.predict_proba(X)[:, 1]
+        else:
+            pre = self.estimator.predict(X)
 
         coef = self.estimator.coef_.reshape(-1)
 
@@ -143,11 +146,9 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
 
     sm = StatsModel(estimator = estimator, criterion = criterion, intercept = intercept)
 
-    best_res = sm.stats(
-        df[remaining[0]],
-        y,
-    )
-    best_score = best_res['criterion']
+    order = -1 if criterion in ['aic', 'bic'] else 1
+
+    best_score = -np.inf * order
 
     iter = -1
     while remaining:
@@ -167,10 +168,10 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
                 )
                 test_score[i] = test_res[i]['criterion']
 
-            curr_ix = np.argmin(test_score)
+            curr_ix = np.argmax(test_score * order)
             curr_score = test_score[curr_ix]
 
-            if best_score - curr_score < p_remove:
+            if (curr_score - best_score) * order < p_remove:
                 break
 
             name = remaining.pop(curr_ix)
@@ -187,11 +188,11 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
                 )
                 test_score[i] = test_res[i]['criterion']
 
-            curr_ix = np.argmin(test_score)
+            curr_ix = np.argmax(test_score * order)
             curr_score = test_score[curr_ix]
 
             name = remaining.pop(curr_ix)
-            if best_score - curr_score < p_enter:
+            if (curr_score - best_score) * order < p_enter:
                 drop_list.append(name)
 
                 # early stop
@@ -206,10 +207,11 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
 
             if direction is 'both':
                 p_values = test_res[curr_ix]['p_value']
-                max_name = p_values.idxmax()
-                if p_values[max_name] > p_value_enter:
-                    selected.remove(max_name)
-                    drop_list.append(max_name)
+                drop_names = p_values[p_values > p_value_enter].index
+
+                for name in drop_names:
+                    selected.remove(name)
+                    drop_list.append(name)
 
     r = frame.drop(columns = drop_list)
 
