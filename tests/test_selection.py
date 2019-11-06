@@ -58,7 +58,25 @@ def test_stepwise_return_drop():
 
 def test_stepwise_lr():
     df = stepwise(frame.fillna(-1), target = 'target', estimator = 'lr', direction = 'forward')
-    assert ['A', 'B', 'C', 'E', 'target'] == df.columns.tolist()
+    assert ['C', 'target'] == df.columns.tolist()
+
+def test_stepwise_ks():
+    df = stepwise(frame.fillna(-1), target = 'target', criterion = 'ks', direction = 'forward')
+    assert ['A', 'C', 'target'] == df.columns.tolist()
+
+def test_stepwise_zero():
+    df = pd.DataFrame({
+        'X': np.zeros(500),
+        'Z': np.random.rand(500),
+        'Y': np.random.randint(2, size = 500),
+    })
+    df = stepwise(df, target = 'Y')
+    assert ['Z', 'Y'] == df.columns.tolist()
+
+def test_stepwise_forward_when_best_is_first():
+    df = frame[['E', 'F', 'B', 'A', 'D', 'C', 'target']]
+    df = stepwise(df.fillna(-1), target = 'target', direction = 'forward')
+    assert ['E', 'F', 'C', 'target'] == df.columns.tolist()
 
 def test_drop_vif():
     df = drop_vif(frame.fillna(-1), exclude = 'target')

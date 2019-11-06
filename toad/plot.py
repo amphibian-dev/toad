@@ -224,6 +224,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True):
         ax = badrate_ax,
     )
 
+    badrate_ax.set_ylim([0, None])
     badrate_ax = add_annotate(badrate_ax)
 
     if iv:

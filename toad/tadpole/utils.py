@@ -154,6 +154,6 @@ def add_text(ax, text, loc = 'top left', offset = (0.01, 0.04)):
     elif loc == 'bottom right':
         loc = (x_max - x_offset, y_min + y_offset)
 
-    ax.text(*loc, text, fontsize = 'large')
+    ax.text(*loc, text, fontsize = 'x-large')
 
     return ax

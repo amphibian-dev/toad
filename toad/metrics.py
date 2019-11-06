@@ -114,35 +114,35 @@ def MSE(y_pred, y):
     return np.mean((y_pred - y) ** 2)
 
 
-def AIC(y_pred, y, k, lf = None):
+def AIC(y_pred, y, k, llf = None):
     """Akaike Information Criterion
 
     Args:
         y_pred (array-like)
         y (array-like)
         k (int): number of featuers
-        lf (float): result of likelihood function
+        llf (float): result of log-likelihood function
     """
-    if lf is None:
-        lf = SSE(y_pred, y)
-    
-    return 2 * k - 2 * np.log(lf)
+    if llf is None:
+        llf = np.log(SSE(y_pred, y))
+
+    return 2 * k - 2 * llf
 
 
-def BIC(y_pred, y, k, lf = None):
+def BIC(y_pred, y, k, llf = None):
     """Bayesian Information Criterion
 
     Args:
         y_pred (array-like)
         y (array-like)
         k (int): number of featuers
-        lf (float): result of likelihood function
+        llf (float): result of log-likelihood function
     """
     n = len(y)
-    if lf is None:
-        lf = SSE(y_pred, y)
-    
-    return np.log(n) * k - 2 * np.log(lf)
+    if llf is None:
+        llf = np.log(SSE(y_pred, y))
+
+    return np.log(n) * k - 2 * llf
 
 
 def F1(score, target, split = 'best', return_split = False):
@@ -207,9 +207,9 @@ def _PSI(test, base):
         'base': base_prop,
     })
     frame.index.name = 'value'
-    
+
     return psi, frame.reset_index()
-    
+
 
 
 def PSI(test, base, combiner = None, return_frame = False):
@@ -234,7 +234,7 @@ def PSI(test, base, combiner = None, return_frame = False):
 
     psi = list()
     frame = list()
-    
+
     if isinstance(test, pd.DataFrame):
         for col in test:
             p, f = _PSI(test[col], base[col])
@@ -242,7 +242,7 @@ def PSI(test, base, combiner = None, return_frame = False):
             frame.append(f)
 
         psi = pd.Series(psi, index = test.columns)
-        
+
         frame = pd.concat(
             frame,
             keys = test.columns,
