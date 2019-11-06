@@ -34,7 +34,7 @@ matrix:
       env:
           - PATH=/c/Python37:/c/Python37/Scripts:$PATH
       before_install:
-          - choco install python --version 3.7.2
+          - choco install python --version=3.7.2
           - choco install graphviz
           - choco install make
       before_deploy:
@@ -47,7 +47,7 @@ matrix:
       env:
           - PATH=/c/Python36:/c/Python36/Scripts:$PATH
       before_install:
-          - choco install python --version 3.6.8
+          - choco install python --version=3.6.8
           - choco install graphviz
           - choco install make
           - pip install -U patsy
