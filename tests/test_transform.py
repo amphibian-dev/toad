@@ -6,7 +6,7 @@ import pyximport
 
 pyximport.install(setup_args={"include_dirs": np.get_include()})
 
-from toad.transform import WOETransformer, Combiner
+from toad.transform import WOETransformer, Combiner, GBDTTransformer
 
 np.random.seed(1)
 
@@ -92,3 +92,12 @@ def test_combiner_export():
     combiner = Combiner().fit(df, target, method = 'chi', n_bins = 4)
     bins = combiner.export()
     assert isinstance(bins['B'][0], list)
+
+def test_gbdt_transformer():
+    df = pd.DataFrame({
+        'A': np.random.rand(500),
+        'B': np.random.randint(10, size = 500),
+    })
+    f = GBDTTransformer().fit_transform(df, target, n_estimators = 10, max_depth = 2)
+    assert f.shape == (500, 40)
+    

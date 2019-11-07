@@ -470,5 +470,6 @@ class GBDTTransformer(TransformerMixin):
             array-like
         """
         X = self.gbdt.apply(X)
+        X = X.reshape(-1, X.shape[1])
         res = self.onehot.transform(X).toarray()
         return res
