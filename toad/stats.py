@@ -236,14 +236,23 @@ def VIF(frame):
     if isinstance(frame, pd.DataFrame):
         index = frame.columns
         frame = frame.values
+    
+    from sklearn.linear_model import LinearRegression
 
-    from statsmodels.stats.outliers_influence import variance_inflation_factor
+    model = LinearRegression(fit_intercept = False)
 
     l = frame.shape[1]
     vif = np.zeros(l)
-    for i in range(l):
-        vif[i] = variance_inflation_factor(frame, i)
 
+    for i in range(l):
+        X = frame[:, np.arange(l) != i]
+        y = frame[:, i]
+        model.fit(X, y)
+
+        pre_y = model.predict(X)
+
+        vif[i] = np.sum(y ** 2) / np.sum((pre_y - y) ** 2)
+    
     return pd.Series(vif, index = index)
 
 

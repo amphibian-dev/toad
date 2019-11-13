@@ -77,4 +77,4 @@ def test_quality_object_type_array_with_nan():
 
 def test_vif():
     vif = VIF(df)
-    assert vif['A'] == 2.9693364426401105
+    assert vif['A'] == 2.969336442640111

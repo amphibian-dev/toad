@@ -45,7 +45,6 @@ setup(
         'pandas',
         'scipy',
         'scikit-learn',
-        'statsmodels >= 0.10',
         'seaborn >= 0.9.0',
     ],
     tests_require=[
