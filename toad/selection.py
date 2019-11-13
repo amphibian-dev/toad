@@ -160,7 +160,7 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
         test_score = np.zeros(l)
         test_res = np.empty(l, dtype = np.object)
 
-        if direction is 'backward':
+        if direction == 'backward':
             for i in range(l):
                 test_res[i] = sm.stats(
                     df[ remaining[:i] + remaining[i+1:] ],
@@ -205,7 +205,7 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
             selected.append(name)
             best_score = curr_score
 
-            if direction is 'both':
+            if direction == 'both':
                 p_values = test_res[curr_ix]['p_value']
                 drop_names = p_values[p_values > p_value_enter].index
 

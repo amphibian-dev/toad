@@ -138,9 +138,9 @@ class WOETransformer(TransformerMixin):
         X = to_ndarray(X)
         res = np.zeros(len(X))
 
-        if default is 'min':
+        if default == 'min':
             default = np.min(woe)
-        elif default is 'max':
+        elif default == 'max':
             default = np.max(woe)
 
         # replace unknown group to default value
@@ -464,7 +464,6 @@ class GBDTTransformer(TransformerMixin):
 
         Args:
             X (DataFrame|array-like)
-            default (str): 'min'(default), 'max' - the strategy to be used for unknown group
 
         Returns:
             array-like
