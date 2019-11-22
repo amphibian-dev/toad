@@ -9,7 +9,7 @@ sns.set_palette('muted')
 
 CURRENT_PATH = os.path.abspath(os.path.dirname(__file__))
 FONT_FILE = 'NotoSansCJKsc-Regular.otf'
-FONTS_PATH = os.path.join(CURRENT_PATH, '..', 'fonts', FONT_FILE)
+FONTS_PATH = os.path.join(CURRENT_PATH, 'fonts', FONT_FILE)
 myfont = FontProperties(fname = os.path.abspath(FONTS_PATH))
 sns.set(font = myfont.get_family())
 
