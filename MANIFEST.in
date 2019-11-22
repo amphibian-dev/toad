@@ -1,5 +1,6 @@
 include README.md
 include setup.py
+include toad/*.pyd
 include toad/*.pyx
 include toad/tadpole/fonts/*
 

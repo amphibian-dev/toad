@@ -129,7 +129,7 @@ def corr_plot(frame, figure_size = (20, 15)):
 
 
 def proportion_plot(x = None, keys = None):
-    """plot for proportion
+    """plot for comparing proportion in different dataset
 
     Args:
         x (Series|list): series or list of series data for plot
@@ -197,6 +197,15 @@ def roc_plot(score, target):
 
 def bin_plot(frame, x = None, target = 'target', iv = True):
     """plot for bins
+
+    Args:
+        frame (DataFrame)
+        x (str): column in frame that will be used as x axis
+        target (str): target column in frame
+        iv (bool): if need to show iv in plot
+
+    Returns:
+        Axes: bins' proportion and badrate plot
     """
     group = frame.groupby(x)
 
