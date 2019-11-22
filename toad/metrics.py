@@ -10,6 +10,7 @@ from .utils import (
     feature_splits,
     iter_df,
     unpack_tuple,
+    bin_by_splits,
 )
 
 
@@ -259,3 +260,29 @@ def PSI(test, base, combiner = None, return_frame = False):
         res += (frame,)
 
     return unpack_tuple(res)
+
+
+def matrix(y_pred, y, splits = None):
+    """confusion matrix of target
+
+    Args:
+        y_pred (array-like)
+        y (array-like)
+        splits (float|list): split points of y_pred
+
+    Returns:
+        DataFrame: confusion matrix witch true labels in rows and predicted labels in columns
+
+    """
+    if splits is not None:
+        y_pred = bin_by_splits(y_pred, splits)
+    
+    labels = np.unique(y)
+    from sklearn.metrics import confusion_matrix
+    m = confusion_matrix(y, y_pred, labels = labels)
+
+    return pd.DataFrame(
+        m,
+        index = pd.Index(labels, name = 'Actual'),
+        columns = pd.Index(labels, name = 'Predicted'),
+    )

@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.metrics import KS, KS_bucket, F1, PSI, AUC
+from toad.metrics import KS, KS_bucket, F1, PSI, AUC, matrix
 
 np.random.seed(1)
 
@@ -76,3 +76,7 @@ def test_PSI_return_frame():
     )
 
     assert frame.loc[4, 'test'] == 0.38
+
+def test_matrix():
+    df = matrix(feature, target, splits = 0.5)
+    assert df.iloc[0,1] == 133

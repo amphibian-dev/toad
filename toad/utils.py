@@ -123,6 +123,10 @@ def bin_by_splits(feature, splits):
     """Bin feature by split points
     """
     feature = fillna(feature)
+
+    if not isinstance(splits, (list, np.ndarray)):
+        splits = [splits]
+    
     return np.digitize(feature, splits)
 
 
