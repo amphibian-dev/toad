@@ -6,8 +6,9 @@
 
 
 [![PyPi version][pypi-image]][pypi-url]
-[![Python version][python-image]][pypi-url]
+[![Python version][python-image]][docs-url]
 [![Build Status][travis-image]][travis-url]
+[![Downloads Status][download-image]][docs-url]
 
 
 **Toad is developed to facilitate the model development work - especially credit risk scorecard.**
@@ -56,7 +57,7 @@ toad.IV(feature, target, method = 'dt', min_samples = 0.1)
 
 ## Documents
 
-A simple API [docs](https://toad.readthedocs.io/en/latest/)
+A simple API [docs][docs-url]
 
 
 [pypi-image]: https://img.shields.io/pypi/v/toad.svg?style=flat-square
@@ -64,3 +65,5 @@ A simple API [docs](https://toad.readthedocs.io/en/latest/)
 [python-image]: https://img.shields.io/pypi/pyversions/toad.svg?style=flat-square
 [travis-image]: https://img.shields.io/travis/amphibian-dev/toad/master.svg?style=flat-square
 [travis-url]: https://travis-ci.org/amphibian-dev/toad
+[downloads-image]: https://img.shields.io/pypi/dm/toad?style=flat-square
+[docs-url]: https://toad.readthedocs.io/
