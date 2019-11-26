@@ -71,7 +71,7 @@ def test_stepwise_zero():
         'Y': np.random.randint(2, size = 500),
     })
     df = stepwise(df, target = 'Y')
-    assert ['Z', 'Y'] == df.columns.tolist()
+    assert set(['Z', 'Y']) == set(df.columns.tolist())
 
 def test_stepwise_forward_when_best_is_first():
     df = frame[['E', 'F', 'B', 'A', 'D', 'C', 'target']]

@@ -71,7 +71,7 @@ def test_predict():
 
 def test_predict_sub_score():
     score, sub = card.predict(df, return_sub = True)
-    assert sub.iloc[250, 1] == 162.08878336572937
+    assert sub.loc[250, 'B'] == 162.08878336572937
 
 def test_woe_to_score():
     score = card.woe_to_score(woe)
@@ -105,7 +105,8 @@ def test_generate_testing_frame():
 def test_export_frame():
     card = ScoreCard(card = card_config)
     frame = card.export(to_frame = True)
-    assert frame.loc[6, 'value'] == 'else'
+    rows = frame[(frame['name'] == 'B') & (frame['value'] == 'else')].reset_index()
+    assert rows.loc[0, 'score'] == 500
 
 def test_card_without_combiner():
     transer = WOETransformer()
