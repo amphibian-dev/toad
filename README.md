@@ -8,7 +8,7 @@
 [![PyPi version][pypi-image]][pypi-url]
 [![Python version][python-image]][docs-url]
 [![Build Status][travis-image]][travis-url]
-[![Downloads Status][download-image]][docs-url]
+[![Downloads Status][downloads-image]][docs-url]
 
 
 **Toad is developed to facilitate the model development work - especially credit risk scorecard.**
