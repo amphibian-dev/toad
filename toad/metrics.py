@@ -57,6 +57,7 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
 
     bad_total = df['bad'].sum()
     good_total = df['good'].sum()
+    all_total = bad_total + good_total
 
     df['bucket'] = 0
     if bucket is False:
@@ -84,12 +85,15 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
 
     agg2['bad_prop'] = agg2['bads'] / bad_total
     agg2['good_prop'] = agg2['goods'] / good_total
+    agg2['total_prop'] = agg2['total'] / all_total
 
     agg2['cum_bads'] = agg2['bads'].cumsum()
     agg2['cum_goods'] = agg2['goods'].cumsum()
+    agg2['cum_total'] = agg2['total'].cumsum()
 
     agg2['cum_bads_prop'] = agg2['cum_bads'] / bad_total
     agg2['cum_goods_prop'] = agg2['cum_goods'] / good_total
+    agg2['cum_total_prop'] = agg2['cum_total'] / all_total
 
 
     agg2['ks'] = agg2['cum_bads_prop'] - agg2['cum_goods_prop']
