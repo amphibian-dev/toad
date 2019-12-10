@@ -14,6 +14,7 @@ from .utils import (
     is_continuous,
     inter_feature,
     support_dataframe,
+    split_target,
 )
 
 STATS_EMPTY = np.nan
@@ -304,14 +305,13 @@ def quality(dataframe, target = 'target', iv_only = False, **kwargs):
     Returns:
         DataFrame: quality of features with the features' name as row name
     """
+    frame, target = split_target(dataframe, target)
+    
     res = []
     pool = Pool(cpu_count())
 
-    for name, series in dataframe.iteritems():
-        if name == target:
-            continue
-
-        r = pool.apply_async(column_quality, args = (series, dataframe[target]), kwds = {'name': name, 'iv_only': iv_only, **kwargs})
+    for name, series in frame.iteritems():
+        r = pool.apply_async(column_quality, args = (series, target), kwds = {'name': name, 'iv_only': iv_only, **kwargs})
         res.append(r)
 
     pool.close()
