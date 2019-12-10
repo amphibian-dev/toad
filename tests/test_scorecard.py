@@ -71,7 +71,7 @@ def test_predict():
 
 def test_predict_sub_score():
     score, sub = card.predict(df, return_sub = True)
-    assert sub.loc[250, 'B'] == 162.0781460573475
+    assert sub.loc[250, 'B'] == pytest.approx(162.0781460573475, FUZZ_THRESHOLD)
 
 def test_woe_to_score():
     score = card.woe_to_score(woe)
