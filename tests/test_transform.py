@@ -94,6 +94,8 @@ def test_combiner_export():
     assert isinstance(bins['B'][0], list)
 
 def test_gbdt_transformer():
+    np.random.seed(1)
+    
     df = pd.DataFrame({
         'A': np.random.rand(500),
         'B': np.random.randint(10, size = 500),

@@ -71,7 +71,7 @@ def test_predict():
 
 def test_predict_sub_score():
     score, sub = card.predict(df, return_sub = True)
-    assert sub.loc[250, 'B'] == 162.08878336572937
+    assert sub.loc[250, 'B'] == 162.0781460573475
 
 def test_woe_to_score():
     score = card.woe_to_score(woe)
@@ -84,7 +84,7 @@ def test_bin_to_score():
 
 def test_export_map():
     card_map = card.export()
-    assert card_map['B']['D'] == 159.25
+    assert card_map['B']['D'] == 159.24
 
 def test_card_map():
     config = card.export()

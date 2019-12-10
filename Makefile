@@ -1,5 +1,6 @@
 .PHONY: build test
 
+SHELL = /bin/bash
 
 PYTHON = python3
 PIP = pip3
@@ -31,7 +32,12 @@ uninstall:
 	cat files.txt | xargs rm -rf
 
 test:
-	$(PYTHON) -m pytest -x ./tests
+	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))
+	@if [ -z $(TARGET) ]; then \
+		$(PYTHON) -m pytest tests; \
+	else \
+		$(PYTHON) -m pytest tests/test_$(TARGET).py; \
+	fi
 
 build_deps:
 	$(SUDO) $(PIP) install -U wheel setuptools twine
@@ -65,3 +71,6 @@ clean:
 
 docs: build
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+%:
+	@:
