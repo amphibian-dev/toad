@@ -207,6 +207,14 @@ def bin_plot(frame, x = None, target = 'target', iv = True):
     Returns:
         Axes: bins' proportion and badrate plot
     """
+    frame = frame.copy()
+
+    if not isinstance(target, str):
+        temp_name = generate_str()
+        frame[temp_name] = target
+        target = temp_name
+    
+    
     group = frame.groupby(x)
 
     table = group[target].agg(['sum', 'count']).reset_index()
