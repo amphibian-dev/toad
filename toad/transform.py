@@ -16,6 +16,10 @@ EMPTY_BIN = -1
 ELSE_GROUP = 'else'
 
 
+###############
+# decorators
+###############
+
 def support_select_dtypes(fn):
 
     @wraps(fn)
@@ -53,7 +57,41 @@ def support_save_to_json(fn):
 
 
 
-class WOETransformer(TransformerMixin):
+class Transformer(TransformerMixin):
+    _fitted = False
+
+
+    def fit_method(fn):
+
+        @wraps(fn)
+        def fit(self, X, *args, **kwargs):
+            # check X dims
+            fn(self, X, *args, **kwargs)
+
+            self._fitted = True
+            return self
+        
+        return fit
+
+
+    def transform_method(fn):
+
+        @wraps(fn)
+        def transform(self, X, *args, **kwargs):
+            if not self._fitted:
+                return self.raiseUnfitted()
+            
+            return fn(self, X, *args, **kwargs)
+        
+        return transform
+    
+
+    def raiseUnfitted(self):
+        raise Exception('transformer is unfitted yet!')
+
+
+
+class WOETransformer(Transformer):
     """WOE transformer
     """
     def __init__(self):
@@ -61,6 +99,7 @@ class WOETransformer(TransformerMixin):
         self.woe_ = dict()
     
 
+    @Transformer.fit_method
     @support_exclude
     @support_select_dtypes
     def fit(self, X, y, **kwargs):
@@ -102,6 +141,7 @@ class WOETransformer(TransformerMixin):
         return values, woe
 
 
+    @Transformer.transform_method
     def transform(self, X, **kwargs):
         """transform woe
 
@@ -165,7 +205,7 @@ class WOETransformer(TransformerMixin):
 
 
 
-class Combiner(TransformerMixin):
+class Combiner(Transformer):
     """Combiner for merge data
     """
 
@@ -173,6 +213,7 @@ class Combiner(TransformerMixin):
         self.splits_ = dict()
 
 
+    @Transformer.fit_method
     @support_exclude
     @support_select_dtypes
     def fit(self, X, y = None, **kwargs):
@@ -236,6 +277,7 @@ class Combiner(TransformerMixin):
 
         return self._covert_splits(uni_val, splits)
 
+    @Transformer.transform_method
     def transform(self, X, **kwargs):
         """transform X by combiner
 
@@ -328,6 +370,7 @@ class Combiner(TransformerMixin):
 
         return np.array(l)
 
+    @Transformer.fit_method
     def set_rules(self, map, reset = False):
         """set rules for combiner
 
@@ -425,7 +468,7 @@ class Combiner(TransformerMixin):
 
 
 
-class GBDTTransformer(TransformerMixin):
+class GBDTTransformer(Transformer):
     """GBDT transformer
     """
     def __init__(self):
@@ -433,6 +476,7 @@ class GBDTTransformer(TransformerMixin):
         self.onehot = None
     
 
+    @Transformer.fit_method
     @support_exclude
     @support_select_dtypes
     def fit(self, X, y, **kwargs):
@@ -458,7 +502,7 @@ class GBDTTransformer(TransformerMixin):
 
         return self
 
-
+    @Transformer.transform_method
     def transform(self, X):
         """transform woe
 
