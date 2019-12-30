@@ -50,6 +50,12 @@ class ScoreCard(BaseEstimator):
 
         if card is not None:
             self.generate_card(card = card)
+        
+    @property
+    def coef_(self):
+        """ coef of LR model
+        """
+        return self.weight
 
 
     def generate_card(self, card = None):
