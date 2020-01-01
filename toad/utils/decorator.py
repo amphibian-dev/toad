@@ -7,8 +7,10 @@ class Decorator:
     """
     _fn = None
     _cls = None
+    is_class = False
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, is_class = False, **kwargs):
+        self.is_class = is_class
 
         if len(args) == 1 and callable(args[0]):
             self._fn = args[0]
@@ -16,40 +18,53 @@ class Decorator:
             self.setup(*args, **kwargs)
 
     def __call__(self, *args, **kwargs):
-        # print('------------', self.a, args)
         if self._fn is None:
             self._fn = args[0]
             return self
-        
-        print('~~~~~', args)
-        print('-----', args[0], self._cls)
-        if len(args) > 0 and args[0] is self._cls:
+
+        if self.is_class:
+            self._cls = args[0]
             args = args[1:]
-        
-        print('-----', len(args))
 
         args, kwargs = self.before(*args, **kwargs)
-        
+
         if self._cls:
             res = self._fn(self._cls, *args, **kwargs)
         else:
             res = self._fn(*args, **kwargs)
-        
-        return self.after(res, *args, **kwargs)
-    
-    def __get__(self, instance, type = None):
-        self._cls = instance
-        
-        return self
 
-    
+        return self.after(res, *args, **kwargs)
+
+    def __get__(self, instance, type = None):
+        self.is_class = True
+
+        def func(*args, **kwargs):
+            return self.__call__(instance, *args, **kwargs)
+
+        return func
+
+    @property
+    def __name__(self):
+        if self._fn is not None:
+            return self._fn.__name__
+
+        return ''
+
+    @property
+    def __doc__(self):
+        if self._fn is not None:
+            return self._fn.__doc__
+
+        return ''
+
+
     def setup(self, *args, **kwargs):
         for key in kwargs:
             setattr(self, key, kwargs[key])
-    
+
     def before(self, *args, **kwargs):
         return args, kwargs
-    
+
     def after(self, res, *args, **kwargs):
         return res
 
@@ -57,12 +72,11 @@ class Decorator:
 class frame_exclude(Decorator):
     """decorator for exclude columns
     """
-    
+
     def before(self, X, *args, exclude = None, **kwargs):
-        print('~~~~~ exclude')
         if exclude is not None and isinstance(X, pd.DataFrame):
             X = X.drop(columns = exclude)
-        
+
         return (X, *args), kwargs
 
 
@@ -71,7 +85,6 @@ class select_dtypes(Decorator):
     """
 
     def before(self, X, *args, select_dtypes = None, **kwargs):
-        print('~~~~~ dtypes')
         if select_dtypes is not None and isinstance(X, pd.DataFrame):
             X = X.select_dtypes(include = select_dtypes)
 

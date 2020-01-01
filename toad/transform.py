@@ -10,50 +10,11 @@ from sklearn.ensemble import GradientBoostingClassifier
 
 from .stats import WOE, probability
 from .merge import merge
-from .utils import to_ndarray, np_count, bin_by_splits, save_json
+from .utils import to_ndarray, np_count, bin_by_splits
+from .utils.decorator import frame_exclude, select_dtypes, save_to_json
 
 EMPTY_BIN = -1
 ELSE_GROUP = 'else'
-
-
-###############
-# decorators
-###############
-
-def support_select_dtypes(fn):
-
-    @wraps(fn)
-    def func(self, X, *args, select_dtypes = None, **kwargs):
-        if select_dtypes is not None and isinstance(X, pd.DataFrame):
-            X = X.select_dtypes(include = select_dtypes)
-
-        return fn(self, X, *args, **kwargs)
-
-    return func
-
-
-def support_exclude(fn):
-    @wraps(fn)
-    def func(self, X, *args, exclude = None, **kwargs):
-        if exclude is not None and isinstance(X, pd.DataFrame):
-            X = X.drop(columns = exclude)
-
-        return fn(self, X, *args, **kwargs)
-
-    return func
-
-
-def support_save_to_json(fn):
-    @wraps(fn)
-    def func(self, *args, to_json = None, **kwargs):
-        res = fn(self, *args, **kwargs)
-
-        if to_json is None:
-            return res
-
-        save_json(res, to_json)
-
-    return func
 
 
 
@@ -70,7 +31,7 @@ class Transformer(TransformerMixin):
 
             self._fitted = True
             return self
-        
+
         return fit
 
 
@@ -80,11 +41,11 @@ class Transformer(TransformerMixin):
         def transform(self, X, *args, **kwargs):
             if not self._fitted:
                 return self.raiseUnfitted()
-            
+
             return fn(self, X, *args, **kwargs)
-        
+
         return transform
-    
+
 
     def raiseUnfitted(self):
         raise Exception('transformer is unfitted yet!')
@@ -97,11 +58,11 @@ class WOETransformer(Transformer):
     def __init__(self):
         self.values_ = dict()
         self.woe_ = dict()
-    
+
 
     @Transformer.fit_method
-    @support_exclude
-    @support_select_dtypes
+    @frame_exclude(is_class = True)
+    @select_dtypes(is_class = True)
     def fit(self, X, y, **kwargs):
         """fit WOE transformer
 
@@ -192,7 +153,7 @@ class WOETransformer(Transformer):
         return res
 
 
-    @support_save_to_json
+    @save_to_json(is_class = True)
     def export(self):
         if not isinstance(self.values_, dict):
             return dict(zip(self.values_, self.woe_))
@@ -214,8 +175,8 @@ class Combiner(Transformer):
 
 
     @Transformer.fit_method
-    @support_exclude
-    @support_select_dtypes
+    @frame_exclude(is_class = True)
+    @select_dtypes(is_class = True)
     def fit(self, X, y = None, **kwargs):
         """fit combiner
 
@@ -387,7 +348,7 @@ class Combiner(Transformer):
 
         if reset:
             self.splits_ = dict()
-        
+
         for col in map:
             self.splits_[col] = np.array(map[col])
 
@@ -416,7 +377,7 @@ class Combiner(Transformer):
         return 'object'
 
 
-    @support_save_to_json
+    @save_to_json(is_class = True)
     def export(self, format = False):
         """export combine rules for score card
 
@@ -474,11 +435,11 @@ class GBDTTransformer(Transformer):
     def __init__(self):
         self.gbdt = None
         self.onehot = None
-    
+
 
     @Transformer.fit_method
-    @support_exclude
-    @support_select_dtypes
+    @frame_exclude(is_class = True)
+    @select_dtypes(is_class = True)
     def fit(self, X, y, **kwargs):
         """fit GBDT transformer
 
