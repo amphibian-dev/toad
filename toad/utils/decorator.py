@@ -48,7 +48,7 @@ class Decorator:
 
     def __getattribute__(self, name):
         if name in WRAPPER_ASSIGNMENTS:
-            self = self._fn
+            return getattr(self._fn, name)
         
         return object.__getattribute__(self, name)
 
