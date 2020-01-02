@@ -2,8 +2,7 @@
 
 
 ```eval_rst
-.. automodule:: toad.utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. toctree::
+   toad.utils.func
+   toad.utils.decorator
 ```
