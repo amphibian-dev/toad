@@ -1,5 +1,7 @@
 import pandas as pd
 from .func import save_json
+from functools import WRAPPER_ASSIGNMENTS
+
 
 
 class Decorator:
@@ -43,19 +45,12 @@ class Decorator:
 
         return func
 
-    @property
-    def __name__(self):
-        if self._fn is not None:
-            return self._fn.__name__
 
-        return ''
-
-    @property
-    def __doc__(self):
-        if self._fn is not None:
-            return self._fn.__doc__
-
-        return ''
+    def __getattribute__(self, name):
+        if name in WRAPPER_ASSIGNMENTS:
+            self = self._fn
+        
+        return object.__getattribute__(self, name)
 
 
     def setup(self, *args, **kwargs):
