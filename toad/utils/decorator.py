@@ -27,15 +27,9 @@ class Decorator:
         if self.is_class:
             self._cls = args[0]
             args = args[1:]
-
-        args, kwargs = self.before(*args, **kwargs)
-
-        if self._cls:
-            res = self._fn(self._cls, *args, **kwargs)
-        else:
-            res = self._fn(*args, **kwargs)
-
-        return self.after(res, *args, **kwargs)
+        
+        return self.wrapper(*args, **kwargs)
+    
 
     def __get__(self, instance, type = None):
         self.is_class = True
@@ -56,47 +50,46 @@ class Decorator:
     def setup(self, *args, **kwargs):
         for key in kwargs:
             setattr(self, key, kwargs[key])
+        
+    def call(self, *args, **kwargs):
+        if self._cls:
+            args = (self._cls, *args)
 
-    def before(self, *args, **kwargs):
-        return args, kwargs
+        return self._fn(*args, **kwargs)
 
-    def after(self, res, *args, **kwargs):
-        return res
+    def wrapper(self, *args, **kwargs):
+        return self.call(*args, **kwargs)
 
 
 class frame_exclude(Decorator):
     """decorator for exclude columns
     """
 
-    def before(self, X, *args, exclude = None, **kwargs):
+    def wrapper(self, X, *args, exclude = None, **kwargs):
         if exclude is not None and isinstance(X, pd.DataFrame):
             X = X.drop(columns = exclude)
 
-        return (X, *args), kwargs
+        return self.call(X, *args, **kwargs)
 
 
 class select_dtypes(Decorator):
     """ decorator for select frame by dtypes
     """
 
-    def before(self, X, *args, select_dtypes = None, **kwargs):
+    def wrapper(self, X, *args, select_dtypes = None, **kwargs):
         if select_dtypes is not None and isinstance(X, pd.DataFrame):
             X = X.select_dtypes(include = select_dtypes)
 
-        return (X, *args), kwargs
+        return self.call(X, *args, **kwargs)
 
 
 class save_to_json(Decorator):
     """support save result to json file
     """
-    def before(self, *args, to_json = None, **kwargs):
-        self.to_json = to_json
+    def wrapper(self, *args, to_json = None, **kwargs):
+        res = self.call(*args, **kwargs)
 
-        return args, kwargs
-
-
-    def after(self, res, *args, **kwargs):
-        if self.to_json is None:
+        if to_json is None:
             return res
 
         save_json(res, to_json)
