@@ -213,36 +213,6 @@ def generate_str(size = 6, chars = ALPHABET):
     return ''.join(np.random.choice(list(chars), size = size))
 
 
-def support_dataframe(require_target = True):
-    """decorator for supporting dataframe
-    """
-    def decorator(fn):
-        @wraps(fn)
-        def func(frame, *args, **kwargs):
-            if not isinstance(frame, pd.DataFrame):
-                return fn(frame, *args, **kwargs)
-
-            frame = frame.copy()
-            if require_target and isinstance(args[0], str):
-                target = frame.pop(args[0])
-                args = (target,) + args[1:]
-            elif 'target' in kwargs and isinstance(kwargs['target'], str):
-                kwargs['target'] = frame.pop(kwargs['target'])
-
-            res = dict()
-            for col in frame:
-                r = fn(frame[col], *args, **kwargs)
-
-                if not isinstance(r, np.ndarray):
-                    r = [r]
-
-                res[col] = r
-            return pd.DataFrame(res)
-
-        return func
-
-    return decorator
-
 
 def save_json(contents, file, indent = 4):
     """save json file

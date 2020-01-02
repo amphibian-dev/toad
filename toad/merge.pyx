@@ -7,7 +7,8 @@ cimport cython
 import pandas as pd
 from sklearn.tree import DecisionTreeClassifier, _tree
 from sklearn.cluster import KMeans
-from .utils import fillna, bin_by_splits, to_ndarray, support_dataframe, clip
+from .utils import fillna, bin_by_splits, to_ndarray, clip
+from .utils.decorator import support_dataframe
 
 from cython.parallel import prange
 from .c_utils cimport c_min, c_sum, c_sum_axis_0, c_sum_axis_1

@@ -13,9 +13,10 @@ from .utils import (
     feature_splits,
     is_continuous,
     inter_feature,
-    support_dataframe,
     split_target,
 )
+
+from .utils.decorator import support_dataframe
 
 STATS_EMPTY = np.nan
 
@@ -52,7 +53,7 @@ def _gini_cond(feature, target):
 
     return value
 
-@support_dataframe()
+@support_dataframe
 def gini_cond(feature, target):
     """get conditional gini index of a feature
 
@@ -110,7 +111,7 @@ def _entropy_cond(feature, target):
 
     return value
 
-@support_dataframe()
+@support_dataframe
 def entropy_cond(feature, target):
     """get conditional entropy of a feature
 
@@ -193,7 +194,7 @@ def _IV(feature, target):
     return value
 
 
-@support_dataframe()
+@support_dataframe
 def IV(feature, target, **kwargs):
     """get the IV of a feature
 

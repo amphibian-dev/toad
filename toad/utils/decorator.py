@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from .func import save_json
 from functools import WRAPPER_ASSIGNMENTS
@@ -93,3 +94,30 @@ class save_to_json(Decorator):
             return res
 
         save_json(res, to_json)
+
+
+class support_dataframe(Decorator):
+    """decorator for supporting dataframe
+    """
+    require_target = True
+
+    def wrapper(self, frame, *args, **kwargs):
+        if not isinstance(frame, pd.DataFrame):
+            return self.call(frame, *args, **kwargs)
+
+        frame = frame.copy()
+        if self.require_target and isinstance(args[0], str):
+            target = frame.pop(args[0])
+            args = (target,) + args[1:]
+        elif 'target' in kwargs and isinstance(kwargs['target'], str):
+            kwargs['target'] = frame.pop(kwargs['target'])
+
+        res = dict()
+        for col in frame:
+            r = self.call(frame[col], *args, **kwargs)
+
+            if not isinstance(r, np.ndarray):
+                r = [r]
+
+            res[col] = r
+        return pd.DataFrame(res)
