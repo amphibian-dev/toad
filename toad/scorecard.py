@@ -89,7 +89,7 @@ class ScoreCard(BaseEstimator):
         self.features_ = X.columns.tolist()
 
         for f in self.features_:
-            if f not in self.transer.values_:
+            if f not in self.transer._rules:
                 raise Exception('column \'{f}\' is not in transer'.format(f = f))
 
         self.model.fit(X, y)
@@ -101,8 +101,8 @@ class ScoreCard(BaseEstimator):
 
     def _transer_to_rules(self, transer):
         c = dict()
-        for k in transer.values_:
-            c[k] = np.reshape(transer.values_[k], (-1, 1)).tolist()
+        for k in transer._rules:
+            c[k] = np.reshape(transer._rules[k]['value'], (-1, 1)).tolist()
 
         return c
 
@@ -320,7 +320,7 @@ class ScoreCard(BaseEstimator):
             if weight == 0:
                 continue
 
-            woe = transer.woe_[k]
+            woe = transer._rules[k]['woe']
             s_map[k] = self.woe_to_score(woe, weight = weight)
 
         return s_map

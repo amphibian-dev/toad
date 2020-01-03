@@ -232,7 +232,7 @@ def PSI(test, base, combiner = None, return_frame = False):
 
     if combiner is not None:
         if isinstance(combiner, (dict, list)):
-            combiner = Combiner().set_rules(combiner)
+            combiner = Combiner().load(combiner)
 
         test = combiner.transform(test, labels = True)
         base = combiner.transform(base, labels = True)

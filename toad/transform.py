@@ -11,16 +11,15 @@ from sklearn.ensemble import GradientBoostingClassifier
 from .stats import WOE, probability
 from .merge import merge
 from .utils import to_ndarray, np_count, bin_by_splits
-from .utils.decorator import frame_exclude, select_dtypes, save_to_json
+from .utils.decorator import frame_exclude, select_dtypes
+from .utils.mixin import SaveMixin, DEFAULT_NAME
 
 EMPTY_BIN = -1
 ELSE_GROUP = 'else'
 
 
-
-class Transformer(TransformerMixin):
-    _fitted = False
-
+class Transformer(TransformerMixin, SaveMixin):
+    _fit_frame = False
 
     def fit_method(fn):
 
@@ -45,6 +44,66 @@ class Transformer(TransformerMixin):
             return fn(self, X, *args, **kwargs)
 
         return transform
+    
+    @property
+    def _rules_counts(self):
+        return len(self._rules.keys())
+    
+    @property
+    def _fitted(self):
+        return self._rules_counts > 0
+    
+
+    @frame_exclude(is_class = True)
+    @select_dtypes(is_class = True)
+    def fit(self, X, *args, update = False, **kwargs):
+        dim = getattr(X, 'ndim', 1)
+        
+        rules = {}
+
+        if self._fit_frame:
+            rules = self._fit(X, *args, **kwargs)
+        
+        elif dim == 1:
+            name = getattr(X, 'name', DEFAULT_NAME)
+            rules[name] = self._fit(X, *args, **kwargs)
+        
+        else:
+            for col in X:
+                name = X[col].name
+                rules[name] = self._fit(X[col], *args, **kwargs)            
+
+        if update:
+            self._rules.update(rules)
+        else:
+            self._rules = rules
+
+        return self
+    
+
+    def transform(self, X, *args, **kwargs):
+        if not self._fitted:
+            return self.raiseUnfitted()
+        
+
+        if self._fit_frame:
+            return self._transform(self._rules, X, *args, **kwargs)
+        
+        if getattr(X, 'ndim', 1) == 1:
+            if self._rules_counts == 1:
+                rule = next(iter(self._rules.values()))
+                return self._transform(rule, X, *args, **kwargs)
+            elif hasattr(X, 'name') and X.name in self._rules:
+                return self._transform(self._rules[X.name], X, *args, **kwargs)
+            else:
+                return X
+        
+        res = X.copy()
+        for key in X:
+            if key in self._rules:
+                res[key] = self._transform(self._rules[key], X[key], *args, **kwargs)
+        
+        return res
 
 
     def raiseUnfitted(self):
@@ -55,82 +114,36 @@ class Transformer(TransformerMixin):
 class WOETransformer(Transformer):
     """WOE transformer
     """
-    def __init__(self):
-        self.values_ = dict()
-        self.woe_ = dict()
 
-
-    @Transformer.fit_method
-    @frame_exclude(is_class = True)
-    @select_dtypes(is_class = True)
-    def fit(self, X, y, **kwargs):
+    def _fit(self, X, y):
         """fit WOE transformer
 
         Args:
             X (DataFrame|array-like)
             y (str|array-like)
-            select_dtypes (str|numpy.dtypes): `'object'`, `'number'` etc. only selected dtypes will be transform,
+            select_dtypes (str|numpy.dtypes): `'object'`, `'number'` etc. only selected dtypes will be transform
         """
-        if not isinstance(X, pd.DataFrame):
-            self.values_, self.woe_ = self._fit_woe(X, y, **kwargs)
-            return self
-
-        if isinstance(y, str):
-            X = X.copy()
-            y = X.pop(y)
-
-        self.values_ = dict()
-        self.woe_ = dict()
-
-        for col in X:
-            self.values_[col], self.woe_[col] = self._fit_woe(X[col], y)
-
-        return self
-
-    def _fit_woe(self, X, y):
         X = to_ndarray(X)
 
-        values = np.unique(X)
-        l = len(values)
+        value = np.unique(X)
+        l = len(value)
         woe = np.zeros(l)
 
         for i in range(l):
-            y_prob, n_prob = probability(y, mask = (X == values[i]))
+            y_prob, n_prob = probability(y, mask = (X == value[i]))
 
             woe[i] = WOE(y_prob, n_prob)
 
-        return values, woe
-
-
-    @Transformer.transform_method
-    def transform(self, X, **kwargs):
-        """transform woe
-
-        Args:
-            X (DataFrame|array-like)
-            default (str): 'min'(default), 'max' - the strategy to be used for unknown group
-
-        Returns:
-            array-like
-        """
-        if not isinstance(self.values_, dict):
-            return self._transform_apply(X, self.values_, self.woe_, **kwargs)
-
-        res = X.copy()
-        for col in X:
-            if col in self.values_:
-                res[col] = self._transform_apply(X[col], self.values_[col], self.woe_[col], **kwargs)
-
-        return res
-
-
-    def _transform_apply(self, X, value, woe, default = 'min'):
+        return {
+            'value': value,
+            'woe': woe,
+        }
+    
+    def _transform(self, rule, X, default = 'min'):
         """transform function for single feature
 
         Args:
             X (array-like)
-            value (array-like)
-            woe (array-like)
             default (str): 'min'(default), 'max' - the strategy to be used for unknown group
 
         Returns:
@@ -138,6 +151,9 @@ class WOETransformer(Transformer):
         """
         X = to_ndarray(X)
         res = np.zeros(len(X))
+
+        value = rule['value']
+        woe = rule['woe']
 
         if default == 'min':
             default = np.min(woe)
@@ -151,18 +167,15 @@ class WOETransformer(Transformer):
             res[X == value[i]] = woe[i]
 
         return res
-
-
-    @save_to_json(is_class = True)
-    def export(self):
-        if not isinstance(self.values_, dict):
-            return dict(zip(self.values_, self.woe_))
-
-        d = dict()
-        for col in self.values_:
-            d[col] = dict(zip(self.values_[col], self.woe_[col]))
-
-        return d
+    
+    def _format_rule(self, rule):
+        return dict(zip(rule['value'], rule['woe']))
+    
+    def _parse_rule(self, rule):
+        return {
+            'value': np.array(list(rule.keys())),
+            'woe': np.array(list(rule.values())),
+        }
 
 
 
@@ -170,14 +183,7 @@ class Combiner(Transformer):
     """Combiner for merge data
     """
 
-    def __init__(self):
-        self.splits_ = dict()
-
-
-    @Transformer.fit_method
-    @frame_exclude(is_class = True)
-    @select_dtypes(is_class = True)
-    def fit(self, X, y = None, **kwargs):
+    def _fit(self, X, y = None, method = 'chi', **kwargs):
         """fit combiner
 
         Args:
@@ -185,34 +191,6 @@ class Combiner(Transformer):
             y (str|array-like): target data or name of target in `X`
             method (str): the strategy to be used to merge `X`, same as `.merge`, default is `chi`
             n_bins (int): counts of bins will be combined
-
-        Returns:
-            self
-        """
-        if not isinstance(X, pd.DataFrame):
-            self.splits_ = self._merge(X, y = y, **kwargs)
-            return self
-
-        if isinstance(y, str):
-            X = X.copy()
-            y = X.pop(y)
-
-        self.splits_ = dict()
-        for col in X:
-            self.splits_[col] = self._merge(X[col], y = y, **kwargs)
-
-        return self
-
-    def _merge(self, X, y = None, method = 'chi', **kwargs):
-        """merge function for fit
-
-        Args:
-            X (DataFrame|array-like): features to be combined
-            y (str|array-like): target data or name of target in `X`
-            method (str): the strategy to be used to merge `X`, same as `.merge`, `chi` by default
-
-        Returns:
-            array-like: array of splits
         """
         X = to_ndarray(X)
 
@@ -238,8 +216,8 @@ class Combiner(Transformer):
 
         return self._covert_splits(uni_val, splits)
 
-    @Transformer.transform_method
-    def transform(self, X, **kwargs):
+
+    def _transform(self, rule, X, labels = False, **kwargs):
         """transform X by combiner
 
         Args:
@@ -249,46 +227,47 @@ class Combiner(Transformer):
         Returns:
             array-like
         """
-        if not isinstance(self.splits_, dict):
-            return self._transform_apply(X, self.splits_, **kwargs)
-
-        res = X.copy()
-        for col in X:
-            if col in self.splits_:
-                res[col] = self._transform_apply(X[col], self.splits_[col], **kwargs)
-
-        return res
-
-    def _transform_apply(self, X, splits, labels = False):
-        """transform function for single feature
-
-        Args:
-            X (array-like): feature to be transformed
-            splits (array-like): splits of `X`
-            labels (bool): if need to use labels for resulting bins, `False` by default
-
-        Returns:
-            array-like
-        """
         X = to_ndarray(X)
 
         # if is not continuous
-        if splits.ndim > 1 or not np.issubdtype(splits.dtype, np.number):
-            bins = self._raw_to_bin(X, splits)
+        if rule.ndim > 1 or not np.issubdtype(rule.dtype, np.number):
+            bins = self._raw_to_bin(X, rule)
 
         else:
-            if len(splits):
-                bins = bin_by_splits(X, splits)
+            if len(rule):
+                bins = bin_by_splits(X, rule)
             else:
                 bins = np.zeros(len(X), dtype = int)
 
         if labels:
-            formated = self._format_splits(splits, index = True)
+            formated = self._format_splits(rule, index = True)
             empty_mask = (bins == EMPTY_BIN)
             bins = formated[bins]
             bins[empty_mask] = EMPTY_BIN
 
         return bins
+    
+
+    def _covert_splits(self, value, splits):
+        """covert combine rules to array
+        """
+        if value is False:
+            return splits
+
+        if isinstance(value, np.ndarray):
+            value = value.tolist()
+
+        start = 0
+        l = list()
+        for i in splits:
+            i = math.ceil(i)
+            l.append(value[start:i])
+            start = i
+
+        l.append(value[start:])
+
+        return np.array(l)
+
 
     def _raw_to_bin(self, X, splits):
         """bin by splits
@@ -331,7 +310,7 @@ class Combiner(Transformer):
 
         return np.array(l)
 
-    @Transformer.fit_method
+
     def set_rules(self, map, reset = False):
         """set rules for combiner
 
@@ -342,89 +321,27 @@ class Combiner(Transformer):
         Returns:
             self
         """
-        if not isinstance(map, dict):
-            self.splits_ = np.array(map)
-            return self
+        import warnings
+        warnings.warn(
+            """`combiner.set_rules` will be deprecated soon,
+                use `combiner.load(rules, update = False)` instead!
+            """,
+            DeprecationWarning,
+        )
 
-        if reset:
-            self.splits_ = dict()
 
-        for col in map:
-            self.splits_[col] = np.array(map[col])
+        self.load(map, update = not reset)
 
         return self
 
+    def _parse_rule(self, rule):
+        return np.array(rule)
 
-    @property
-    def dtypes(self):
-        """get the dtypes which is combiner used
-
-        Returns:
-            (str|dict)
-        """
-        if not isinstance(self.splits_, dict):
-            return self._get_dtype(self.splits_)
-
-        t = {}
-        for n, v in self.splits_.items():
-            t[n] = self._get_dtype(v)
-        return t
-
-    def _get_dtype(self, split):
-        if np.issubdtype(split.dtype, np.number):
-            return 'numeric'
-
-        return 'object'
-
-
-    @save_to_json(is_class = True)
-    def export(self, format = False):
-        """export combine rules for score card
-
-        Args:
-            format (bool): if True, bins will be replace with string label for values
-            to_json (str|IOBase): io to write json file
-
-        Returns:
-            dict
-        """
-        splits = copy.deepcopy(self.splits_)
-
+    def _format_rule(self, rule, format = False):
         if format:
-            if not isinstance(splits, dict):
-                splits = self._format_splits(splits)
-            else:
-                for col in splits:
-                    splits[col] = self._format_splits(splits[col])
-
-        if not isinstance(splits, dict):
-            bins = splits.tolist()
-        else:
-            bins = {k: v.tolist() for k, v in splits.items()}
-
-        return bins
-
-
-    def _covert_splits(self, value, splits):
-        """covert combine rules to array
-        """
-        if value is False:
-            return splits
-
-        if isinstance(value, np.ndarray):
-            value = value.tolist()
-
-        start = 0
-        l = list()
-        for i in splits:
-            i = math.ceil(i)
-            l.append(value[start:i])
-            start = i
-
-        l.append(value[start:])
-
-        return np.array(l)
-
+            rule = self._format_splits(rule)
+        
+        return rule.tolist()    
 
 
 
@@ -432,15 +349,14 @@ class Combiner(Transformer):
 class GBDTTransformer(Transformer):
     """GBDT transformer
     """
+    _fit_frame = True
+
     def __init__(self):
         self.gbdt = None
         self.onehot = None
 
 
-    @Transformer.fit_method
-    @frame_exclude(is_class = True)
-    @select_dtypes(is_class = True)
-    def fit(self, X, y, **kwargs):
+    def _fit(self, X, y, **kwargs):
         """fit GBDT transformer
 
         Args:
@@ -453,18 +369,21 @@ class GBDTTransformer(Transformer):
             X = X.copy()
             y = X.pop(y)
 
-        self.gbdt = GradientBoostingClassifier(**kwargs)
-        self.gbdt.fit(X, y)
+        gbdt = GradientBoostingClassifier(**kwargs)
+        gbdt.fit(X, y)
 
-        X = self.gbdt.apply(X)
+        X = gbdt.apply(X)
         X = X.reshape(-1, X.shape[1])
 
-        self.onehot = OneHotEncoder().fit(X)
+        onehot = OneHotEncoder().fit(X)
 
-        return self
+        return {
+            'gbdt': gbdt,
+            'onehot': onehot,
+        }
 
-    @Transformer.transform_method
-    def transform(self, X):
+
+    def _transform(self, rules, X):
         """transform woe
 
         Args:
@@ -473,7 +392,7 @@ class GBDTTransformer(Transformer):
         Returns:
             array-like
         """
-        X = self.gbdt.apply(X)
+        X = rules['gbdt'].apply(X)
         X = X.reshape(-1, X.shape[1])
-        res = self.onehot.transform(X).toarray()
+        res = rules['onehot'].transform(X).toarray()
         return res
