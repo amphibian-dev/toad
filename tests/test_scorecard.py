@@ -122,7 +122,7 @@ def test_card_without_combiner():
 def test_card_combiner_number_not_match():
     c = combiner.export()
     c['A'] = [0, 3, 6, 8]
-    com = Combiner().set_rules(c)
+    com = Combiner().load(c)
     bins = com.transform(df)
     woe_transer = WOETransformer()
     woe = woe_transer.fit_transform(bins, target)
@@ -142,7 +142,7 @@ def test_card_combiner_number_not_match():
 def test_card_combiner_str_not_match():
     c = combiner.export()
     c['C'] = [['A'], ['B'], ['C']]
-    com = Combiner().set_rules(c)
+    com = Combiner().load(c)
     bins = com.transform(df)
     woe_transer = WOETransformer()
     woe = woe_transer.fit_transform(bins, target)

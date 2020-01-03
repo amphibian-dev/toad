@@ -219,7 +219,7 @@ class ScoreCard(BaseEstimator):
         """set combiner
         """
         if not isinstance(combiner, Combiner):
-            combiner = Combiner().set_rules(combiner)
+            combiner = Combiner().load(combiner)
 
         self.combiner = combiner
 
