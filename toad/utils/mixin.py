@@ -1,4 +1,4 @@
-from .decorator import save_to_json
+from .decorator import save_to_json, load_from_json
 
 DEFAULT_NAME = '_feature_default_name_'
 
@@ -12,6 +12,7 @@ class SaveMixin:
     def _format_rule(self, rule):
         return rule
 
+    @load_from_json
     def load(self, rules, update = False, **kwargs):
         if not isinstance(rules, dict):
             rules = {

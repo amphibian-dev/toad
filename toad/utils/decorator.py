@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from .func import save_json
+from .func import save_json, read_json
 from functools import WRAPPER_ASSIGNMENTS
 
 
@@ -90,10 +90,21 @@ class save_to_json(Decorator):
     def wrapper(self, *args, to_json = None, **kwargs):
         res = self.call(*args, **kwargs)
 
-        if to_json is None:
-            return res
+        if to_json is not None:
+            save_json(res, to_json)
 
-        save_json(res, to_json)
+        return res
+
+
+class load_from_json(Decorator):
+    """support load data from json file
+    """
+    def wrapper(self, *args, from_json = None, **kwargs):
+        if from_json is not None:
+            obj = read_json(from_json)
+            args = (obj, *args)
+        
+        return self.call(*args, **kwargs)
 
 
 class support_dataframe(Decorator):
