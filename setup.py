@@ -41,7 +41,7 @@ setup(
         'Cython >= 0.28',
     ],
     install_requires = [
-        'numpy >= 1.15.4',
+        'numpy >= 1.15.4, <1.18.0',
         'pandas',
         'scipy',
         'scikit-learn',
