@@ -10,7 +10,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 
 from .stats import WOE, probability
 from .merge import merge
-from .utils import to_ndarray, np_count, bin_by_splits
+from .utils.func import to_ndarray, np_count, bin_by_splits, split_target
 from .utils.decorator import frame_exclude, select_dtypes
 from .utils.mixin import SaveMixin, DEFAULT_NAME
 
@@ -44,34 +44,40 @@ class Transformer(TransformerMixin, SaveMixin):
             return fn(self, X, *args, **kwargs)
 
         return transform
-    
+
     @property
     def _rules_counts(self):
         return len(self._rules.keys())
-    
+
     @property
     def _fitted(self):
         return self._rules_counts > 0
-    
+
 
     @frame_exclude(is_class = True)
     @select_dtypes(is_class = True)
     def fit(self, X, *args, update = False, **kwargs):
         dim = getattr(X, 'ndim', 1)
-        
+
         rules = {}
 
         if self._fit_frame:
             rules = self._fit(X, *args, **kwargs)
-        
+
         elif dim == 1:
             name = getattr(X, 'name', DEFAULT_NAME)
             rules[name] = self._fit(X, *args, **kwargs)
-        
+
         else:
+            if len(args) > 0:
+                X, y = split_target(X, args[0])
+                args = (y, *args[1:])
+            if 'y' in kwargs:
+                X, kwargs['y'] = split_target(X, kwargs['y'])
+
             for col in X:
                 name = X[col].name
-                rules[name] = self._fit(X[col], *args, **kwargs)            
+                rules[name] = self._fit(X[col], *args, **kwargs)
 
         if update:
             self._rules.update(rules)
@@ -79,16 +85,16 @@ class Transformer(TransformerMixin, SaveMixin):
             self._rules = rules
 
         return self
-    
+
 
     def transform(self, X, *args, **kwargs):
         if not self._fitted:
             return self.raiseUnfitted()
-        
+
 
         if self._fit_frame:
             return self._transform(self._rules, X, *args, **kwargs)
-        
+
         if getattr(X, 'ndim', 1) == 1:
             if self._rules_counts == 1:
                 rule = next(iter(self._rules.values()))
@@ -97,12 +103,12 @@ class Transformer(TransformerMixin, SaveMixin):
                 return self._transform(self._rules[X.name], X, *args, **kwargs)
             else:
                 return X
-        
+
         res = X.copy()
         for key in X:
             if key in self._rules:
                 res[key] = self._transform(self._rules[key], X[key], *args, **kwargs)
-        
+
         return res
 
 
@@ -138,7 +144,7 @@ class WOETransformer(Transformer):
             'value': value,
             'woe': woe,
         }
-    
+
     def _transform(self, rule, X, default = 'min'):
         """transform function for single feature
 
@@ -167,10 +173,10 @@ class WOETransformer(Transformer):
             res[X == value[i]] = woe[i]
 
         return res
-    
+
     def _format_rule(self, rule):
         return dict(zip(rule['value'], rule['woe']))
-    
+
     def _parse_rule(self, rule):
         return {
             'value': np.array(list(rule.keys())),
@@ -246,7 +252,7 @@ class Combiner(Transformer):
             bins[empty_mask] = EMPTY_BIN
 
         return bins
-    
+
 
     def _covert_splits(self, value, splits):
         """covert combine rules to array
@@ -340,8 +346,8 @@ class Combiner(Transformer):
     def _format_rule(self, rule, format = False):
         if format:
             rule = self._format_splits(rule)
-        
-        return rule.tolist()    
+
+        return rule.tolist()
 
 
 

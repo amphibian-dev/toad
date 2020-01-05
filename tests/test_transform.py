@@ -20,6 +20,7 @@ df = pd.DataFrame({
     'A': feature,
     'B': str_feat,
     'C': uni_feat,
+    'target': target,
 })
 
 
@@ -106,13 +107,27 @@ def test_combiner_export():
     bins = combiner.export()
     assert isinstance(bins['B'][0], list)
 
+def test_combiner_step():
+    combiner = Combiner().fit(df['A'], method = 'step', n_bins = 4)
+    bins = combiner.export()
+    assert bins['A'][1] == 4.5
+
+def test_combiner_target_in_frame():
+    combiner = Combiner().fit(df, 'target', n_bins = 4)
+    bins = combiner.export()
+    assert bins['A'][1] == 6
+
+def test_combiner_target_in_frame_kwargs():
+    combiner = Combiner().fit(df, y = 'target', n_bins = 4)
+    bins = combiner.export()
+    assert bins['A'][1] == 6
+
 def test_gbdt_transformer():
     np.random.seed(1)
-    
+
     df = pd.DataFrame({
         'A': np.random.rand(500),
         'B': np.random.randint(10, size = 500),
     })
     f = GBDTTransformer().fit_transform(df, target, n_estimators = 10, max_depth = 2)
     assert f.shape == (500, 40)
-    

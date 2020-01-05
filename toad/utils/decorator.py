@@ -28,9 +28,9 @@ class Decorator:
         if self.is_class:
             self._cls = args[0]
             args = args[1:]
-        
+
         return self.wrapper(*args, **kwargs)
-    
+
 
     def __get__(self, instance, type = None):
         self.is_class = True
@@ -44,14 +44,14 @@ class Decorator:
     def __getattribute__(self, name):
         if name in WRAPPER_ASSIGNMENTS:
             return getattr(self._fn, name)
-        
+
         return object.__getattribute__(self, name)
 
 
     def setup(self, *args, **kwargs):
         for key in kwargs:
             setattr(self, key, kwargs[key])
-        
+
     def call(self, *args, **kwargs):
         if self._cls:
             args = (self._cls, *args)
@@ -103,7 +103,7 @@ class load_from_json(Decorator):
         if from_json is not None:
             obj = read_json(from_json)
             args = (obj, *args)
-        
+
         return self.call(*args, **kwargs)
 
 
@@ -111,6 +111,7 @@ class support_dataframe(Decorator):
     """decorator for supporting dataframe
     """
     require_target = True
+    target = 'target'
 
     def wrapper(self, frame, *args, **kwargs):
         if not isinstance(frame, pd.DataFrame):
@@ -120,8 +121,8 @@ class support_dataframe(Decorator):
         if self.require_target and isinstance(args[0], str):
             target = frame.pop(args[0])
             args = (target,) + args[1:]
-        elif 'target' in kwargs and isinstance(kwargs['target'], str):
-            kwargs['target'] = frame.pop(kwargs['target'])
+        elif self.target in kwargs and isinstance(kwargs[self.target], str):
+            kwargs[self.target] = frame.pop(kwargs[self.target])
 
         res = dict()
         for col in frame:
