@@ -15,11 +15,14 @@ feature = np.random.randint(10, size = 500)
 target = np.random.randint(2, size = 500)
 str_feat = ab[np.random.choice(7, 500)]
 uni_feat = np.ones(500)
+empty_feat = feature.astype(float)
+empty_feat[np.random.choice(500, 50, replace = False)] = np.nan
 
 df = pd.DataFrame({
     'A': feature,
     'B': str_feat,
     'C': uni_feat,
+    'D': empty_feat,
     'target': target,
 })
 
@@ -121,6 +124,17 @@ def test_combiner_target_in_frame_kwargs():
     combiner = Combiner().fit(df, y = 'target', n_bins = 4)
     bins = combiner.export()
     assert bins['A'][1] == 6
+
+def test_combiner_empty_separate():
+    combiner = Combiner()
+    bins = combiner.fit_transform(df, 'target', n_bins = 4, empty_separate = True)
+    mask = pd.isna(df['D'])
+    assert (bins['D'][~mask] != 4).all()
+
+def test_combiner_labels_with_empty():
+    combiner = Combiner().fit(df, 'target', n_bins = 4, empty_separate = True)
+    res = combiner.transform(df, labels = True)
+    assert res.loc[2, 'D'] == '4.nan'
 
 def test_gbdt_transformer():
     np.random.seed(1)

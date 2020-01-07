@@ -172,7 +172,7 @@ class Combiner(Transformer):
     """Combiner for merge data
     """
 
-    def fit_(self, X, y = None, method = 'chi', **kwargs):
+    def fit_(self, X, y = None, method = 'chi', empty_separate = False, **kwargs):
         """fit combiner
 
         Args:
@@ -180,13 +180,14 @@ class Combiner(Transformer):
             y (str|array-like): target data or name of target in `X`
             method (str): the strategy to be used to merge `X`, same as `.merge`, default is `chi`
             n_bins (int): counts of bins will be combined
+            empty_separate (bool): if need to combine empty values into a separate group
         """
         X = to_ndarray(X)
 
         if y is not None:
             y = to_ndarray(y)
 
-        uni_val = False
+
         if not np.issubdtype(X.dtype, np.number):
             # transform raw data by woe
             transer = WOETransformer()
@@ -201,9 +202,22 @@ class Combiner(Transformer):
             # replace X by sorted index
             X = self._raw_to_bin(X, uni_val)
 
+            _, splits = merge(X, target = y, method = method, return_splits = True, **kwargs)
+
+            return self._covert_splits(uni_val, splits)
+        
+
+        mask = pd.isna(X)
+        if mask.any() and empty_separate:
+            X = X[~mask]
+            y = y[~mask]
+        
         _, splits = merge(X, target = y, method = method, return_splits = True, **kwargs)
 
-        return self._covert_splits(uni_val, splits)
+        if mask.any() and empty_separate:
+            splits = np.append(splits, np.nan)
+        
+        return splits
 
 
     def transform_(self, rule, X, labels = False, **kwargs):
@@ -223,10 +237,16 @@ class Combiner(Transformer):
             bins = self._raw_to_bin(X, rule)
 
         else:
+            bins = np.zeros(len(X), dtype = int)
+
             if len(rule):
-                bins = bin_by_splits(X, rule)
-            else:
-                bins = np.zeros(len(X), dtype = int)
+                # empty to a separate group
+                if np.isnan(rule[-1]):
+                    mask = pd.isna(X)
+                    bins[~mask] = bin_by_splits(X[~mask], rule[:-1])
+                    bins[mask] = len(rule)
+                else:
+                    bins = bin_by_splits(X, rule)
 
         if labels:
             formated = self._format_splits(rule, index = True)
@@ -283,9 +303,17 @@ class Combiner(Transformer):
     def _format_splits(self, splits, index = False):
         l = list()
         if np.issubdtype(splits.dtype, np.number):
+            has_empty = len(splits) > 0 and np.isnan(splits[-1])
+            
+            if has_empty:
+                splits = splits[:-1]
+            
             sp_l = [-np.inf] + splits.tolist() + [np.inf]
             for i in range(len(sp_l) - 1):
                 l.append('['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')')
+            
+            if has_empty:
+                l.append('nan')
         else:
             for keys in splits:
                 if isinstance(keys, str) and keys == ELSE_GROUP:

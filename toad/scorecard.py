@@ -158,6 +158,10 @@ class ScoreCard(BaseEstimator):
 
         l = list()
         for item in bins:
+            if item == 'nan':
+                l.append(np.nan)
+                continue
+            
             m = exp.match(item)
 
             # if is not range
