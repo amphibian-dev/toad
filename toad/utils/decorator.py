@@ -101,10 +101,16 @@ class save_to_json(Decorator):
 class load_from_json(Decorator):
     """support load data from json file
     """
+    require_first = False
+
     def wrapper(self, *args, from_json = None, **kwargs):
         if from_json is not None:
             obj = read_json(from_json)
             args = (obj, *args)
+        
+        elif self.require_first and len(args) > 0 and isinstance(args[0], str):
+            obj = read_json(args[0])
+            args = (obj, *args[1:])
 
         return self.call(*args, **kwargs)
 

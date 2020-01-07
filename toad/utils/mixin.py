@@ -12,7 +12,7 @@ class SaveMixin:
     def _format_rule(self, rule):
         return rule
 
-    @load_from_json
+    @load_from_json(is_class = True, require_first = True)
     def load(self, rules, update = False, **kwargs):
         if not isinstance(rules, dict):
             rules = {
