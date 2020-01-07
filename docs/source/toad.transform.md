@@ -5,5 +5,7 @@
 .. automodule:: toad.transform
    :members:
    :undoc-members:
+   :inherited-members:
    :show-inheritance:
+
 ```
