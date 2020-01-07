@@ -18,13 +18,14 @@ matrix:
 
     - name: "Python 3.7 on macOS"
       os: osx
-      osx_image: xcode10.2
+      osx_image: xcode11.3
       language: shell
       env:
         - SUDO=sudo
         - HOMEBREW_NO_INSTALL_CLEANUP=TRUE
-      # before_install:
-      #     - brew install graphviz
+      before_install:
+          - brew update
+          - brew install graphviz
       before_deploy:
           - make dist_wheel
 
