@@ -23,8 +23,8 @@ matrix:
       env:
         - SUDO=sudo
         - HOMEBREW_NO_INSTALL_CLEANUP=TRUE
-      before_install:
-          - brew install graphviz
+      # before_install:
+      #     - brew install graphviz
       before_deploy:
           - make dist_wheel
 
