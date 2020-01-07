@@ -25,7 +25,7 @@ matrix:
         - HOMEBREW_NO_INSTALL_CLEANUP=TRUE
       before_install:
           - brew update
-          - brew install graphviz
+          # - brew install graphviz
       before_deploy:
           - make dist_wheel
 
