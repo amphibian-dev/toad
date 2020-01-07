@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from .func import save_json, read_json
-from functools import WRAPPER_ASSIGNMENTS
+from functools import wraps, WRAPPER_ASSIGNMENTS
 
 
 
@@ -34,7 +34,9 @@ class Decorator:
 
     def __get__(self, instance, type = None):
         self.is_class = True
+        self._cls = instance
 
+        @wraps(self._fn)
         def func(*args, **kwargs):
             return self.__call__(instance, *args, **kwargs)
 
@@ -133,3 +135,14 @@ class support_dataframe(Decorator):
 
             res[col] = r
         return pd.DataFrame(res)
+
+class proxy_docstring(Decorator):
+    method_name = None
+    
+    def __get__(self, *args):
+        func = super().__get__(*args)
+        
+        if self.method_name is not None and hasattr(self._cls, self.method_name):
+            setattr(func, '__doc__', getattr(self._cls, self.method_name).__doc__)
+        
+        return func

@@ -19,31 +19,10 @@ ELSE_GROUP = 'else'
 
 
 class Transformer(TransformerMixin, SaveMixin):
+    """Base class for transformers
+    """
+
     _fit_frame = False
-
-    def fit_method(fn):
-
-        @wraps(fn)
-        def fit(self, X, *args, **kwargs):
-            # check X dims
-            fn(self, X, *args, **kwargs)
-
-            self._fitted = True
-            return self
-
-        return fit
-
-
-    def transform_method(fn):
-
-        @wraps(fn)
-        def transform(self, X, *args, **kwargs):
-            if not self._fitted:
-                return self.raiseUnfitted()
-
-            return fn(self, X, *args, **kwargs)
-
-        return transform
 
     @property
     def _rules_counts(self):
@@ -57,16 +36,18 @@ class Transformer(TransformerMixin, SaveMixin):
     @frame_exclude(is_class = True)
     @select_dtypes(is_class = True)
     def fit(self, X, *args, update = False, **kwargs):
+        """fit method, see details in `fit_` method
+        """
         dim = getattr(X, 'ndim', 1)
 
         rules = {}
 
         if self._fit_frame:
-            rules = self._fit(X, *args, **kwargs)
+            rules = self.fit_(X, *args, **kwargs)
 
         elif dim == 1:
             name = getattr(X, 'name', DEFAULT_NAME)
-            rules[name] = self._fit(X, *args, **kwargs)
+            rules[name] = self.fit_(X, *args, **kwargs)
 
         else:
             if len(args) > 0:
@@ -77,7 +58,7 @@ class Transformer(TransformerMixin, SaveMixin):
 
             for col in X:
                 name = X[col].name
-                rules[name] = self._fit(X[col], *args, **kwargs)
+                rules[name] = self.fit_(X[col], *args, **kwargs)
 
         if update:
             self._rules.update(rules)
@@ -88,31 +69,33 @@ class Transformer(TransformerMixin, SaveMixin):
 
 
     def transform(self, X, *args, **kwargs):
+        """transform method, see details in `transform_` method
+        """
         if not self._fitted:
-            return self.raiseUnfitted()
+            return self._raiseUnfitted()
 
 
         if self._fit_frame:
-            return self._transform(self._rules, X, *args, **kwargs)
+            return self.transform_(self._rules, X, *args, **kwargs)
 
         if getattr(X, 'ndim', 1) == 1:
             if self._rules_counts == 1:
                 rule = next(iter(self._rules.values()))
-                return self._transform(rule, X, *args, **kwargs)
+                return self.transform_(rule, X, *args, **kwargs)
             elif hasattr(X, 'name') and X.name in self._rules:
-                return self._transform(self._rules[X.name], X, *args, **kwargs)
+                return self.transform_(self._rules[X.name], X, *args, **kwargs)
             else:
                 return X
 
         res = X.copy()
         for key in X:
             if key in self._rules:
-                res[key] = self._transform(self._rules[key], X[key], *args, **kwargs)
+                res[key] = self.transform_(self._rules[key], X[key], *args, **kwargs)
 
         return res
 
 
-    def raiseUnfitted(self):
+    def _raiseUnfitted(self):
         raise Exception('transformer is unfitted yet!')
 
 
@@ -121,7 +104,7 @@ class WOETransformer(Transformer):
     """WOE transformer
     """
 
-    def _fit(self, X, y):
+    def fit_(self, X, y):
         """fit WOE transformer
 
         Args:
@@ -145,7 +128,7 @@ class WOETransformer(Transformer):
             'woe': woe,
         }
 
-    def _transform(self, rule, X, default = 'min'):
+    def transform_(self, rule, X, default = 'min'):
         """transform function for single feature
 
         Args:
@@ -189,7 +172,7 @@ class Combiner(Transformer):
     """Combiner for merge data
     """
 
-    def _fit(self, X, y = None, method = 'chi', **kwargs):
+    def fit_(self, X, y = None, method = 'chi', **kwargs):
         """fit combiner
 
         Args:
@@ -223,7 +206,7 @@ class Combiner(Transformer):
         return self._covert_splits(uni_val, splits)
 
 
-    def _transform(self, rule, X, labels = False, **kwargs):
+    def transform_(self, rule, X, labels = False, **kwargs):
         """transform X by combiner
 
         Args:
@@ -362,7 +345,7 @@ class GBDTTransformer(Transformer):
         self.onehot = None
 
 
-    def _fit(self, X, y, **kwargs):
+    def fit_(self, X, y, **kwargs):
         """fit GBDT transformer
 
         Args:
@@ -389,7 +372,7 @@ class GBDTTransformer(Transformer):
         }
 
 
-    def _transform(self, rules, X):
+    def transform_(self, rules, X):
         """transform woe
 
         Args:
