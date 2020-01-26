@@ -41,11 +41,11 @@ setup(
         'Cython >= 0.28',
     ],
     install_requires = [
-        'numpy >= 1.15.4, <1.18.0',
+        'numpy >= 1.15.4',
         'pandas',
         'scipy',
         'scikit-learn',
-        'seaborn >= 0.9.0',
+        'seaborn >= 0.10.0',
     ],
     tests_require=[
         'pytest'
