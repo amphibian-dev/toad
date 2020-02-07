@@ -1,4 +1,4 @@
-__version_info__ = (0, 0, 59, 'alpha', 2)
+__version_info__ = (0, 0, 59, 'final', 0)
 
 def get_version(version):
     main = '.'.join(str(x) for x in version[:3])
