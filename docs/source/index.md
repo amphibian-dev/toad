@@ -9,6 +9,11 @@ via pip
 pip install toad
 ```
 
+via anaconda
+```bash
+conda install toad --channel conda-forge
+```
+
 via source code
 ```bash
 python setup.py install
