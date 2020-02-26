@@ -21,7 +21,7 @@ python setup.py install
 
 ## Tutorial
 
-A [basic tutorial](tutorial) is provided.
+A [basic tutorial](tutorial) is provided. [中文教程](tutorial_chinese)
 
 
 ## Contents
