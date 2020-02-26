@@ -106,7 +106,7 @@ def KMeansMerge(feature, target = None, nan = -1, n_bins = None, random_state = 
 
 
 def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
-    """Merge continue
+    """Merge by Decision Tree
 
     Args:
         feature (array-like)
