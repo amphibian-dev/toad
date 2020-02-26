@@ -110,6 +110,12 @@ def test_combiner_export():
     bins = combiner.export()
     assert isinstance(bins['B'][0], list)
 
+def test_combiner_update():
+    combiner = Combiner().fit(df, target, method = 'chi', n_bins = 4)
+    combiner.update({'A': [1,2,3,4,5,6]})
+    bins = combiner.export()
+    assert len(bins['A']) == 6
+
 def test_combiner_step():
     combiner = Combiner().fit(df['A'], method = 'step', n_bins = 4)
     bins = combiner.export()

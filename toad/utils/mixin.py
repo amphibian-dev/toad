@@ -36,3 +36,6 @@ class SaveMixin:
             res[key] = self._format_rule(self._rules[key], **kwargs)
         
         return res
+    
+    def update(self, *args, **kwargs):
+        return self.load(*args, update = True, **kwargs)
