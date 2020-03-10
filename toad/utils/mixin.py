@@ -1,9 +1,10 @@
+from copy import deepcopy
 from .decorator import save_to_json, load_from_json
 
 DEFAULT_NAME = '_feature_default_name_'
 
 
-class SaveMixin:
+class RulesMixin:
     _rules = {}
 
     def _parse_rule(self, rule):
@@ -11,9 +12,27 @@ class SaveMixin:
     
     def _format_rule(self, rule):
         return rule
+    
+    def default_rule(self):
+        return self._rules[DEFAULT_NAME]
+    
+    @property
+    def _default_name(self):
+        return DEFAULT_NAME
+
+    @property
+    def rules(self):
+        return self._rules
+    
+    @rules.setter
+    def rules(self, value):
+        self._rules = value
+    
 
     @load_from_json(is_class = True, require_first = True)
     def load(self, rules, update = False, **kwargs):
+        rules = deepcopy(rules)
+        
         if not isinstance(rules, dict):
             rules = {
                 DEFAULT_NAME: rules,
@@ -39,3 +58,7 @@ class SaveMixin:
     
     def update(self, *args, **kwargs):
         return self.load(*args, update = True, **kwargs)
+    
+
+    def __len__(self):
+        return len(self._rules.keys())

@@ -55,7 +55,7 @@ class Decorator:
             setattr(self, key, kwargs[key])
 
     def call(self, *args, **kwargs):
-        if self._cls:
+        if self._cls is not None:
             args = (self._cls, *args)
 
         return self._fn(*args, **kwargs)

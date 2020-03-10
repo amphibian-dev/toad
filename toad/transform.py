@@ -12,25 +12,21 @@ from .stats import WOE, probability
 from .merge import merge
 from .utils.func import to_ndarray, np_count, bin_by_splits, split_target
 from .utils.decorator import frame_exclude, select_dtypes
-from .utils.mixin import SaveMixin, DEFAULT_NAME
+from .utils.mixin import RulesMixin
 
 EMPTY_BIN = -1
 ELSE_GROUP = 'else'
 
 
-class Transformer(TransformerMixin, SaveMixin):
+class Transformer(TransformerMixin, RulesMixin):
     """Base class for transformers
     """
 
     _fit_frame = False
 
     @property
-    def _rules_counts(self):
-        return len(self._rules.keys())
-
-    @property
     def _fitted(self):
-        return self._rules_counts > 0
+        return len(self.rules) > 0
 
 
     @frame_exclude(is_class = True)
@@ -46,7 +42,7 @@ class Transformer(TransformerMixin, SaveMixin):
             rules = self.fit_(X, *args, **kwargs)
 
         elif dim == 1:
-            name = getattr(X, 'name', DEFAULT_NAME)
+            name = getattr(X, 'name', self._default_name)
             rules[name] = self.fit_(X, *args, **kwargs)
 
         else:
@@ -61,9 +57,9 @@ class Transformer(TransformerMixin, SaveMixin):
                 rules[name] = self.fit_(X[col], *args, **kwargs)
 
         if update:
-            self._rules.update(rules)
+            self.rules.update(rules)
         else:
-            self._rules = rules
+            self.rules = rules
 
         return self
 
@@ -76,21 +72,20 @@ class Transformer(TransformerMixin, SaveMixin):
 
 
         if self._fit_frame:
-            return self.transform_(self._rules, X, *args, **kwargs)
+            return self.transform_(self.rules, X, *args, **kwargs)
 
         if getattr(X, 'ndim', 1) == 1:
-            if self._rules_counts == 1:
-                rule = next(iter(self._rules.values()))
-                return self.transform_(rule, X, *args, **kwargs)
-            elif hasattr(X, 'name') and X.name in self._rules:
-                return self.transform_(self._rules[X.name], X, *args, **kwargs)
+            if len(self.rules) == 1:
+                return self.transform_(self.default_rule(), X, *args, **kwargs)
+            elif hasattr(X, 'name') and X.name in self:
+                return self.transform_(self.rules[X.name], X, *args, **kwargs)
             else:
                 return X
 
         res = X.copy()
         for key in X:
-            if key in self._rules:
-                res[key] = self.transform_(self._rules[key], X[key], *args, **kwargs)
+            if key in self.rules:
+                res[key] = self.transform_(self.rules[key], X[key], *args, **kwargs)
 
         return res
 

@@ -6,7 +6,7 @@ import pyximport
 
 pyximport.install(setup_args={"include_dirs": np.get_include()})
 
-from toad.transform import WOETransformer, Combiner, GBDTTransformer, DEFAULT_NAME
+from toad.transform import WOETransformer, Combiner, GBDTTransformer
 
 np.random.seed(1)
 
@@ -56,7 +56,7 @@ def test_woe_transformer_exclude():
 def test_woe_transformer_export_single():
     transer = WOETransformer().fit(feature, target)
     t = transer.export()
-    assert t[DEFAULT_NAME][5] == 0.3938235330926786
+    assert t[transer._default_name][5] == 0.3938235330926786
 
 def test_woe_transformer_export():
     transer = WOETransformer().fit(df, target)
