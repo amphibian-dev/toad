@@ -1,3 +1,4 @@
+import re
 import numpy as np
 from copy import deepcopy
 from .decorator import save_to_json, load_from_json
@@ -41,7 +42,7 @@ class RulesMixin:
             }
         
         for key in rules:
-            rules[key] = self._parse_rule(rules[key])
+            rules[key] = self._parse_rule(rules[key], **kwargs)
         
         if update:
             self._rules.update(rules)
@@ -55,6 +56,9 @@ class RulesMixin:
         res = {}
         for key in self._rules:
             res[key] = self._format_rule(self._rules[key], **kwargs)
+        
+        if hasattr(self, 'after_export'):
+            res = self.after_export(res, **kwargs)
         
         return res
     
@@ -74,6 +78,8 @@ class RulesMixin:
     def __setitem__(self, key, value):
         self._rules[key] = value
 
+    def __iter__(self):
+        return iter(self._rules)
 
 
 
@@ -95,6 +101,7 @@ RE_RANGE = r'\[{begin}\s*{sep}\s*{end}\)'.format(
 class BinsMixin:
     EMPTY_BIN = -1
     ELSE_GROUP = 'else'
+    NUMBER_EXP = re.compile(RE_RANGE)
 
     @classmethod
     def parse_bins(self, bins):
@@ -145,7 +152,7 @@ class BinsMixin:
 
     @classmethod
     def _is_numeric(self, bins):
-        m = exp.match(bins[0])
+        m = self.NUMBER_EXP.match(bins[0])
 
         return m is not None
     
@@ -159,7 +166,7 @@ class BinsMixin:
                 l.append(np.nan)
                 continue
             
-            m = exp.match(item)
+            m = self.NUMBER_EXP.match(item)
             split = m.group(3)
 
             if split == 'inf':
