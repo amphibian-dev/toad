@@ -14,9 +14,6 @@ from .utils.func import to_ndarray, np_count, bin_by_splits, split_target
 from .utils.decorator import frame_exclude, select_dtypes
 from .utils.mixin import RulesMixin, BinsMixin
 
-# EMPTY_BIN = -1
-# ELSE_GROUP = 'else'
-
 
 class Transformer(TransformerMixin, RulesMixin):
     """Base class for transformers

@@ -9,17 +9,6 @@ from .utils import to_ndarray, bin_by_splits, save_json, read_json
 from .utils.mixin import RulesMixin, BinsMixin
 
 
-RE_NUM = r'-?\d+(.\d+)?'
-RE_SEP = r'[~-]'
-RE_BEGIN = r'(-inf|{num})'.format(num = RE_NUM)
-RE_END = r'(inf|{num})'.format(num = RE_NUM)
-RE_RANGE = r'\[{begin}\s*{sep}\s*{end}\)'.format(
-    begin = RE_BEGIN,
-    end = RE_END,
-    sep = RE_SEP,
-)
-
-
 NUMBER_EMPTY = -9999999
 NUMBER_INF = 1e10
 FACTOR_EMPTY = 'MISSING'
