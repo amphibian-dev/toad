@@ -1,26 +1,31 @@
 import pytest
-from toad.utils.mixin import SaveMixin
+import numpy as np
+from toad.utils.mixin import RulesMixin
 
-class SaveObject(SaveMixin):
-    @property
-    def rules(self):
-        return self._rules
+np.random.seed(1)
 
-
-def test_save_load():
-    obj = SaveObject()
-    obj.load({'A': 3, 'B': 6})
-    assert obj.rules['A'] == 3
+class RulesObject(RulesMixin):
+    def _parse_rule(self, rule):
+        return {
+            'rule': rule
+        }
 
 
-def test_save_export():
-    obj = SaveObject()
-    obj.load({'A': 3, 'B': 6})
-    assert obj.export()['B'] == 6
+    def _format_rule(self, rule):
+        return 'rule -> %s' % rule['rule']
 
+
+rules = {'A': 'rule_A'}
+
+def test_rule_parse():
+    r = RulesObject().load(rules)
+    assert r.rules['A']['rule'] == 'rule_A'
+
+def test_rule_format():
+    r = RulesObject().load(rules)
+    assert r.export()['A'] == 'rule -> rule_A'
 
 def test_save_update():
-    obj = SaveObject()
-    obj.load({'A': 3, 'B': 6})
-    obj.update({'A': 4})
-    assert obj.rules['A'] == 4 and obj.rules['B'] == 6
+    r = RulesObject().load(rules)
+    r.update({'A': 'update_A'})
+    assert r.rules['A']['rule'] == 'update_A'

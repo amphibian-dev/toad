@@ -58,6 +58,12 @@ TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
 
 
 
+def test_load():
+    card = ScoreCard().load(card_config)
+    score = card.predict(df)
+    assert score[200] == 600
+
+
 def test_proba_to_score():
     model = LogisticRegression()
     model.fit(woe, target)
@@ -89,36 +95,25 @@ def test_export_map():
 
 def test_card_map():
     config = card.export()
-    card_from_map = ScoreCard(card = config)
+    card_from_map = ScoreCard().load(config)
     score = card_from_map.predict(df)
     assert score[404] == TEST_SCORE
 
 def test_card_map_with_else():
-    card_from_map = ScoreCard(card = card_config)
+    card_from_map = ScoreCard().load(card_config)
     score = card_from_map.predict(df)
     assert score[80] == 1000
 
 def test_generate_testing_frame():
-    card = ScoreCard(card = card_config)
+    card = ScoreCard().load(card_config)
     frame = card.testing_frame()
     assert frame.loc[4, 'B'] == 'E'
 
 def test_export_frame():
-    card = ScoreCard(card = card_config)
+    card = ScoreCard().load(card_config)
     frame = card.export(to_frame = True)
     rows = frame[(frame['name'] == 'B') & (frame['value'] == 'else')].reset_index()
     assert rows.loc[0, 'score'] == 500
-
-def test_card_without_combiner():
-    transer = WOETransformer()
-    woe_X = transer.fit_transform(df, target)
-
-    card = ScoreCard(transer = transer)
-    card.fit(woe_X, target)
-    score, sub = card.predict(df, return_sub = True)
-
-    assert score[404] == pytest.approx(460.9789823549386, FUZZ_THRESHOLD)
-
 
 def test_card_combiner_number_not_match():
     c = combiner.export()

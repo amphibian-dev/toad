@@ -12,25 +12,18 @@ from .stats import WOE, probability
 from .merge import merge
 from .utils.func import to_ndarray, np_count, bin_by_splits, split_target
 from .utils.decorator import frame_exclude, select_dtypes
-from .utils.mixin import SaveMixin, DEFAULT_NAME
-
-EMPTY_BIN = -1
-ELSE_GROUP = 'else'
+from .utils.mixin import RulesMixin, BinsMixin
 
 
-class Transformer(TransformerMixin, SaveMixin):
+class Transformer(TransformerMixin, RulesMixin):
     """Base class for transformers
     """
 
     _fit_frame = False
 
     @property
-    def _rules_counts(self):
-        return len(self._rules.keys())
-
-    @property
     def _fitted(self):
-        return self._rules_counts > 0
+        return len(self.rules) > 0
 
 
     @frame_exclude(is_class = True)
@@ -46,7 +39,7 @@ class Transformer(TransformerMixin, SaveMixin):
             rules = self.fit_(X, *args, **kwargs)
 
         elif dim == 1:
-            name = getattr(X, 'name', DEFAULT_NAME)
+            name = getattr(X, 'name', self._default_name)
             rules[name] = self.fit_(X, *args, **kwargs)
 
         else:
@@ -61,9 +54,9 @@ class Transformer(TransformerMixin, SaveMixin):
                 rules[name] = self.fit_(X[col], *args, **kwargs)
 
         if update:
-            self._rules.update(rules)
+            self.rules.update(rules)
         else:
-            self._rules = rules
+            self.rules = rules
 
         return self
 
@@ -76,21 +69,20 @@ class Transformer(TransformerMixin, SaveMixin):
 
 
         if self._fit_frame:
-            return self.transform_(self._rules, X, *args, **kwargs)
+            return self.transform_(self.rules, X, *args, **kwargs)
 
         if getattr(X, 'ndim', 1) == 1:
-            if self._rules_counts == 1:
-                rule = next(iter(self._rules.values()))
-                return self.transform_(rule, X, *args, **kwargs)
-            elif hasattr(X, 'name') and X.name in self._rules:
-                return self.transform_(self._rules[X.name], X, *args, **kwargs)
+            if len(self.rules) == 1:
+                return self.transform_(self.default_rule(), X, *args, **kwargs)
+            elif hasattr(X, 'name') and X.name in self:
+                return self.transform_(self.rules[X.name], X, *args, **kwargs)
             else:
                 return X
 
         res = X.copy()
         for key in X:
-            if key in self._rules:
-                res[key] = self.transform_(self._rules[key], X[key], *args, **kwargs)
+            if key in self.rules:
+                res[key] = self.transform_(self.rules[key], X[key], *args, **kwargs)
 
         return res
 
@@ -168,7 +160,7 @@ class WOETransformer(Transformer):
 
 
 
-class Combiner(Transformer):
+class Combiner(Transformer, BinsMixin):
     """Combiner for merge data
     """
 
@@ -249,10 +241,10 @@ class Combiner(Transformer):
                     bins = bin_by_splits(X, rule)
 
         if labels:
-            formated = self._format_splits(rule, index = True)
-            empty_mask = (bins == EMPTY_BIN)
+            formated = self.format_bins(rule, index = True)
+            empty_mask = (bins == self.EMPTY_BIN)
             bins = formated[bins]
-            bins[empty_mask] = EMPTY_BIN
+            bins[empty_mask] = self.EMPTY_BIN
 
         return bins
 
@@ -289,43 +281,16 @@ class Combiner(Transformer):
             array-like
         """
         # set default group to EMPTY_BIN
-        bins = np.full(X.shape, EMPTY_BIN)
+        bins = np.full(X.shape, self.EMPTY_BIN)
         for i in range(len(splits)):
             group = splits[i]
             # if group is else, set all empty group to it
-            if isinstance(group, str) and group == ELSE_GROUP:
-                bins[bins == EMPTY_BIN] = i
+            if isinstance(group, str) and group == self.ELSE_GROUP:
+                bins[bins == self.EMPTY_BIN] = i
             else:
                 bins[np.isin(X, group)] = i
 
         return bins
-
-    def _format_splits(self, splits, index = False):
-        l = list()
-        if np.issubdtype(splits.dtype, np.number):
-            has_empty = len(splits) > 0 and np.isnan(splits[-1])
-            
-            if has_empty:
-                splits = splits[:-1]
-            
-            sp_l = [-np.inf] + splits.tolist() + [np.inf]
-            for i in range(len(sp_l) - 1):
-                l.append('['+str(sp_l[i])+' ~ '+str(sp_l[i+1])+')')
-            
-            if has_empty:
-                l.append('nan')
-        else:
-            for keys in splits:
-                if isinstance(keys, str) and keys == ELSE_GROUP:
-                    l.append(keys)
-                else:
-                    l.append(','.join(keys))
-
-        if index:
-            indexes = [i for i in range(len(l))]
-            l = ["{}.{}".format(ix, lab) for ix, lab in zip(indexes, l)]
-
-        return np.array(l)
 
 
     def set_rules(self, map, reset = False):
@@ -356,7 +321,7 @@ class Combiner(Transformer):
 
     def _format_rule(self, rule, format = False):
         if format:
-            rule = self._format_splits(rule)
+            rule = self.format_bins(rule)
 
         return rule.tolist()
 
