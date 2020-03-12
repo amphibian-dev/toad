@@ -315,6 +315,19 @@ def diff_time_frame(base, frame, format = None):
     return res
 
 
+def flatten_columns(columns, sep = '_'):
+    """flatten multiple columns to 1-dim columns joined with '_'
+    """
+    l = []
+    for col in columns:
+        if not isinstance(col, str):
+            col = sep.join(col)
+        
+        l.append(col)
+    
+    return l
+
+
 def bin_to_number(reg = None):
     """
     Returns:
