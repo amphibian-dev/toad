@@ -4,15 +4,34 @@ from ..utils.func import flatten_columns
 class Processing:
     def __init__(self, data):
         self.data = data
-        self.workers = []
+        self.funcs = {}
 
     def groupby(self, name):
         self.groupby = name
         return self
     
-    def agg(self, worker):
-        self.workers.append(worker)
+    def apply(self, f):
+        if not isinstance(f, dict):
+            f = {
+                '_all_': f
+            }
+        
+        for k, v in f.items():
+            self.append_func(k, v)
+        
         return self
+    
+    def append_func(self, col, func):
+        if not isinstance(func, (list, tuple)):
+            func = [func]
+        
+        func = list(func)
+        
+        if col not in self.funcs:
+            self.funcs[col] = []
+        
+        self.funcs[col] = self.funcs[col] + func
+        
     
     def splitby(self, s):
         self.splits = s
@@ -29,7 +48,7 @@ class Processing:
                 res = data
                 continue
             
-            res = res.join(data)
+            res = res.join(data, how = 'outer')
         
         return res
             
@@ -38,18 +57,41 @@ class Processing:
     def process(self, data):
         group = data.groupby(self.groupby)
 
-        res = None
-        for func in self.workers:
-            r = group.agg(func)
-
-            if res is None:
-                res = r
-                continue
+        res = []
+        for col, l in self.funcs.items():
+            g = group
             
-            res = res.join(r)
+            for f in l:
+                name = f
+                if callable(f):
+                    name = f.__name__
+                    r = g.apply(self._wrapper(col, f))
+                else:
+                    r = getattr(g[col], f)()
+                
+                if isinstance(r, pd.Series):
+                    r = pd.DataFrame(r)
 
-        res.columns = flatten_columns(res.columns)
-        return res
+                res.append(r.add_prefix(col + '_'))
+        
+        return pd.concat(res, axis=1)
+    
+
+    def _wrapper(self, col, f):
+        def func(data):
+            if col != '_all_':
+                data = data[col]
+            
+            r = f(data)
+
+            if not isinstance(r, dict):
+                r = {
+                    f.__name__: r
+                }
+
+            return pd.Series(r)
+        
+        return func
     
 
 
@@ -63,6 +105,25 @@ class VAR:
             'op': '__'+ op +'__',
             'value': value,
         })
+    
+    def replay(self, data):
+        base = data[self.column]
+        for item in self.operators:
+            v = item['value']
+
+            if isinstance(v, VAR):
+                v = v.replay(data)
+            
+            f = getattr(base, item['op'])
+
+            if v is None:
+                base = f()
+                continue
+
+            base = f(v)
+        
+        return base
+
 
     def __eq__(self, other):
         self.push('eq', other)
@@ -82,4 +143,20 @@ class VAR:
     
     def __ge__(self, other):
         self.push('ge', other)
+        return self
+    
+    def __invert__(self):
+        self.push('invert', None)
+        return self
+    
+    def __and__(self, other):
+        self.push('and', other)
+        return self
+    
+    def __or__(self, other):
+        self.push('or', other)
+        return self
+    
+    def __xor__(self, other):
+        self.push('xor', other)
         return self
