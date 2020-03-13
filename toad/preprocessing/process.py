@@ -95,23 +95,27 @@ class Processing:
     
 
 
-class VAR:
-    def __init__(self, column):
+class Mask:
+    
+    def __init__(self, column = None):
         self.column = column
         self.operators = []
     
     def push(self, op, value):
         self.operators.append({
-            'op': '__'+ op +'__',
+            'op': op,
             'value': value,
         })
     
     def replay(self, data):
-        base = data[self.column]
+        base = data
+        if self.column is not None:
+            base = data[self.column]
+
         for item in self.operators:
             v = item['value']
 
-            if isinstance(v, VAR):
+            if isinstance(v, Mask):
                 v = v.replay(data)
             
             f = getattr(base, item['op'])
@@ -124,39 +128,42 @@ class VAR:
         
         return base
 
-
     def __eq__(self, other):
-        self.push('eq', other)
+        self.push('__eq__', other)
         return self
     
     def __lt__(self, other):
-        self.push('lt', other)
+        self.push('__lt__', other)
         return self
     
     def __gt__(self, other):
-        self.push('gt', other)
+        self.push('__gt__', other)
         return self
     
     def __le__(self, other):
-        self.push('le', other)
+        self.push('__le__', other)
         return self
     
     def __ge__(self, other):
-        self.push('ge', other)
+        self.push('__ge__', other)
         return self
     
     def __invert__(self):
-        self.push('invert', None)
+        self.push('__invert__', None)
         return self
     
     def __and__(self, other):
-        self.push('and', other)
+        self.push('__and__', other)
         return self
     
     def __or__(self, other):
-        self.push('or', other)
+        self.push('__or__', other)
         return self
     
     def __xor__(self, other):
-        self.push('xor', other)
+        self.push('__xor__', other)
+        return self
+    
+    def isin(self, other):
+        self.push('isin', other)
         return self
