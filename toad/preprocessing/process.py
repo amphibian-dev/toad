@@ -167,3 +167,44 @@ class Mask:
     def isin(self, other):
         self.push('isin', other)
         return self
+
+
+
+class F:
+    def __init__(self, f, name = None, filter = None):
+        self.f = f
+
+        if name is None:
+            name = f.__name__
+        
+        self.__name__ = name
+
+        self.filter = filter
+    
+    def __call__(self, data, *args, **kwargs):
+        if self.filter is not None:
+            data = data[self.filter.replay(data)]
+        res = self.f(data, *args, **kwargs)
+
+        return res
+
+
+
+
+"""
+(Processing(data).groupby('id')
+    .splitby(TimeSplit(
+        'base_time',
+        'filter_time',
+        ['30d', '60d', '180d', '365d', 'all']
+    ))
+    .apply({'A': ['max', 'min', 'mean']})
+    .apply({'B': ['max', 'min', 'mean']})
+    .apply({'C': 'nunique'})
+    .apply({'D': [
+        F(len, 'normal_count', Mask().isin(['normal']))
+    ]})
+    .apply({'id': 'count'})
+    .exec()
+)
+"""
