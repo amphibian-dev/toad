@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.metrics import KS, KS_bucket, F1, PSI, AUC, matrix
+from .metrics import KS, KS_bucket, F1, PSI, AUC, matrix
 
 np.random.seed(1)
 

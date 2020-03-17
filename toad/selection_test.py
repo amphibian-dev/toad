@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.selection import drop_empty, drop_var, drop_corr, drop_iv, drop_vif, select, stepwise
+from .selection import drop_empty, drop_var, drop_corr, drop_iv, drop_vif, select, stepwise
 
 np.random.seed(1)
 

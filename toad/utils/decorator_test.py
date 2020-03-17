@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.utils.decorator import frame_exclude
+from .decorator import frame_exclude
 
 np.random.seed(1)
 

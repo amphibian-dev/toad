@@ -34,9 +34,9 @@ uninstall:
 test:
 	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))
 	@if [ -z $(TARGET) ]; then \
-		$(PYTHON) -m pytest tests; \
+		$(PYTHON) -m pytest toad; \
 	else \
-		$(PYTHON) -m pytest tests/test_$(TARGET).py; \
+		$(PYTHON) -m pytest toad/$(TARGET)_test.py; \
 	fi
 
 build_deps:

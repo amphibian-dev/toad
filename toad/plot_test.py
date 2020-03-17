@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.plot import (
+from .plot import (
     badrate_plot,
     corr_plot,
     proportion_plot,

@@ -6,7 +6,7 @@ import pyximport
 
 pyximport.install(setup_args={"include_dirs": np.get_include()})
 
-from toad import merge, ChiMerge, DTMerge, QuantileMerge, StepMerge, KMeansMerge
+from .merge import merge, ChiMerge, DTMerge, QuantileMerge, StepMerge, KMeansMerge
 
 np.random.seed(1)
 feature = np.random.rand(500)
