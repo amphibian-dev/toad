@@ -2,6 +2,9 @@ from ..utils.func import flatten_columns
 
 
 class Processing:
+    DEFAULT_NAME: '__ALL__'
+
+
     def __init__(self, data):
         self.data = data
         self.funcs = {}
@@ -13,7 +16,7 @@ class Processing:
     def apply(self, f):
         if not isinstance(f, dict):
             f = {
-                '_all_': f
+                self.DEFAULT_NAME: f
             }
         
         for k, v in f.items():
@@ -33,7 +36,7 @@ class Processing:
         self.funcs[col] = self.funcs[col] + func
         
     
-    def splitby(self, s):
+    def partitionby(self, s):
         self.splits = s
         return self
     
@@ -79,7 +82,7 @@ class Processing:
 
     def _wrapper(self, col, f):
         def func(data):
-            if col != '_all_':
+            if col != self.DEFAULT_NAME:
                 data = data[col]
             
             r = f(data)
@@ -96,7 +99,6 @@ class Processing:
 
 
 class Mask:
-    
     def __init__(self, column = None):
         self.column = column
         self.operators = []
