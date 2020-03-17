@@ -22,6 +22,7 @@ python setup.py install
 ## Tutorial
 
 A [basic tutorial](tutorial) is provided.
+
 [中文指引](https://toad.readthedocs.io/en/dev/tutorial_chinese.html)
 
 ## Contents
