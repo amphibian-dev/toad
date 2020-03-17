@@ -195,7 +195,7 @@ def roc_plot(score, target):
     return ax
 
 
-def bin_plot(frame, x = None, target = 'target', iv = True):
+def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f"):
     """plot for bins
 
     Args:
@@ -203,6 +203,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True):
         x (str): column in frame that will be used as x axis
         target (str): target column in frame
         iv (bool): if need to show iv in plot
+        annotate_format (str): format str for axis annotation of chart
 
     Returns:
         Axes: bins' proportion and badrate plot
@@ -228,7 +229,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True):
         color = '#82C6E2',
     )
 
-    prop_ax = add_annotate(prop_ax)
+    prop_ax = add_annotate(prop_ax, format = annotate_format)
 
     badrate_ax = prop_ax.twinx()
     badrate_ax.grid(False)
@@ -242,7 +243,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True):
     )
 
     badrate_ax.set_ylim([0, None])
-    badrate_ax = add_annotate(badrate_ax)
+    badrate_ax = add_annotate(badrate_ax, format = annotate_format)
 
     if iv:
         prop_ax = reset_ylim(prop_ax)

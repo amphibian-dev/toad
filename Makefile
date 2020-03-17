@@ -24,7 +24,7 @@ ifeq ('$(shell type -P pip3)','')
 endif
 
 
-install:
+install: build
 	$(SUDO) $(PIP) install numpy pytest Cython
 	$(SUDO) $(PIP) install -e .
 

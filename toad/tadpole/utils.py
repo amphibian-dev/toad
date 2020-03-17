@@ -84,7 +84,7 @@ def tadpole_axes(fn):
 
 
 
-def annotate(ax, x, y, space = 5, label = "{:.2f}"):
+def annotate(ax, x, y, space = 5, format = ".2f"):
     """
     """
     va = 'bottom'
@@ -94,7 +94,7 @@ def annotate(ax, x, y, space = 5, label = "{:.2f}"):
         va = 'top'
 
     ax.annotate(
-        label.format(y),
+        ("{:"+ format +"}").format(y),
         (x, y),
         xytext = (0, space),
         textcoords = "offset points",
@@ -104,36 +104,36 @@ def annotate(ax, x, y, space = 5, label = "{:.2f}"):
 
 
 
-def add_bar_annotate(ax, space = 5):
+def add_bar_annotate(ax, **kwargs):
     """
     """
     for rect in ax.patches:
         y_value = rect.get_height()
         x_value = rect.get_x() + rect.get_width() / 2
 
-        annotate(ax, x_value, y_value)
+        annotate(ax, x_value, y_value, **kwargs)
 
     return ax
 
 
-def add_line_annotate(ax, space = 5):
+def add_line_annotate(ax, **kwargs):
     """
     """
     for line in ax.lines:
         points = line.get_xydata()
 
         for point in points:
-            annotate(ax, point[0], point[1])
+            annotate(ax, point[0], point[1], **kwargs)
 
     return ax
 
 
-def add_annotate(ax):
+def add_annotate(ax, **kwargs):
     if len(ax.lines) > 0:
-        add_line_annotate(ax)
+        add_line_annotate(ax, **kwargs)
 
     if len(ax.patches) > 0:
-        add_bar_annotate(ax)
+        add_bar_annotate(ax, **kwargs)
 
     return ax
 
