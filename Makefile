@@ -25,13 +25,15 @@ endif
 
 
 install: build
-	$(SUDO) $(PIP) install numpy pytest Cython
 	$(SUDO) $(PIP) install -e .
 
 uninstall:
 	cat files.txt | xargs rm -rf
 
-test:
+test_deps:
+	$(SUDO) $(PIP) install pytest
+
+test: test_deps
 	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))
 	@if [ -z $(TARGET) ]; then \
 		$(PYTHON) -m pytest -x toad; \
@@ -40,15 +42,18 @@ test:
 	fi
 
 build_deps:
-	$(SUDO) $(PIP) install -U wheel setuptools twine
+	$(SUDO) $(PIP) install numpy Cython setuptools
 
 build: build_deps
 	$(PYTHON) setup.py build_ext --inplace
 
-dist: build
+dist_deps:
+	$(SUDO) $(PIP) install -U wheel twine
+
+dist: build dist_deps
 	$(SUDO) $(PYTHON) setup.py sdist
 
-dist_wheel: build
+dist_wheel: build dist_deps
 	$(SUDO) $(PYTHON) setup.py bdist_wheel --universal
 
 patchelf:
@@ -59,7 +64,7 @@ patchelf:
 manylinux_docker:
 	docker pull $(DOCKER_IMAGE)
 
-dist_manylinux: build dist manylinux_docker
+dist_manylinux: dist manylinux_docker
 	docker run --rm -e PLAT=$(PLAT) -v $(shell pwd):/io $(DOCKER_IMAGE) $(PRE_CMD) /io/scripts/build_wheels.sh
 
 upload:
