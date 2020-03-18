@@ -6,7 +6,7 @@ import pyximport
 
 pyximport.install(setup_args={"include_dirs": np.get_include()})
 
-from toad.transform import WOETransformer, Combiner, GBDTTransformer
+from .transform import WOETransformer, Combiner, GBDTTransformer
 
 np.random.seed(1)
 

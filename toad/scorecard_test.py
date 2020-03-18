@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
-from toad.transform import WOETransformer, Combiner
-from toad.scorecard import ScoreCard
+from .scorecard import ScoreCard, WOETransformer, Combiner
+
 
 np.random.seed(1)
 

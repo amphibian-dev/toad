@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad.utils import (
+from .func import (
     np_unique,
     fillna,
     clip,
@@ -11,6 +11,7 @@ from toad.utils import (
     generate_target,
     generate_str,
     get_dummies,
+    feature_splits,
 )
 
 np.random.seed(1)
@@ -33,6 +34,12 @@ def test_clip():
     res1 = clip(feature, quantile = (.05, .95))
     res2 = clip(feature, quantile = 0.05)
     assert np.testing.assert_array_equal(res1, res2) is None
+
+
+def test_feature_splits():
+    value = feature_splits(feature, target)
+    assert len(value) == 243
+
 
 def test_diff_time_frame():
     time_data = [

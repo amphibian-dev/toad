@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from toad.utils.mixin import RulesMixin
+from .mixin import RulesMixin
 
 np.random.seed(1)
 

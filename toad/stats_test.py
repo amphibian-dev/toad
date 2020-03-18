@@ -2,9 +2,8 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from toad import IV, WOE, gini, gini_cond, entropy_cond, quality, KS_bucket
-from toad.stats import _IV, VIF
-from toad.utils import feature_splits
+from .stats import IV, WOE, gini, gini_cond, entropy_cond, quality, _IV, VIF
+
 
 np.random.seed(1)
 
@@ -41,10 +40,6 @@ def test_iv_frame():
 def test_gini():
     value = gini(df['target'])
     assert value == 0.499352
-
-def test_feature_splits():
-    value = feature_splits(df['feature'], df['target'])
-    assert len(value) == 243
 
 def test_gini_cond():
     value = gini_cond(df['feature'], df['target'])
