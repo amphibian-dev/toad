@@ -5,4 +5,5 @@
 .. toctree::
    toad.utils.func
    toad.utils.decorator
+   toad.utils.mixin
 ```

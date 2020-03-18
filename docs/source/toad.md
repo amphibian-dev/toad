@@ -16,6 +16,7 @@
    toad.selection
    toad.stats
    toad.transform
+   toad.preprocessing
    toad.utils
 ```
 
