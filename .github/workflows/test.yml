@@ -20,4 +20,4 @@ jobs:
           architecture: x64
       - run: pip install numpy cython pytest
       - run: pip install -e .
-      - run: python -m pytest -x ./tests
+      - run: make test
