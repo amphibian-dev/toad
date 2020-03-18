@@ -9,25 +9,24 @@ class Processing:
 
     Example:
 
-    (
-        Processing(data)
-        .groupby('id')
-        .partitionby(TimePartition(
-            'base_time',
-            'filter_time',
-            ['30d', '60d', '180d', '365d', 'all']
-        ))
-        .apply({'A': ['max', 'min', 'mean']})
-        .apply({'B': ['max', 'min', 'mean']})
-        .apply({'C': 'nunique'})
-        .apply({'D': {
-            'f': len,
-            'name': 'normal_count',
-            'mask':  Mask().isin(['normal']),
-        }})
-        .apply({'id': 'count'})
-        .exec()
-    )
+    >>> (Processing(data)
+    ...     .groupby('id')
+    ...     .partitionby(TimePartition(
+    ...         'base_time',
+    ...         'filter_time',
+    ...         ['30d', '60d', '180d', '365d', 'all']
+    ...     ))
+    ...     .apply({'A': ['max', 'min', 'mean']})
+    ...     .apply({'B': ['max', 'min', 'mean']})
+    ...     .apply({'C': 'nunique'})
+    ...     .apply({'D': {
+    ...         'f': len,
+    ...         'name': 'normal_count',
+    ...         'mask':  Mask().isin(['normal']),
+    ...     }})
+    ...     .apply({'id': 'count'})
+    ...     .exec()
+    ... )
     """
     def __init__(self, data):
         self.data = data
