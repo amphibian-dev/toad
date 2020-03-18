@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-from .partition import TimePartition
+from .process import Processing, Mask, F
 
 
 np.random.seed(1)
@@ -20,3 +20,35 @@ df = pd.DataFrame({
     'A': A,
     'B': B,
 })
+
+
+def test_mask():
+    m = Mask('A') > 3
+    assert m.replay(df).sum() == 299
+
+
+def test_mask_without_name():
+    m = Mask() > 3
+    assert m.replay(A).sum() == 299
+
+def test_f():
+    assert F(len)(A)[0] == 500
+
+def test_processing():
+    res = (
+        Processing(df)
+        .groupby('open_time')
+        .apply({'A': ['min', 'mean']})
+        .apply({'B': [
+            {
+                'f': 'count',
+                'mask': Mask('A') > 1,
+            },
+            {
+                'f': len,
+            },
+        ]})
+        .exec()
+    )
+    
+    assert res.size == 120 and res.loc['2020-02-29', 'B_count'] == 23

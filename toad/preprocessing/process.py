@@ -1,13 +1,14 @@
+import pandas as pd
 from ..utils.func import flatten_columns
 
 
+_ALL_SYMBOL_ = '__all_symbol__'
+
 class Processing:
-    DEFAULT_NAME: '__ALL__'
-
-
     def __init__(self, data):
         self.data = data
         self.funcs = {}
+        self.partitions = None
 
     def groupby(self, name):
         self.groupby = name
@@ -16,7 +17,7 @@ class Processing:
     def apply(self, f):
         if not isinstance(f, dict):
             f = {
-                self.DEFAULT_NAME: f
+                _ALL_SYMBOL_: f
             }
         
         for k, v in f.items():
@@ -24,26 +25,38 @@ class Processing:
         
         return self
     
+
     def append_func(self, col, func):
         if not isinstance(func, (list, tuple)):
             func = [func]
         
-        func = list(func)
-        
         if col not in self.funcs:
             self.funcs[col] = []
         
-        self.funcs[col] = self.funcs[col] + func
+        for f in func:
+            self.funcs[col].append(self._convert_func(f))
+    
+
+    def _convert_func(self, f):
+        if isinstance(f, F):
+            return f
+        
+        if not isinstance(f, dict):
+            f = {'f': f}
+        
+        return F(**f)
         
     
-    def partitionby(self, s):
-        self.splits = s
+    def partitionby(self, p):
+        self.partitions = p
         return self
     
     def exec(self):
-        res = None
+        if self.partitions is None:
+            return self.process(self.data)
 
-        for mask, suffix in self.splits.apply(self.data):
+        res = None
+        for mask, suffix in self.partitions.apply(self.data):
             data = self.process(self.data[mask])
             data = data.add_suffix(suffix)
 
@@ -62,15 +75,20 @@ class Processing:
 
         res = []
         for col, l in self.funcs.items():
-            g = group
-            
             for f in l:
-                name = f
-                if callable(f):
-                    name = f.__name__
-                    r = g.apply(self._wrapper(col, f))
+                g = group
+
+                if f.need_filter:
+                    g = f.filter(data).groupby(self.groupby)
+                
+                if f.is_buildin:
+                    r = getattr(g[col], f.name)()
+                    r.name = f.name
                 else:
-                    r = getattr(g[col], f)()
+                    if col == _ALL_SYMBOL_:
+                        col = None
+                    
+                    r = g.apply(f, col = col)
                 
                 if isinstance(r, pd.Series):
                     r = pd.DataFrame(r)
@@ -78,23 +96,6 @@ class Processing:
                 res.append(r.add_prefix(col + '_'))
         
         return pd.concat(res, axis=1)
-    
-
-    def _wrapper(self, col, f):
-        def func(data):
-            if col != self.DEFAULT_NAME:
-                data = data[col]
-            
-            r = f(data)
-
-            if not isinstance(r, dict):
-                r = {
-                    f.__name__: r
-                }
-
-            return pd.Series(r)
-        
-        return func
     
 
 
@@ -173,22 +174,54 @@ class Mask:
 
 
 class F:
-    def __init__(self, f, name = None, filter = None):
+    def __init__(self, f, name = None, mask = None):
         self.f = f
 
         if name is None:
-            name = f.__name__
+            if self.is_buildin:
+                name = f
+            else:
+                name = f.__name__
         
         self.__name__ = name
 
-        self.filter = filter
+        self.mask = mask
     
-    def __call__(self, data, *args, **kwargs):
-        if self.filter is not None:
-            data = data[self.filter.replay(data)]
-        res = self.f(data, *args, **kwargs)
+    @property
+    def name(self):
+        return self.__name__
 
-        return res
+    @property
+    def is_buildin(self):
+        return isinstance(self.f, str)
+    
+    @property
+    def need_filter(self):
+        return self.mask is not None
+    
+    def __call__(self, data, *args, col = None, **kwargs):
+        if col in data:
+            data = data[col]
+
+        r = self.f(data, *args, **kwargs)
+
+        if not isinstance(r, dict):
+            r = {
+                self.name: r
+            }
+
+        return pd.Series(r)
+    
+
+    def filter(self, data):
+        if self.mask is None:
+            return data
+        
+        mask = self.mask
+        if isinstance(self.mask, Mask):
+            mask = self.mask.replay(data)
+        
+        return data[mask]
 
 
 
