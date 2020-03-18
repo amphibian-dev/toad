@@ -5,16 +5,54 @@ from ..utils.func import flatten_columns
 _ALL_SYMBOL_ = '__all_symbol__'
 
 class Processing:
+    """
+
+    Example:
+
+    (
+        Processing(data)
+        .groupby('id')
+        .partitionby(TimePartition(
+            'base_time',
+            'filter_time',
+            ['30d', '60d', '180d', '365d', 'all']
+        ))
+        .apply({'A': ['max', 'min', 'mean']})
+        .apply({'B': ['max', 'min', 'mean']})
+        .apply({'C': 'nunique'})
+        .apply({'D': {
+            'f': len,
+            'name': 'normal_count',
+            'mask':  Mask().isin(['normal']),
+        }})
+        .apply({'id': 'count'})
+        .exec()
+    )
+    """
     def __init__(self, data):
         self.data = data
         self.funcs = {}
         self.partitions = None
 
     def groupby(self, name):
+        """group data by name
+
+        Args:
+            name (str): column name in data
+        """
         self.groupby = name
         return self
     
     def apply(self, f):
+        """apply functions to data
+
+        Args:
+            f (dict|function): a config dict that keys are the column names and 
+                values are the functions, it will take the column series as the
+                functions argument. if `f` is a function, it will take the whole
+                dataframe as the argument.
+            
+        """
         if not isinstance(f, dict):
             f = {
                 _ALL_SYMBOL_: f
@@ -48,6 +86,11 @@ class Processing:
         
     
     def partitionby(self, p):
+        """partition data to multiple pieces, processing will process to all the pieces
+
+        Args:
+            p (Partition)
+        """
         self.partitions = p
         return self
     
@@ -100,6 +143,8 @@ class Processing:
 
 
 class Mask:
+    """a placeholder to select dataframe
+    """
     def __init__(self, column = None):
         self.column = column
         self.operators = []
@@ -174,6 +219,8 @@ class Mask:
 
 
 class F:
+    """function class for processing
+    """
     def __init__(self, f, name = None, mask = None):
         self.f = f
 
@@ -223,23 +270,3 @@ class F:
         
         return data[mask]
 
-
-
-
-"""
-(Processing(data).groupby('id')
-    .splitby(TimeSplit(
-        'base_time',
-        'filter_time',
-        ['30d', '60d', '180d', '365d', 'all']
-    ))
-    .apply({'A': ['max', 'min', 'mean']})
-    .apply({'B': ['max', 'min', 'mean']})
-    .apply({'C': 'nunique'})
-    .apply({'D': [
-        F(len, 'normal_count', Mask().isin(['normal']))
-    ]})
-    .apply({'id': 'count'})
-    .exec()
-)
-"""
