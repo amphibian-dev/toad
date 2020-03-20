@@ -214,6 +214,10 @@ class Mask:
     def isin(self, other):
         self.push('isin', other)
         return self
+    
+    def isna(self):
+        self.push('isna', None)
+        return self
 
 
 
