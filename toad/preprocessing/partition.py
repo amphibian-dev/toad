@@ -4,7 +4,7 @@ import pandas as pd
 
 class Partition:
     def partition(self, data):
-        return self
+        yield np.ones(len(data)).astype(bool), ''
 
 
 
@@ -46,3 +46,21 @@ class TimePartition(Partition):
                 mask = np.ones(len(filter)).astype(bool)
             
             yield mask, '_' + t
+
+
+class ValuePartition(Partition):
+    def __init__(self, column):
+        self.column = column
+    
+
+    def partition(self, data):
+        data = data[self.column]
+        unique = data.unique()
+
+        for u in unique:
+            if pd.isna(u):
+                mask = data.isna()
+            else:
+                mask = (data == u)
+            
+            yield mask, '_' + str(u)
