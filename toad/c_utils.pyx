@@ -5,6 +5,11 @@ cimport numpy as np
 cimport cython
 
 
+ctypedef fused number:
+    int
+    double
+    long
+
 
 cdef number c_min(number[:] arr):
     cdef number res = np.inf
