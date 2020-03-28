@@ -144,8 +144,7 @@ class BinsMixin:
                     l.append(','.join(keys))
 
         if index:
-            indexes = [i for i in range(len(l))]
-            l = ["{}.{}".format(ix, lab) for ix, lab in zip(indexes, l)]
+            l = ["{:02}.{}".format(ix, lab) for ix, lab in enumerate(l)]
 
         return np.array(l)
     

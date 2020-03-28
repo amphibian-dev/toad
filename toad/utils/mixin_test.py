@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from .mixin import RulesMixin
+from .mixin import RulesMixin, BinsMixin
 
 np.random.seed(1)
 
@@ -29,3 +29,15 @@ def test_save_update():
     r = RulesObject().load(rules)
     r.update({'A': 'update_A'})
     assert r.rules['A']['rule'] == 'update_A'
+
+def test_format_bins():
+    obj = BinsMixin()
+    formated = obj.format_bins(np.array([2,4,6]))
+    expect = ['[-inf ~ 2)', '[2 ~ 4)', '[4 ~ 6)', '[6 ~ inf)']
+    assert all([a == b for a, b in zip(formated, expect)])
+
+def test_format_bins_with_index():
+    obj = BinsMixin()
+    formated = obj.format_bins(np.array([2,4,6]), index = True)
+    assert '01.[2 ~ 4)' in formated
+
