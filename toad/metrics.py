@@ -86,14 +86,25 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
     agg2['bad_prop'] = agg2['bads'] / bad_total
     agg2['good_prop'] = agg2['goods'] / good_total
     agg2['total_prop'] = agg2['total'] / all_total
+    
 
-    agg2['cum_bads'] = agg2['bads'].cumsum()
-    agg2['cum_goods'] = agg2['goods'].cumsum()
-    agg2['cum_total'] = agg2['total'].cumsum()
+    cum_bads = agg2['bads'].cumsum()
+    cum_goods = agg2['goods'].cumsum()
+    cum_total = agg2['total'].cumsum()
 
-    agg2['cum_bads_prop'] = agg2['cum_bads'] / bad_total
-    agg2['cum_goods_prop'] = agg2['cum_goods'] / good_total
-    agg2['cum_total_prop'] = agg2['cum_total'] / all_total
+    cum_bads_rev = agg2.loc[::-1, 'bads'].cumsum()[::-1]
+    cum_goods_rev = agg2.loc[::-1, 'goods'].cumsum()[::-1]
+    cum_total_rev = agg2.loc[::-1, 'total'].cumsum()[::-1]
+
+    agg2['cum_bad_rate'] = cum_bads / cum_total
+    agg2['cum_bad_rate_rev'] = cum_bads_rev / cum_total_rev
+    
+    agg2['cum_bads_prop'] = cum_bads / bad_total
+    agg2['cum_bads_prop_rev'] = cum_bads_rev / bad_total
+    agg2['cum_goods_prop'] = cum_goods / good_total
+    agg2['cum_goods_prop_rev'] = cum_goods_rev / good_total
+    agg2['cum_total_prop'] = cum_total / all_total
+    agg2['cum_total_prop_rev'] = cum_total_rev / all_total
 
 
     agg2['ks'] = agg2['cum_bads_prop'] - agg2['cum_goods_prop']
