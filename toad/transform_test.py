@@ -103,7 +103,7 @@ def test_combiner_exclude():
 def test_combiner_labels():
     combiner = Combiner().fit(df, target)
     res = combiner.transform(df, labels = True)
-    assert res.loc[451, 'A'] == '3.[3 ~ 4)'
+    assert res.loc[451, 'A'] == '03.[3 ~ 4)'
 
 def test_combiner_export():
     combiner = Combiner().fit(df, target, method = 'chi', n_bins = 4)
@@ -140,7 +140,7 @@ def test_combiner_empty_separate():
 def test_combiner_labels_with_empty():
     combiner = Combiner().fit(df, 'target', n_bins = 4, empty_separate = True)
     res = combiner.transform(df, labels = True)
-    assert res.loc[2, 'D'] == '4.nan'
+    assert res.loc[2, 'D'] == '04.nan'
 
 def test_gbdt_transformer():
     np.random.seed(1)
