@@ -145,9 +145,12 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
 
     def _check_rules(self, combiner, transer):
-        for col in combiner:
+        for col in self.features_:
+            if col not in combiner:
+                raise Exception('column \'{col}\' is not in combiner'.format(col = col))
+            
             if col not in transer:
-                continue
+                raise Exception('column \'{col}\' is not in transer'.format(col = col))
 
             l_c = len(combiner[col])
             l_t = len(transer[col]['woe'])

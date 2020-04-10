@@ -153,3 +153,15 @@ def test_card_combiner_str_not_match():
         card.fit(woe, target)
 
     assert '\'C\' is not matched' in str(e.value)
+
+
+def test_card_with_less_X():
+    x = woe.drop(columns = 'A')
+    card = ScoreCard(
+        combiner = combiner,
+        transer = woe_transer,
+    )
+
+    card.fit(x, target)
+    assert card.predict(x)[200] == pytest.approx(411.968588097131, FUZZ_THRESHOLD)
+
