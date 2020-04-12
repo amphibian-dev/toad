@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from sklearn.metrics import f1_score, roc_auc_score
+from sklearn.metrics import f1_score, roc_auc_score, roc_curve
 
 from .merge import merge
 from .transform import Combiner
@@ -198,7 +198,7 @@ def F1(score, target, split = 'best', return_split = False):
     return best
 
 
-def AUC(score, target):
+def AUC(score, target, return_curve = False):
     """AUC Score
 
     Args:
@@ -208,8 +208,16 @@ def AUC(score, target):
     Returns:
         float: auc score
     """
+    # fix score order
+    if np.nanmax(score) > 1:
+        score = -score
 
-    return roc_auc_score(target, score)
+    auc = roc_auc_score(target, score)
+
+    if not return_curve:
+        return auc
+    
+    return (auc,) + roc_curve(target, score)
 
 
 def _PSI(test, base):

@@ -48,6 +48,10 @@ def test_AUC():
     result = AUC(feature, target)
     assert result == 0.5038690142424582
 
+def test_AUC_with_curve():
+    auc, fpr, tpr, thresholds = AUC(feature, target, return_curve = True)
+    assert thresholds[200] == 0.15773006987053328
+
 def test_PSI():
     result = PSI(feature, base_feature, combiner = [0.3, 0.5, 0.7])
     assert result == 0.018630024627491467

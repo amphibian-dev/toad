@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import roc_curve, roc_auc_score
 
 from .stats import IV
+from .metrics import AUC
 from .tadpole import tadpole
 from .tadpole.utils import HEATMAP_CMAP, MAX_STYLE, add_annotate, add_text, reset_ylim
 from .utils import unpack_tuple, generate_str
@@ -180,7 +180,7 @@ def roc_plot(score, target):
     Returns:
         Axes
     """
-    fpr, tpr, thresholds = roc_curve(target, score)
+    auc, fpr, tpr, thresholds = AUC(score, target, return_curve = True)
 
     ax = tadpole.lineplot(
         x = fpr,
@@ -189,7 +189,6 @@ def roc_plot(score, target):
 
     ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
 
-    auc = roc_auc_score(target, score)
     ax = add_text(ax, 'AUC: {:.5f}'.format(auc))
 
     return ax
