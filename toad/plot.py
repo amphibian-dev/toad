@@ -53,6 +53,10 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     table = group[target].agg(['sum', 'count']).reset_index()
     table['badrate'] = table['sum'] / table['count']
 
+    # set number dtype to object
+    if np.issubdtype(table[x].dtype, np.number):
+        table[x] = table[x].astype(str)
+
 
     rate_plot = tadpole.lineplot(
         x = x,
