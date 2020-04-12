@@ -212,12 +212,13 @@ class Combiner(Transformer, BinsMixin):
         return splits
 
 
-    def transform_(self, rule, X, labels = False, **kwargs):
+    def transform_(self, rule, X, labels = False, ellipsis = 16, **kwargs):
         """transform X by combiner
 
         Args:
             X (DataFrame|array-like): features to be transformed
             labels (bool): if need to use labels for resulting bins, `False` by default
+            ellipsis (int): max length threshold that labels will not be ellipsis, `None` for skipping ellipsis
 
         Returns:
             array-like
@@ -241,7 +242,7 @@ class Combiner(Transformer, BinsMixin):
                     bins = bin_by_splits(X, rule)
 
         if labels:
-            formated = self.format_bins(rule, index = True)
+            formated = self.format_bins(rule, index = True, ellipsis = ellipsis)
             empty_mask = (bins == self.EMPTY_BIN)
             bins = formated[bins]
             bins[empty_mask] = self.EMPTY_BIN

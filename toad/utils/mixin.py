@@ -121,7 +121,17 @@ class BinsMixin:
 
 
     @classmethod
-    def format_bins(self, bins, index = False):
+    def format_bins(self, bins, index = False, ellipsis = None):
+        """format bins to label
+
+        Args:
+            bins (ndarray): bins to format
+            index (bool): if need index prefix
+            ellipsis (int): max length threshold that labels will not be ellipsis, `None` for skipping ellipsis
+        
+        Returns:
+            ndarray: array of labels
+        """
         l = list()
 
         if np.issubdtype(bins.dtype, np.number):
@@ -141,7 +151,10 @@ class BinsMixin:
                 if isinstance(keys, str) and keys == self.ELSE_GROUP:
                     l.append(keys)
                 else:
-                    l.append(','.join(keys))
+                    label = ','.join(keys)
+                    if ellipsis is not None:
+                        label = label[:ellipsis] + '..' if len(label) > ellipsis else label
+                    l.append(label)
 
         if index:
             l = ["{:02}.{}".format(ix, lab) for ix, lab in enumerate(l)]
