@@ -36,7 +36,7 @@ def KS(score, target):
     return max(abs(df['ks']))
 
 
-def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
+def KS_bucket(score, target, bucket = 10, method = 'quantile', return_splits = False, **kwargs):
     """calculate ks value by bucket
 
     Args:
@@ -44,6 +44,7 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
         target (array-like): list of real target
         bucket (int): n groups that will bin into
         method (str): method to bin score. `quantile` (default), `step`
+        return_splits (bool): if need to return splits of bucket
 
     Returns:
         DataFrame
@@ -59,13 +60,19 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
     good_total = df['good'].sum()
     all_total = bad_total + good_total
 
+    splits = None
     df['bucket'] = 0
+
     if bucket is False:
         df['bucket'] = score
     elif isinstance(bucket, (list, np.ndarray, pd.Series)):
+        # list of split pointers
+        if len(bucket) < len(score):
+            bucket = bin_by_splits(score, bucket)
+        
         df['bucket'] = bucket
     elif isinstance(bucket, int):
-        df['bucket'] = merge(score, n_bins = bucket, method = method, **kwargs)
+        df['bucket'], splits = merge(score, n_bins = bucket, method = method, return_splits = True, **kwargs)
 
     grouped = df.groupby('bucket', as_index = False)
 
@@ -109,6 +116,9 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', **kwargs):
 
     agg2['ks'] = agg2['cum_bads_prop'] - agg2['cum_goods_prop']
 
+    if return_splits and splits is not None:
+        return agg2, splits
+    
     return agg2
 
 def KS_by_col(df, by='feature', score='score', target='target'):

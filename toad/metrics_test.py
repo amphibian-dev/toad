@@ -36,6 +36,14 @@ def test_KS_bucket_for_all_score():
     result = KS_bucket(feature, target, bucket = False)
     assert len(result) == 500
 
+def test_KS_bucket_return_splits():
+    result, splits = KS_bucket(feature, target, return_splits = True)
+    assert len(splits) == 9
+
+def test_KS_bucket_use_split_pointers():
+    result = KS_bucket(feature, target, bucket = [0.2, 0.6])
+    assert len(result) == 3
+
 def test_F1():
     result, split = F1(feature, target, return_split = True)
     assert result == 0.6844207723035951
