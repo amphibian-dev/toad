@@ -204,6 +204,7 @@ def AUC(score, target, return_curve = False):
     Args:
         score (array-like): list of score or probability that the model predict
         target (array-like): list of real target
+        return_curve (bool): if need return curve data for ROC plot
 
     Returns:
         float: auc score
