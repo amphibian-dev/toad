@@ -11,17 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Preprocess module.
 - Annotation format for bin plot.
-- KS bucket support split pointers as bucket
+- KS bucket support split pointers as bucket. [#22](https://github.com/amphibian-dev/toad/issues/22)
 
 ### Changed
 
 - Format_bins support ellipsis.
 - Reverse cumulative columns in KS bucket
-- Use correct order of score for auc and roc plot. fixed #21
+- Use correct order of score for auc and roc plot. [#21](https://github.com/amphibian-dev/toad/issues/21)
 
 ### Fixed
 
-- Fix number type of x axis of badrate plot. fixed #20
+- Fixed number type of x axis of badrate plot. [#20](#20)
+- Fixed negative ks value in `KS_bucket`.
 
 ## [0.0.59] - 2020-02-07
 
