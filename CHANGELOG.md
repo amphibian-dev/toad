@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Fixed number type of x axis of badrate plot. [#20](#20)
+- Fixed number type of x axis of badrate plot. [#20](https://github.com/amphibian-dev/toad/issues/20)
 - Fixed negative ks value in `KS_bucket`.
 
 ## [0.0.59] - 2020-02-07
