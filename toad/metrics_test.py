@@ -26,11 +26,11 @@ def test_KS():
 
 def test_KS_bucket():
     result = KS_bucket(feature, target)
-    assert result.loc[4, 'ks'] == 0.028036335090276976
+    assert result.loc[4, 'ks'] == -0.028036335090276976
 
 def test_KS_bucket_use_step():
     result = KS_bucket(feature, target, method = 'step', clip_q = 0.01)
-    assert result.loc[4, 'ks'] == 0.0422147102645028
+    assert result.loc[4, 'ks'] == -0.0422147102645028
 
 def test_KS_bucket_for_all_score():
     result = KS_bucket(feature, target, bucket = False)

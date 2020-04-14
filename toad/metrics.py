@@ -116,6 +116,10 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', return_splits = F
 
     agg2['ks'] = agg2['cum_bads_prop'] - agg2['cum_goods_prop']
 
+    # fix negative ks value
+    if agg2['ks'].sum() < 0:
+        agg2['ks'] = -agg2['ks']
+
     if return_splits and splits is not None:
         return agg2, splits
     
