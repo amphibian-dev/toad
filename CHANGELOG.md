@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.60] - 2020-04-20
+
 ### Added
 
 - Preprocess module.
@@ -38,5 +40,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VIF independent statsmodels.
 
 
-[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.59...HEAD
+[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.60...HEAD
+[0.0.60]: https://github.com/amphibian-dev/toad/compare/0.0.59...0.0.60
 [0.0.59]: https://github.com/amphibian-dev/toad/compare/0.0.58...0.0.59

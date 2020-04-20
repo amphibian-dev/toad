@@ -23,7 +23,7 @@ It provides intuitive tools for
 
 A [basic tutorial](https://toad.readthedocs.io/en/latest/tutorial.html) is provided on readthedocs.
 
-[中文指引](https://toad.readthedocs.io/en/dev/tutorial_chinese.html)
+[中文指引](https://toad.readthedocs.io/en/latest/tutorial_chinese.html)
 
 By the **ESC Team**
 
