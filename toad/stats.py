@@ -184,18 +184,19 @@ def _IV(feature, target):
     feature = to_ndarray(feature)
     target = to_ndarray(target)
 
-    value = 0
+    iv = {}
 
     for v in np.unique(feature):
         y_prob, n_prob = probability(target, mask = (feature == v))
 
-        value += (y_prob - n_prob) * WOE(y_prob, n_prob)
+        iv[v] = (y_prob - n_prob) * WOE(y_prob, n_prob)
 
-    return value
+    iv = pd.Series(iv)
+    return iv.sum(), iv
 
 
 @support_dataframe
-def IV(feature, target, **kwargs):
+def IV(feature, target, return_sub = False, **kwargs):
     """get the IV of a feature
 
     Args:
@@ -205,12 +206,15 @@ def IV(feature, target, **kwargs):
         method (str): the strategy to be used to merge feature, default is 'dt'
         **kwargs (): other options for merge function
     """
-    if not is_continuous(feature):
-        return _IV(feature, target)
+    if is_continuous(feature):
+        feature = merge(feature, target, **kwargs)
 
-    feature = merge(feature, target, **kwargs)
+    iv, sub = _IV(feature, target)
 
-    return _IV(feature, target)
+    if return_sub:
+        return iv, sub
+    
+    return iv
 
 
 def badrate(target):

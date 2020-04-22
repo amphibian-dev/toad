@@ -26,12 +26,17 @@ def test_woe():
     assert value == -0.4054651081081643
 
 def test_iv_priv():
-    value = _IV(df['feature'], df['target'])
-    assert value == 0.010385942643745353
+    value, _ = _IV(df['feature'], df['target'])
+    assert value == 0.010385942643745403
 
 def test_iv():
     value = IV(df['feature'], df['target'], n_bins = 10, method = 'dt')
-    assert value == 0.273591770774362
+    assert value == 0.2735917707743619
+
+def test_iv_return_sub():
+    _, sub = IV(mask, df['target'], return_sub = True, n_bins = 10, method = 'dt')
+    assert len(sub) == 8
+    assert sub[4] == 0.006449386778057019
 
 def test_iv_frame():
     res = IV(df, 'target', n_bins = 10, method = 'chi')
@@ -51,7 +56,7 @@ def test_entropy_cond():
 
 def test_quality():
     result = quality(df, 'target')
-    assert result.loc['feature', 'iv'] == 0.273591770774362
+    assert result.loc['feature', 'iv'] == 0.2735917707743619
     assert result.loc['A', 'gini'] == 0.49284164671885444
     assert result.loc['B', 'entropy'] == 0.6924956879070063
     assert result.loc['feature', 'unique'] == 500
@@ -68,7 +73,7 @@ def test_quality_object_type_array_with_nan():
         'target': target,
     })
     result = quality(df)
-    assert result.loc['feature', 'iv'] == 0.01637933818053033
+    assert result.loc['feature', 'iv'] == 0.016379338180530334
 
 def test_vif():
     vif = VIF(df)
