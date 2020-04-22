@@ -68,6 +68,10 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
         markers = markers,
         dashes = False,
     )
+
+    # set y axis start with 0
+    rate_plot.set_ylim(0, None)
+
     res = (rate_plot,)
 
     if return_counts:

@@ -49,6 +49,15 @@ def test_badrate_plot():
         return_proportion = True,
     )
 
+def test_badrate_plot_y_axis():
+    g = badrate_plot(
+        frame,
+        x = 'A',
+        target = 'target',
+    )
+    bottom, _ = g.get_ylim()
+    assert bottom == 0
+
 def test_corr_plot():
     g = corr_plot(frame)
 
