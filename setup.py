@@ -38,13 +38,13 @@ setup(
     python_requires = '>=3.5',
     setup_requires = [
         'setuptools',
-        'Cython >= 0.28',
+        'Cython >= 0.29.15',
     ],
     install_requires = [
-        'numpy >= 1.15.4',
+        'numpy >= 1.17.3',
         'pandas',
         'scipy',
-        'scikit-learn',
+        'scikit-learn >= 0.22',
         'seaborn >= 0.10.0',
     ],
     tests_require=[
