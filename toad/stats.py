@@ -180,6 +180,7 @@ def _IV(feature, target):
 
     Returns:
         number: IV
+        Series: IV of each groups
     """
     feature = to_ndarray(feature)
     target = to_ndarray(target)
@@ -202,6 +203,7 @@ def IV(feature, target, return_sub = False, **kwargs):
     Args:
         feature (array-like)
         target (array-like)
+        return_sub (bool): if need return IV of each groups
         n_bins (int): n groups that the feature will bin into
         method (str): the strategy to be used to merge feature, default is 'dt'
         **kwargs (): other options for merge function
