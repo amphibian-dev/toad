@@ -34,6 +34,13 @@ class RulesMixin:
 
     @load_from_json(is_class = True, require_first = True)
     def load(self, rules, update = False, **kwargs):
+        """load rules from dict or json file
+
+        Args:
+            rules (dict): dictionary of rules
+            from_json (str|IOBase): json file of rules
+            update (bool): if need to use updating instead of replacing rules
+        """
         rules = deepcopy(rules)
 
         if not isinstance(rules, dict):
@@ -53,6 +60,14 @@ class RulesMixin:
     
     @save_to_json(is_class = True)
     def export(self, **kwargs):
+        """export rules to dict or a json file
+
+        Args:
+            to_json (str|IOBase): json file to save rules
+        
+        Returns:
+            dict: dictionary of rules
+        """
         res = {}
         for key in self._rules:
             res[key] = self._format_rule(self._rules[key], **kwargs)
@@ -63,6 +78,12 @@ class RulesMixin:
         return res
     
     def update(self, *args, **kwargs):
+        """update rules
+
+        Args:
+            rules (dict): dictionary of rules
+            from_json (str|IOBase): json file of rules
+        """
         return self.load(*args, update = True, **kwargs)
     
 
@@ -105,7 +126,8 @@ class BinsMixin:
 
     @classmethod
     def parse_bins(self, bins):
-
+        """parse labeled bins to array
+        """
         if self._is_numeric(bins):
             return self._numeric_parser(bins)
         
