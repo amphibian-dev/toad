@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Support for calculating IV for each groups in a feature. [#25](https://github.com/amphibian-dev/toad/issues/25)
+
+### Changed
+
+- The y axis of `badrate_plot` is starting with `0` now. [#23](https://github.com/amphibian-dev/toad/issues/23)
+
 ## [0.0.60] - 2020-04-20
 
 ### Added
