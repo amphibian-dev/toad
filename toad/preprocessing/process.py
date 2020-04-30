@@ -1,5 +1,4 @@
 import pandas as pd
-from ..utils.func import flatten_columns
 
 
 _ALL_SYMBOL_ = '__all_symbol__'
@@ -98,7 +97,7 @@ class Processing:
             return self.process(self.data)
 
         res = None
-        for mask, suffix in self.partitions.apply(self.data):
+        for mask, suffix in self.partitions.partition(self.data):
             data = self.process(self.data[mask])
             data = data.add_suffix(suffix)
 
