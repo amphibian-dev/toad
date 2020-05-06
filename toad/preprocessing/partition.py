@@ -26,7 +26,9 @@ class TimePartition(Partition):
         times (list): list of time delta`
     
     Example:
-        TimePartition('apply_time', 'query_time', ['30d', '90d', 'all'])
+
+    >>> TimePartition('apply_time', 'query_time', ['30d', '90d', 'all'])
+
     """
     def __init__(self, base, filter, times):
         self.base = base
@@ -55,7 +57,9 @@ class ValuePartition(Partition):
         column (str): column name which will be used as partition
     
     Example:
-        ValuePartition('status')
+
+    >>> ValuePartition('status')
+    
     """
     def __init__(self, column):
         self.column = column
