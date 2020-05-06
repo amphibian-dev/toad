@@ -21,7 +21,7 @@ class Processing:
     ...     .apply({'D': {
     ...         'f': len,
     ...         'name': 'normal_count',
-    ...         'mask':  Mask().isin(['normal']),
+    ...         'mask':  Mask('D').isin(['normal']),
     ...     }})
     ...     .apply({'id': 'count'})
     ...     .exec()

@@ -61,3 +61,16 @@ def test_processing():
     )
     
     assert res.size == 120 and res.loc['2020-02-29', 'B_size'] == 23
+
+
+def test_processing_with_partition():
+    from .partition import ValuePartition
+    res = (
+        Processing(df)
+        .groupby('open_time')
+        .partitionby(ValuePartition('A'))
+        .apply({'B': ['mean', 'size']})
+        .exec()
+    )
+
+    assert res.size == 600 and res.loc['2020-02-29', 'B_size_1'] == 2
