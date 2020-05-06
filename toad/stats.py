@@ -301,13 +301,14 @@ def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs)
     return row
 
 
-def quality(dataframe, target = 'target', iv_only = False, **kwargs):
+def quality(dataframe, target = 'target', iv_only = False, cpu_cores = cpu_count(), **kwargs):
     """get quality of features in data
 
     Args:
         dataframe (DataFrame): dataframe that will be calculate quality
         target (str): the target's name in dataframe
         iv_only (bool): if only calculate IV
+        cpu_cores (int): number of cpu cores
 
     Returns:
         DataFrame: quality of features with the features' name as row name
@@ -315,7 +316,7 @@ def quality(dataframe, target = 'target', iv_only = False, **kwargs):
     frame, target = split_target(dataframe, target)
     
     res = []
-    pool = Pool(cpu_count())
+    pool = Pool(cpu_cores)
 
     for name, series in frame.iteritems():
         r = pool.apply_async(column_quality, args = (series, target), kwds = {'name': name, 'iv_only': iv_only, **kwargs})
