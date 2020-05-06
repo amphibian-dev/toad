@@ -4,28 +4,6 @@ import pandas as pd
 
 class Partition:
     def partition(self, data):
-        yield np.ones(len(data)).astype(bool), ''
-
-
-
-class TimePartition(Partition):
-    def __init__(self, base, filter, times):
-        """partition data by time delta
-
-        Args:
-            base (str): column name of base time
-            filter (str): column name of target time to be compared
-            times (list): list of time delta`
-        
-        Example:
-            TimePartition('apply_time', 'query_time', ['30d', '90d', 'all'])
-        """
-        self.base = base
-        self.filter = filter
-        self.times = times
-    
-
-    def partition(self, data):
         """partition data
 
         Args:
@@ -35,6 +13,28 @@ class TimePartition(Partition):
             iterator -> ndarray[bool]: mask of partition data
             iterator -> str: suffix string of current partition
         """
+        yield np.ones(len(data)).astype(bool), ''
+
+
+
+class TimePartition(Partition):
+    """partition data by time delta
+
+    Args:
+        base (str): column name of base time
+        filter (str): column name of target time to be compared
+        times (list): list of time delta`
+    
+    Example:
+        TimePartition('apply_time', 'query_time', ['30d', '90d', 'all'])
+    """
+    def __init__(self, base, filter, times):
+        self.base = base
+        self.filter = filter
+        self.times = times
+    
+
+    def partition(self, data):
         base = pd.to_datetime(data[self.base])
         filter = pd.to_datetime(data[self.filter])
 
@@ -49,6 +49,14 @@ class TimePartition(Partition):
 
 
 class ValuePartition(Partition):
+    """partition data by column values
+
+    Args:
+        column (str): column name which will be used as partition
+    
+    Example:
+        ValuePartition('status')
+    """
     def __init__(self, column):
         self.column = column
     
