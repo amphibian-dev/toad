@@ -120,6 +120,19 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         return self.bin_to_score(bins, **kwargs)
     
 
+    def predict_proba(self, X):
+        """predict probability
+
+        Args:
+            X (2D array-like): X to predict
+        
+        Returns:
+            2d array: probability of all classes
+        """
+        proba = self.score_to_proba(self.predict(X))
+        return np.stack((1-proba, proba), axis = 1)
+    
+
     def _generate_rules(self):
         if not self._check_rules(self.combiner, self.transer):
             raise Exception('generate failed')
@@ -175,6 +188,15 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         score = factor * log(odds) * offset
         """
         return self.factor * (np.log(1 - prob) - np.log(prob)) + self.offset
+    
+
+    def score_to_proba(self, score):
+        """covert score to probability
+
+        Returns:
+            array-like|float: the probability of `1`
+        """
+        return 1 / (np.e ** ((score - self.offset) / self.factor) + 1)
 
 
     def bin_to_score(self, bins, return_sub = False):

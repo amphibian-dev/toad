@@ -72,9 +72,18 @@ def test_proba_to_score():
     score = card.proba_to_score(proba)
     assert score[404] == TEST_SCORE
 
+def test_score_to_prob():
+    score = card.predict(df)
+    proba = card.score_to_proba(score)
+    assert proba[404] == 0.4673929989138551
+
 def test_predict():
     score = card.predict(df)
     assert score[404] == TEST_SCORE
+
+def test_predict_proba():
+    proba = card.predict_proba(df)
+    assert proba[404,1] == 0.4673929989138551
 
 def test_predict_sub_score():
     score, sub = card.predict(df, return_sub = True)
