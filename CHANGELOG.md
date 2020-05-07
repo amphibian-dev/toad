@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support for calculating IV for each groups in a feature. [#25](https://github.com/amphibian-dev/toad/issues/25)
 - Add `cpu_cores` for `quality` function
+- Add `predict_proba` for `ScoreCard`
 
 ### Changed
 
