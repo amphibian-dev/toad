@@ -44,6 +44,7 @@ setup(
         'numpy >= 1.17.3',
         'pandas',
         'scipy',
+        'joblib >= 0.12',
         'scikit-learn >= 0.22',
         'seaborn >= 0.10.0',
     ],

@@ -1,4 +1,4 @@
-from multiprocessing import Pool, cpu_count
+from joblib import Parallel, delayed
 
 import numpy as np
 import pandas as pd
@@ -301,31 +301,33 @@ def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs)
     return row
 
 
-def quality(dataframe, target = 'target', iv_only = False, cpu_cores = cpu_count(), **kwargs):
+def quality(dataframe, target = 'target', cpu_cores = 0, **kwargs):
     """get quality of features in data
 
     Args:
         dataframe (DataFrame): dataframe that will be calculate quality
         target (str): the target's name in dataframe
         iv_only (bool): if only calculate IV
-        cpu_cores (int): number of cpu cores
+        cpu_cores (int): the maximun number of CPU cores will be used, `0` means all CPUs will be used, 
+            `-1` means all CPUs but one will be used.
 
     Returns:
         DataFrame: quality of features with the features' name as row name
     """
     frame, target = split_target(dataframe, target)
     
-    res = []
-    pool = Pool(cpu_cores)
+    if cpu_cores < 1:
+        cpu_cores = cpu_cores - 1
+    
+    
+    pool = Parallel(n_jobs = cpu_cores)
 
+    jobs = []
     for name, series in frame.iteritems():
-        r = pool.apply_async(column_quality, args = (series, target), kwds = {'name': name, 'iv_only': iv_only, **kwargs})
-        res.append(r)
+        jobs.append(delayed(column_quality)(series, target, name = name, **kwargs))
 
-    pool.close()
-    pool.join()
+    rows = pool(jobs)
 
-    rows = [r.get() for r in res]
 
     return pd.DataFrame(rows).sort_values(
         by = 'iv',
