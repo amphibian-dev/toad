@@ -1,4 +1,5 @@
 from torch import nn, optim
+from ..utils.progress import Progress
 
 
 
@@ -34,7 +35,10 @@ class AutoEncoder(nn.Module):
         loss = nn.MSELoss()
         optimizer = optim.Adam(self.parameters(), lr = 1e-3)
         for epoch in range(10):
-            for (x, _) in X:
+            p = Progress(X)
+            p.prefix = epoch
+
+            for (x, _) in p:
                 x = x.view(-1, 784)
                 x_hat = self.forward(x)
                 l = loss(x_hat, x)
@@ -43,7 +47,8 @@ class AutoEncoder(nn.Module):
                 l.backward()
                 optimizer.step()
 
-                print(epoch, l.item())
+                p.suffix = '{:.4f}'.format(l.item())
+                # print(epoch, l.item())
 
 
 

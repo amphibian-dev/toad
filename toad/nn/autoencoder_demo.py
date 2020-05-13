@@ -18,6 +18,7 @@ loader = DataLoader(
 )
 
 print(len(dataset))
+# print(loader.shape)
 
 ae = AutoEncoder(784, 200, 10)
 ae.fit(loader)
