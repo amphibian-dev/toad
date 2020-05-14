@@ -1,13 +1,12 @@
 from torch import nn, optim
+from .module import Module
 from ..utils.progress import Progress
 
 
 
-
-
-class AutoEncoder(nn.Module):
+class BaseAutoEncoder(Module):
     def __init__(self, input, hidden, zipped):
-        super().__init__()
+        # super().__init__()
 
         self.encoder = nn.Sequential(
             nn.Linear(input, hidden),
@@ -20,6 +19,10 @@ class AutoEncoder(nn.Module):
             nn.ReLU(),
             nn.Linear(hidden, input),
         )
+
+        self.loss = nn.MSELoss()
+        self.optim = optim.Adam
+        self.lr = 1e-3
     
     def encode(self, x):
         return self.encoder(x)
@@ -31,24 +34,12 @@ class AutoEncoder(nn.Module):
         z = self.encode(x)
         return self.decode(z)
     
+    def calculate_loss(self, y_hat, y, x):
+        return self.loss(y_hat, x)
+    
     def fit(self, X):
-        loss = nn.MSELoss()
-        optimizer = optim.Adam(self.parameters(), lr = 1e-3)
-        for epoch in range(10):
-            p = Progress(X)
-            p.prefix = epoch
-
-            for (x, _) in p:
-                x = x.view(-1, 784)
-                x_hat = self.forward(x)
-                l = loss(x_hat, x)
-                
-                optimizer.zero_grad()
-                l.backward()
-                optimizer.step()
-
-                p.suffix = '{:.4f}'.format(l.item())
-                # print(epoch, l.item())
+        # TODO convert X to loader
+        self.train(X)
 
 
 
