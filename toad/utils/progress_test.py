@@ -4,6 +4,7 @@ from .progress import Progress
 
 def test_progress():
     for i in Progress(range(100)):
+        sleep(0.01)
         pass
 
 

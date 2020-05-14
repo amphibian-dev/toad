@@ -18,9 +18,11 @@ class Progress:
 
         self.BAR_LENGTH = 32
         
+        self.SYMBOL_DONE = '█'
+        self.SYMBOL_REST = '.'
         self.prefix = ""
         self.suffix = ""
-        self.template = "{prefix} {percent:.0%}|{bar}| [{done}/{size}] {time:.2f}s {suffix}"
+        self.template = "{prefix} {percent:3.0f}%|{bar}| [{done}/{size}] {time:.2f}s {suffix}"
 
 
     def __len__(self):
@@ -42,10 +44,10 @@ class Progress:
         done = min(self.idx * self.batch, self.size)
         percent = done / self.size
 
-        bar = ('█' * int(percent * self.BAR_LENGTH)).ljust(self.BAR_LENGTH, '.')
+        bar = (self.SYMBOL_DONE * int(percent * self.BAR_LENGTH)).ljust(self.BAR_LENGTH, self.SYMBOL_REST)
 
         print('\r' + self.template.format(
-            percent = percent,
+            percent = percent * 100,
             bar = bar,
             done = done,
             size = self.size,
