@@ -31,7 +31,8 @@ uninstall:
 	cat files.txt | xargs rm -rf
 
 test_deps:
-	$(SUDO) $(PIP) install pytest torch
+	$(SUDO) $(PIP) install pytest
+	$(SUDO) $(PIP) install torch -f https://download.pytorch.org/whl/torch_stable.html
 
 test: test_deps
 	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))
