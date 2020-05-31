@@ -31,7 +31,7 @@ uninstall:
 	cat files.txt | xargs rm -rf
 
 test_deps:
-	$(SUDO) $(PIP) install pytest
+	$(SUDO) $(PIP) install pytest torch
 
 test: test_deps
 	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))
@@ -42,7 +42,7 @@ test: test_deps
 	fi
 
 build_deps:
-	$(SUDO) $(PIP) install numpy Cython setuptools torch
+	$(SUDO) $(PIP) install numpy Cython setuptools
 
 build: build_deps
 	$(PYTHON) setup.py build_ext --inplace
