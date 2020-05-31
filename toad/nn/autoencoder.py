@@ -6,7 +6,6 @@ from ..utils.progress import Progress
 
 class BaseAutoEncoder(Module):
     def __init__(self, input, hidden, zipped):
-        # super().__init__()
 
         self.encoder = nn.Sequential(
             nn.Linear(input, hidden),
@@ -21,8 +20,7 @@ class BaseAutoEncoder(Module):
         )
 
         self.loss = nn.MSELoss()
-        self.optim = optim.Adam
-        self.lr = 1e-3
+    
     
     def encode(self, x):
         return self.encoder(x)
@@ -34,13 +32,8 @@ class BaseAutoEncoder(Module):
         z = self.encode(x)
         return self.decode(z)
     
-    def calculate_loss(self, y_hat, y, x):
-        return self.loss(y_hat, x)
-    
-    def fit(self, X):
-        # TODO convert X to loader
-        self.train(X)
-
+    def fit_step(self, x, y):
+        return self.loss(self(x), x)
 
 
 

@@ -9,26 +9,24 @@ class Module(nn.Module):
         
         # call `__init__` of `nn.Module`
         super(Module, instance).__init__()
-        
-        instance.optim = optim.Adam
-        instance.lr = 1e-3
+
         return instance
     
     def __init__(self):
         pass
     
 
-    def train(self, loader, epoch = 10):
+    def fit(self, loader, epoch = 10):
         """train model
         """
-        optimizer = self.optim(self.parameters(), lr = self.lr)
-        for epoch in range(10):
+        optimizer = self.optimizer()
+
+        for ep in range(epoch):
             p = Progress(loader)
-            p.prefix = f"Epoch:{epoch}"
+            p.prefix = f"Epoch:{ep}"
 
             for x, y in p:
-                y_hat = self.__call__(x)
-                loss = self.calculate_loss(y_hat, y, x)
+                loss = self.fit_step(x, y)
                 
                 optimizer.zero_grad()
                 loss.backward()
@@ -36,7 +34,19 @@ class Module(nn.Module):
 
                 p.suffix = 'loss:{:.4f}'.format(loss.item())
     
-    def calculate_loss(self, y_hat, y, x):
-        """calculate loss
+    def fit_step(self, x, y):
+        """step for fitting
+        Args:
+            x (Tensor)
+            y (Tensor)
+        
+        Returns:
+            Tensor: loss of this step
         """
-        return nn.functional.mse_loss(y_hat, y)
+        y_hat = self.__call__(x)
+        loss = nn.functional.mse_loss(y_hat, y)
+        return loss
+
+    def optimizer(self):
+        return optim.Adam(self.parameters(), lr = 1e-3)
+    
