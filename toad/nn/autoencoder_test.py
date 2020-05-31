@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader
 
-from .autoencoder import BaseAutoEncoder
+from .autoencoder import BaseAutoEncoder, VAE
 
 
 X = torch.Tensor(np.random.rand(20000, 784))
@@ -15,5 +15,10 @@ loader = DataLoader(
     shuffle = True,
 )
 
-ae = BaseAutoEncoder(784, 200, 10)
-ae.fit(loader)
+def test_ae():
+    ae = BaseAutoEncoder(784, 200, 10)
+    ae.fit(loader, epoch = 1)
+
+def test_vae():
+    vae = BaseAutoEncoder(784, 200, 10)
+    vae.fit(loader, epoch = 1)
