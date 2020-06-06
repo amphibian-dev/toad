@@ -32,7 +32,7 @@ uninstall:
 
 test_deps:
 	$(SUDO) $(PIP) install pytest
-	$(SUDO) $(PIP) install torch -f https://download.pytorch.org/whl/torch_stable.html
+	$(SUDO) $(PIP) install torch==1.5.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
 test: test_deps
 	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))

@@ -4,6 +4,8 @@ from ..utils.progress import Progress
 
 
 class Module(nn.Module):
+    """base module for every model
+    """
     def __new__(cls, *args, **kwargs):
         instance = super().__new__(cls)
         
@@ -13,19 +15,27 @@ class Module(nn.Module):
         return instance
     
     def __init__(self):
+        """define model struct
+        """
         pass
     
 
     def fit(self, loader, epoch = 10):
         """train model
+
+        Args:
+            loader (DataLoader): loader for training model
+            epoch (int): number of epoch for training loop
         """
         optimizer = self.optimizer()
 
         for ep in range(epoch):
+            # init progress bar
             p = Progress(loader)
             p.prefix = f"Epoch:{ep}"
 
             for x, y in p:
+                # step fit
                 loss = self.fit_step(x, y)
                 
                 optimizer.zero_grad()
@@ -48,5 +58,10 @@ class Module(nn.Module):
         return loss
 
     def optimizer(self):
+        """config optimizer
+
+        Returns:
+            Optimizer
+        """
         return optim.Adam(self.parameters(), lr = 1e-3)
     
