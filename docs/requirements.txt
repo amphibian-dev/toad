@@ -1,6 +1,6 @@
 numpy
 Cython
 recommonmark
-sphinx-rtd-theme
+sphinx-readable-theme
 ipykernel
 nbsphinx
