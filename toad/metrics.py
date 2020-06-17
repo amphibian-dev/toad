@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.stats import ks_2samp
 
 from sklearn.metrics import f1_score, roc_auc_score, roc_curve
 
@@ -24,16 +25,9 @@ def KS(score, target):
     Returns:
         float: the max KS value
     """
-    df = pd.DataFrame({
-        'score': score,
-        'target': target,
-    })
-    df = df.sort_values(by='score', ascending=False)
-    df['good'] = 1 - df['target']
-    df['bad_rate'] = df['target'].cumsum() / df['target'].sum()
-    df['good_rate'] = df['good'].cumsum() / df['good'].sum()
-    df['ks'] = df['bad_rate'] - df['good_rate']
-    return max(abs(df['ks']))
+    mask = target == 1
+    res = ks_2samp(score[mask], score[~mask])
+    return res[0]
 
 
 def KS_bucket(score, target, bucket = 10, method = 'quantile', return_splits = False, **kwargs):

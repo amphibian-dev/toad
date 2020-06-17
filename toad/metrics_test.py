@@ -22,7 +22,7 @@ base_df = pd.DataFrame({
 
 def test_KS():
     result = KS(feature, target)
-    assert result == 0.055367756612569874
+    assert result == 0.05536775661256989
 
 def test_KS_bucket():
     result = KS_bucket(feature, target)
