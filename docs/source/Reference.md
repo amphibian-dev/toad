@@ -15,9 +15,12 @@ ChiMerge Algorithm uses Chi-squared statistic to discretize attributes (numeric)
 Stepwise Regression （Forward/Backward/Stepwise, i.e. [2] 3.6. Stepwise Linear Regression）is uesed to reduce Low Information Gain Attributes and simplify the Final Model.
 
 The Stepwise Regression Process[2]:
-<div align="center">
-    <img src="https://raw.githubusercontent.com/amphibian-dev/toad/dev/images/stepwise.png" width="500px" />
-</div>
+
+```eval_rst
+.. image:: images/stepwise.png
+   :width: 80%
+   :align: center
+```
 
 # Scorecard Transformation
 
@@ -56,9 +59,12 @@ Each score corresponding to each set of odds:
 Score = 487.123 + 28.8539 ln (odds)
 
 Scorecard is developed with WOE as input, the formula can be modified as:
-<div align="center">
-    <img src="https://raw.githubusercontent.com/amphibian-dev/toad/dev/images/scorecard.png" width="500px" />
-</div>
+
+```eval_rst
+.. image:: images/scorecard.png
+   :width: 80%
+   :align: center
+```
 
 WOE = weight of evidence for each grouped attribute
 
