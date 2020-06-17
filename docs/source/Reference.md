@@ -16,7 +16,7 @@ Stepwise Regression （Forward/Backward/Stepwise, i.e. [2] 3.6. Stepwise Linear 
 
 The Stepwise Regression Process[2]:
 <div align="center">
-    <img src="https://raw.githubusercontent.com/amphibian-dev/toad/master/images/stepwise.png" width="500px" />
+    <img src="https://raw.githubusercontent.com/amphibian-dev/toad/dev/images/stepwise.png" width="500px" />
 </div>
 
 # Scorecard Transformation
@@ -57,7 +57,7 @@ Score = 487.123 + 28.8539 ln (odds)
 
 Scorecard is developed with WOE as input, the formula can be modified as:
 <div align="center">
-    <img src="https://raw.githubusercontent.com/amphibian-dev/toad/master/images/scorecard.png" width="500px" />
+    <img src="https://raw.githubusercontent.com/amphibian-dev/toad/dev/images/scorecard.png" width="500px" />
 </div>
 
 WOE = weight of evidence for each grouped attribute
