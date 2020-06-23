@@ -12,10 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for calculating IV for each groups in a feature. [#25](https://github.com/amphibian-dev/toad/issues/25)
 - Add `cpu_cores` for `quality` function
 - Add `predict_proba` for `ScoreCard`
+- Impute module
 
 ### Changed
 
 - The y axis of `badrate_plot` is starting with `0` now. [#23](https://github.com/amphibian-dev/toad/issues/23)
+
+### Fixed
+
+- Fixed `Preprocess` bugs
+
+### Docs
+
+- Add references for `Chi-Merge`, `Stepwise Regression`, `Scorecard Transformation`
 
 ## [0.0.60] - 2020-04-20
 
