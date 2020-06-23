@@ -24,7 +24,7 @@ The Stepwise Regression Process[2]:
 
 # Scorecard Transformation
 
-John Wiley & Sons, Inc.*,Credit Risk  Scorecards Developing and Implementing Intelligent Credit Scoring *(Final Scorecard Production Part)
+John Wiley & Sons, Inc., *Credit Risk Scorecards Developing and Implementing Intelligent Credit Scoring* (Final Scorecard Production Part)
 
 
 
