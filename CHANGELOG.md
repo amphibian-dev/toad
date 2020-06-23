@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The y axis of `badrate_plot` is starting with `0` now. [#23](https://github.com/amphibian-dev/toad/issues/23)
+- `KS` is implemented using `ks2samp` instead
 
 ### Fixed
 

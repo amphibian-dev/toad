@@ -22,6 +22,7 @@ pip install toad
 ```
 
 Conda
+
 ```bash
 conda install toad --channel conda-forge
 ```
@@ -32,22 +33,31 @@ Source code
 python setup.py install
 ```
 
-Upgrade
+## Upgrade
+
+Pip
+
 ```bash
-!pip install -U toad; conda install -U toad --channel conda-forge
+pip install -U toad
+```
+
+Conda
+
+```bash
+conda install -U toad --channel conda-forge
 ```
 
 ## Key features
 
 - Simple IV calculation for all
 
-```bash
+```python
 toad.quality(data,'target',iv_only=True)
 ```
 
 - Optimised stepwise feature selection algorithm, and selection by criteria
 
-```bash
+```python
 selected_data = toad.selection.select(data,target = 'target', empty = 0.5, iv = 0.02, corr = 0.7, return_drop=True, exclude=['ID','month'])
 
 final_data = toad.selection.stepwise(data_woe,target = 'target', estimator='ols', direction = 'both', criterion = 'aic', exclude = to_drop)
@@ -55,7 +65,7 @@ final_data = toad.selection.stepwise(data_woe,target = 'target', estimator='ols'
 
 - Reliable fine binning with visualisation 
 
-```bash
+```python
 # Chi-squared fine binning
 c = toad.transform.Combiner()
 c.fit(data_selected.drop(to_drop, axis=1), y = 'target', method = 'chi', min_samples = 0.05) 
@@ -68,13 +78,13 @@ bin_plot(c.transform(data_selected[[col,'target']], labels=True), x=col, target=
 
 - Intuitive model results presentation
 
-```bash
+```python
 toad.metrics.KS_bucket(pred_proba, final_data['target'], bucket=10, method = 'quantile')
 ```
 
 - One-click scorecard transformation 
 
-```bash
+```python
 card = toad.ScoreCard(
     combiner = c,
     transer = transer,
@@ -100,7 +110,7 @@ print(card.export())
 
 ## Community
 We welcome public feedback and new PRs. We hold a WeChat group for questions and suggestions. 
-[微信群二维码]
+
 
 ## Dedicated by **The ESC Team**
 
