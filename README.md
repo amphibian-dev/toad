@@ -7,7 +7,7 @@
 
 [![PyPi version][pypi-image]][pypi-url]
 [![Python version][python-image]][docs-url]
-[![Build Status][travis-image]][travis-url]
+[![Build Status][actions-image]][actions-url]
 [![Downloads Status][downloads-image]][docs-url]
 
 
@@ -117,7 +117,7 @@ We welcome public feedback and new PRs. We hold a WeChat group for questions and
 [pypi-image]: https://img.shields.io/pypi/v/toad.svg?style=flat-square
 [pypi-url]: https://pypi.org/project/toad/
 [python-image]: https://img.shields.io/pypi/pyversions/toad.svg?style=flat-square
-[travis-image]: https://img.shields.io/travis/amphibian-dev/toad/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/amphibian-dev/toad
+[actions-image]: https://img.shields.io/github/workflow/status/amphibian-dev/toad/Release?style=flat-square
+[actions-url]: https://github.com/amphibian-dev/toad/actions
 [downloads-image]: https://img.shields.io/pypi/dm/toad?style=flat-square
 [docs-url]: https://toad.readthedocs.io/
