@@ -22,6 +22,13 @@ extensions = [
     Extension('toad.merge', sources = ['toad/merge.pyx'], include_dirs = [np.get_include()]),
 ]
 
+extras = {
+    'nn': [
+        'torch',
+        'torchvision',
+    ],
+}
+
 setup(
     name = NAME,
     version = get_version(),
@@ -48,7 +55,8 @@ setup(
         'scikit-learn >= 0.22',
         'seaborn >= 0.10.0',
     ],
-    tests_require=[
+    extras_require = extras,
+    tests_require = [
         'pytest'
     ],
     license = 'MIT',
