@@ -18,7 +18,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: pip install numpy cython pytest
-      - run: pip install -e .
+      - run: pip install -e .[nn]
       - run: make test
   release:
     needs: [test]
