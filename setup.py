@@ -48,7 +48,7 @@ setup(
         'Cython >= 0.29.15',
     ],
     install_requires = [
-        'numpy >= 1.17.3',
+        'numpy >= 1.18.0',
         'pandas',
         'scipy',
         'joblib >= 0.12',

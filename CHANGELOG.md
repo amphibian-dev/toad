@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.61] - 2020-06-24
+
 ### Added
 
 - Support for calculating IV for each groups in a feature. [#25](https://github.com/amphibian-dev/toad/issues/25)
