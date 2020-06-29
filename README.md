@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="https://raw.githubusercontent.com/amphibian-dev/toad/master/images/toadlogo.png" width="256px" />
+    <img src="https://raw.githubusercontent.com/amphibian-dev/toad/master/images/toad_m_logo.png" width="256px" />
 </div>
 
 # TOAD
