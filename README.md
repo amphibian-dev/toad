@@ -15,38 +15,26 @@ Toad is dedicated to facilitating model development process, especially for a sc
 
 Toad 是专为工业界模型开发设计的Python工具包，特别针对评分卡的开发。Toad 的功能覆盖了建模全流程，从 EDA、特征工程、特征筛选 到 模型验证和评分卡转化。Toad 的主要功能极大简化了建模中最重要最费时的流程，即特征筛选和分箱。
 
-## Install · 安装
+## Install and Upgrade · 安装与升级
  
 Pip
 
 ```bash
-pip install toad
+pip install toad # to install
+pip install -U toad # to upgrade
 ```
 
 Conda
 
 ```bash
-conda install toad --channel conda-forge
+conda install toad --channel conda-forge # to install
+conda install -U toad --channel conda-forge # to upgrade
 ```
 
 Source code
 
 ```bash
 python setup.py install
-```
-
-## Upgrade · 升级
-
-Pip
-
-```bash
-pip install -U toad
-```
-
-Conda
-
-```bash
-conda install -U toad --channel conda-forge
 ```
 
 ## Key features · 主要功能
@@ -119,6 +107,8 @@ print(card.export())
 We welcome public feedback and new PRs. We hold a WeChat group for questions and suggestions. 
 
 欢迎各位提PR，同时我们有toad使用交流的微信群，欢迎询问加群。
+
+------------
 
 ## Dedicated by **The ESC Team** 
 
