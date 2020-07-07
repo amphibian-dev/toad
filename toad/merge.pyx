@@ -179,8 +179,6 @@ cpdef ChiMerge(feature, target, n_bins = None, min_samples = None,
 
     cdef double [:,:] couple
     cdef double [:] cols, rows, chi_list
-    # cdef long [:] min_ix, drop_ix
-    # cdef long[:] chi_ix
     cdef double chi, chi_min, total, e
     cdef int l, retain_ix, ix
     cdef Py_ssize_t i, j, k, p
@@ -198,7 +196,7 @@ cpdef ChiMerge(feature, target, n_bins = None, min_samples = None,
         l = len(grouped) - 1
         chi_list = np.zeros(l, dtype=np.float)
         chi_min = np.inf
-        # chi_ix = []
+
         for i in range(l):
             chi = 0
             couple = grouped[i:i+2,:]
@@ -226,11 +224,6 @@ cpdef ChiMerge(feature, target, n_bins = None, min_samples = None,
                 chi_min = chi
                 chi_ix = [i]
 
-            # if chi < chi_min:
-            #     chi_min = chi
-
-
-
 
         # break loop when the minimun chi greater the threshold
         if min_threshold and chi_min > min_threshold:
@@ -238,7 +231,6 @@ cpdef ChiMerge(feature, target, n_bins = None, min_samples = None,
 
         # get indexes of the groups who has the minimun chi
         min_ix = np.array(chi_ix)
-        # min_ix = np.where(chi_list == chi_min)[0]
 
         # get the indexes witch needs to drop
         drop_ix = min_ix + 1
