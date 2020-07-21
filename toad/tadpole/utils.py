@@ -22,12 +22,13 @@ def get_axes(size = FIG_SIZE):
     return ax
 
 def reset_legend(axes):
-    axes.legend(
-        loc='center left',
-        bbox_to_anchor=(1, 0.5),
-        framealpha = 0,
-        prop = myfont,
-    )
+    if axes.get_legend() is not None:
+        axes.legend(
+            loc='center left',
+            bbox_to_anchor=(1, 0.5),
+            framealpha = 0,
+            prop = myfont,
+        )
 
     return axes
 
