@@ -105,6 +105,11 @@ def test_combiner_labels():
     res = combiner.transform(df, labels = True)
     assert res.loc[451, 'A'] == '03.[3 ~ 4)'
 
+def test_combiner_single_feature():
+    combiner = Combiner().fit(df['A'], method = 'step', n_bins = 5)
+    res = combiner.transform(df['A'])
+    assert res[451] == 1
+
 def test_combiner_export():
     combiner = Combiner().fit(df, target, method = 'chi', n_bins = 4)
     bins = combiner.export()

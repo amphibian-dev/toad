@@ -17,7 +17,14 @@ class RulesMixin:
         return rule
     
     def default_rule(self):
-        return self._rules[DEFAULT_NAME]
+        if len(self._rules) == 1:
+            # return the only rule as default
+            return next(iter(self._rules.values()))
+        
+        if self._default_name not in self._rules:
+            raise Exception('can not get default rule')
+
+        return self._rules[self._default_name]
     
     @property
     def _default_name(self):
@@ -45,7 +52,7 @@ class RulesMixin:
 
         if not isinstance(rules, dict):
             rules = {
-                DEFAULT_NAME: rules,
+                self._default_name: rules,
             }
         
         for key in rules:
