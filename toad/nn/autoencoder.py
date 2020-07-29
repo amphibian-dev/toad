@@ -52,6 +52,8 @@ class VAE(Module):
             nn.ReLU(),
             nn.Linear(hidden, input),
         )
+
+        self.loss = nn.MSELoss()
     
     def encode(self, x):
         h = relu(self.hidden_layer(x))
@@ -74,8 +76,8 @@ class VAE(Module):
     
     def fit_step(self, x, y):
         x_hat, mu, var = self(x)
-        bce = binary_cross_entropy(x_hat, x)
+        l = self.loss(x_hat, x)
         kld = -0.5 * torch.sum(1 + var - torch.pow(mu, 2) - torch.exp(var))
 
-        loss = bce + kld
+        loss = l + kld
         return loss

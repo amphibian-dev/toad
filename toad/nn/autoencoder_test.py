@@ -20,5 +20,5 @@ def test_ae():
     ae.fit(loader, epoch = 1)
 
 def test_vae():
-    vae = BaseAutoEncoder(784, 200, 10)
+    vae = VAE(784, 200, 10)
     vae.fit(loader, epoch = 1)
