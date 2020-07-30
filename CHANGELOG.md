@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed tadpole warning of legend. [#52](https://github.com/amphibian-dev/toad/issues/52)
+- Fixed default rule in RuleMixin.
+- Fixed loss function of VAE model.
+
 ## [0.0.61] - 2020-06-24
 
 ### Added
