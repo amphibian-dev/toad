@@ -178,12 +178,13 @@ def proportion_plot(x = None, keys = None):
     return prop_plot
 
 
-def roc_plot(score, target):
+def roc_plot(score, target, compare = None):
     """plot for roc
 
     Args:
         score (array-like): predicted score
         target (array-like): true target
+        compare (array-like): another score for comparing with score
 
     Returns:
         Axes
@@ -194,10 +195,15 @@ def roc_plot(score, target):
         x = fpr,
         y = tpr,
     )
+    ax.fill_between(fpr, tpr, alpha = 0.3)
+    ax = add_text(ax, 'AUC: {:.5f}'.format(auc))
+
+    if compare is not None:
+        c_aux, c_fpr, c_tpr, _ = AUC(compare, target, return_curve = True)
+        ax.plot(c_fpr, c_tpr)
+        ax.fill_between(c_fpr, c_tpr, alpha = 0.3)
 
     ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
-
-    ax = add_text(ax, 'AUC: {:.5f}'.format(auc))
 
     return ax
 
