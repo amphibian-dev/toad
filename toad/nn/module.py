@@ -1,3 +1,4 @@
+import torch
 from torch import nn, optim
 from ..utils.progress import Progress
 
@@ -65,3 +66,14 @@ class Module(nn.Module):
         """
         return optim.Adam(self.parameters(), lr = 1e-3)
     
+    def save(self, path):
+        """save model
+        """
+        torch.save(self.state_dict(), path)
+    
+    def load(self, path):
+        """load model
+        """
+        state = torch.load(path)
+        self.load_state_dict(state)
+        
