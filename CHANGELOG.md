@@ -7,11 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `save` and `load` method for nn module
+
 ### Fixed
 
 - Fixed tadpole warning of legend. [#52](https://github.com/amphibian-dev/toad/issues/52)
 - Fixed default rule in RuleMixin.
 - Fixed loss function of VAE model.
+- Fixed `decimal` argument in `ScoreCard.export` function
 
 ## [0.0.61] - 2020-06-24
 
