@@ -82,7 +82,11 @@ class Transformer(TransformerMixin, RulesMixin):
         res = X.copy()
         for key in X:
             if key in self.rules:
-                res[key] = self.transform_(self.rules[key], X[key], *args, **kwargs)
+                try:
+                    res[key] = self.transform_(self.rules[key], X[key], *args, **kwargs)
+                except Exception as e:
+                    e.args += ('on column "{key}"'.format(key = key),)
+                    raise e
 
         return res
 
