@@ -255,7 +255,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         return dict(zip(bins, scores))
 
 
-    def after_export(self, card, to_frame = False, to_json = None, to_csv = None):
+    def after_export(self, card, to_frame = False, to_json = None, to_csv = None, **kwargs):
         """generate a scorecard object
 
         Args:
