@@ -19,7 +19,6 @@ jobs:
           architecture: x64
       - run: pip install numpy cython pytest setuptools_rust
       - run: pip install torch torchvision
-      - run: make build
       - run: pip install -e .
       - run: make test
       - run: make dist_wheel

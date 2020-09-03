@@ -19,7 +19,6 @@ jobs:
           architecture: x64
       - run: pip install numpy cython pytest setuptools_rust
       - run: pip install torch==1.5.1+cpu torchvision==0.6.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      - run: make build
       - run: pip install -e .
       - run: make test
       - run: make dist_wheel
