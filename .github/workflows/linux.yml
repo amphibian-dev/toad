@@ -19,6 +19,7 @@ jobs:
           architecture: x64
       - run: pip install numpy cython pytest setuptools_rust
       - run: pip install torch==1.5.1+cpu torchvision==0.6.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      - run: make build
       - run: pip install -e .
       - run: make test
   release:
@@ -34,7 +35,7 @@ jobs:
           architecture: x64
       - uses: RalfG/python-wheels-manylinux-build@v0.2.2
         with:
-          build-requirements: 'cython numpy'
+          build-requirements: 'cython numpy setuptools_rust'
       - run: make dist
       - run: cp wheelhouse/*-manylinux*.whl dist/
       - uses: pypa/gh-action-pypi-publish@master
