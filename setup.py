@@ -56,7 +56,8 @@ setup(
     author_email = 'secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
     include_dirs = [np.get_include()],
-    ext_modules = cythonize(extensions) + rust_extensions,
+    ext_modules = cythonize(extensions),
+    rust_extensions = rust_extensions,
     include_package_data = True,
     python_requires = '>=3.5',
     setup_requires = [
