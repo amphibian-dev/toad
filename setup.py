@@ -3,6 +3,18 @@ import numpy as np
 from setuptools import setup, find_packages, Extension
 from Cython.Build import cythonize
 
+try:
+    from setuptools_rust import RustExtension
+except ImportError:
+    import subprocess
+
+    errno = subprocess.call([sys.executable, "-m", "pip", "install", "setuptools-rust"])
+    if errno:
+        print("Please install setuptools-rust package")
+        raise SystemExit(errno)
+    else:
+        from setuptools_rust import RustExtension
+
 
 NAME = 'toad'
 
@@ -20,6 +32,10 @@ def get_version():
 extensions = [
     Extension('toad.c_utils', sources = ['toad/c_utils.pyx'], include_dirs = [np.get_include()]),
     Extension('toad.merge', sources = ['toad/merge.pyx'], include_dirs = [np.get_include()]),
+]
+
+rust_extensions = [
+    RustExtension('toad.rust'),
 ]
 
 extras = {
@@ -40,11 +56,12 @@ setup(
     author_email = 'secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
     include_dirs = [np.get_include()],
-    ext_modules = cythonize(extensions),
+    ext_modules = cythonize(extensions) + rust_extensions,
     include_package_data = True,
     python_requires = '>=3.5',
     setup_requires = [
         'setuptools',
+        'setuptools_rust',
         'Cython >= 0.29.15',
     ],
     install_requires = [

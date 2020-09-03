@@ -11,3 +11,9 @@ dist/
 *.c
 *.so
 *.pyc
+
+
+#Added by cargo
+
+/target
+Cargo.lock

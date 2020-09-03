@@ -42,7 +42,7 @@ test: test_deps
 	fi
 
 build_deps:
-	$(SUDO) $(PIP) install numpy Cython setuptools
+	$(SUDO) $(PIP) install numpy Cython setuptools setuptools_rust
 
 build: build_deps
 	$(PYTHON) setup.py build_ext --inplace

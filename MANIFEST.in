@@ -3,6 +3,8 @@ include setup.py
 include toad/*.pyd
 include toad/*.pyx
 include toad/tadpole/fonts/*
+include Cargo.toml
+recursive-include src *
 
 include CONTRIBUTORS
 include LICENSE
