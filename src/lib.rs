@@ -5,7 +5,6 @@ use pyo3::prelude::{pymodule, PyModule, PyResult, Python};
 
 pub mod numeric_traits;
 pub mod merge;
-pub use merge::add;
 
 #[pymodule]
 fn rust(_py: Python, m: &PyModule) -> PyResult<()> {
