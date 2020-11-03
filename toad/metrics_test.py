@@ -44,6 +44,10 @@ def test_KS_bucket_use_split_pointers():
     result = KS_bucket(feature, target, bucket = [0.2, 0.6])
     assert len(result) == 3
 
+def test_KS_bucket_with_lift():
+    result = KS_bucket(feature, target)
+    assert result.loc[3, 'lift'] == 1.003861003861004
+
 def test_F1():
     result, split = F1(feature, target, return_split = True)
     assert result == 0.6844207723035951
