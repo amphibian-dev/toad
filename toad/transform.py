@@ -185,6 +185,9 @@ class Combiner(Transformer, BinsMixin):
 
 
         if not np.issubdtype(X.dtype, np.number):
+            if y is None:
+                raise ValueError("Can not combine `{dtype}` type in X, if you want to combine this type columns, please pass argument `y` to deal with it".format(dtype = X.dtype))
+
             # transform raw data by woe
             transer = WOETransformer()
             woe = transer.fit_transform(X, y)
