@@ -146,7 +146,7 @@ class BinsMixin:
             else:
                 l.append(item.split(','))
 
-        return np.array(l)
+        return np.array(l, dtype = object)
 
 
     @classmethod

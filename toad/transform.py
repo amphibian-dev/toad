@@ -275,7 +275,7 @@ class Combiner(Transformer, BinsMixin):
 
         l.append(value[start:])
 
-        return np.array(l)
+        return np.array(l, dtype = object)
 
 
     def _raw_to_bin(self, X, splits):
