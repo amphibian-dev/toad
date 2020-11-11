@@ -193,10 +193,11 @@ def split_target(frame, target):
     """
     """
     if isinstance(target, str):
-        f = frame.drop(columns = target)
+        cols = frame.columns.copy().drop(target)
+        f = frame[cols]
         t = frame[target]
     else:
-        f = frame.copy()
+        f = frame.copy(deep = False)
         t = target
 
     return f, t

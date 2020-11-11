@@ -237,20 +237,22 @@ def drop_empty(frame, threshold = 0.9, nan = None, return_drop = False,
         DataFrame: selected dataframe
         array: list of feature names that has been dropped
     """
-    df = frame.copy()
+    cols = frame.columns.copy()
 
     if exclude is not None:
-        df = df.drop(columns = exclude)
-
-    if nan is not None:
-        df = df.replace(nan, np.nan)
+        cols = cols.drop(exclude)
 
     if threshold < 1:
-        threshold = len(df) * threshold
+        threshold = len(frame) * threshold
 
     drop_list = []
-    for col in df:
-        n = df[col].isnull().sum()
+    for col in cols:
+        series = frame[col]
+        
+        if nan is not None:
+            series = series.replace(nan, np.nan)
+        
+        n = series.isnull().sum()
         if n > threshold:
             drop_list.append(col)
 
@@ -315,14 +317,14 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
     if not isinstance(by, (str, pd.Series)):
         by = pd.Series(by, index = frame.columns)
 
-    df = frame.copy()
+    cols = frame.columns.copy()
 
     if exclude is not None:
         exclude = exclude if isinstance(exclude, (list, np.ndarray)) else [exclude]
-        df = df.drop(columns = exclude)
+        cols = cols.drop(exclude)
 
 
-    f, t = split_target(df, target)
+    f, t = split_target(frame[cols], target)
 
     corr = f.corr().abs()
 
@@ -346,7 +348,7 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
             weights = by[corr.index].values
         elif by.upper() == 'IV':
             for ix in uni:
-                weights[ix] = IV(df[corr.index[ix]], target = t)
+                weights[ix] = IV(frame[corr.index[ix]], target = t)
 
 
         while(True):
@@ -412,12 +414,12 @@ def drop_iv(frame, target = 'target', threshold = 0.02, return_drop = False,
         array: list of feature names that has been dropped
         Series: list of features' IV
     """
-    df = frame.copy()
+    cols = frame.columns.copy()
 
     if exclude is not None:
-        df = df.drop(columns = exclude)
+        cols = cols.drop(exclude)
 
-    f, t = split_target(df, target)
+    f, t = split_target(frame[cols], target)
 
     l = len(f.columns)
     iv = np.zeros(l)
@@ -453,14 +455,14 @@ def drop_vif(frame, threshold = 3, return_drop = False, exclude = None):
         DataFrame: selected dataframe
         array: list of feature names that has been dropped
     """
-    df = frame.copy()
+    cols = frame.columns.copy()
 
     if exclude is not None:
-        df = df.drop(columns = exclude)
+        cols = cols.drop(exclude)
 
     drop_list = []
     while(True):
-        vif = VIF(df)
+        vif = VIF(frame[cols])
 
         ix = vif.idxmax()
         max = vif[ix]
@@ -468,7 +470,7 @@ def drop_vif(frame, threshold = 3, return_drop = False, exclude = None):
         if max < threshold:
             break
 
-        df = df.drop(columns = ix)
+        cols = cols.drop(ix)
         drop_list.append(ix)
 
 
