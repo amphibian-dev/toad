@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `save` and `load` method for nn module
 - Added `lift` value in `KS_bucket` function
+- Added checking duplicate keys in `Transformer`
 
 ### Fixed
 
@@ -18,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed default rule in RuleMixin.
 - Fixed loss function of VAE model.
 - Fixed `decimal` argument in `ScoreCard.export` function
+
+### Enhancements
+
+- Reduce memory usage when using `select` function
 
 ## [0.0.61] - 2020-06-24
 

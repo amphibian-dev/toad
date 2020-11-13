@@ -49,6 +49,8 @@ class Transformer(TransformerMixin, RulesMixin):
             if 'y' in kwargs:
                 X, kwargs['y'] = split_target(X, kwargs['y'])
 
+            self._check_duplicated_keys(X)
+
             for col in X:
                 name = X[col].name
                 rules[name] = self.fit_(X[col], *args, **kwargs)
@@ -65,7 +67,7 @@ class Transformer(TransformerMixin, RulesMixin):
         """transform method, see details in `transform_` method
         """
         if not self._fitted:
-            return self._raiseUnfitted()
+            return self._raise_unfitted()
 
 
         if self._fit_frame:
@@ -79,6 +81,8 @@ class Transformer(TransformerMixin, RulesMixin):
             else:
                 return X
 
+        self._check_duplicated_keys(X)
+
         res = X.copy()
         for key in X:
             if key in self.rules:
@@ -91,8 +95,16 @@ class Transformer(TransformerMixin, RulesMixin):
         return res
 
 
-    def _raiseUnfitted(self):
+    def _raise_unfitted(self):
         raise Exception('transformer is unfitted yet!')
+    
+
+    def _check_duplicated_keys(self, X):
+        if isinstance(X, pd.DataFrame) and X.columns.has_duplicates:
+            keys = X.columns[X.columns.duplicated()].values
+            raise Exception("X has duplicate keys `{keys}`".format(keys = str(keys)))
+        
+        return True
 
 
 

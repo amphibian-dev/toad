@@ -28,6 +28,11 @@ df = pd.DataFrame({
 
 
 
+def test_duplicated_keys():
+    dup_df = df.rename(columns = {"C": "A"})
+    with pytest.raises(Exception, match=r"X has duplicate keys `.*`"):
+        WOETransformer().fit_transform(dup_df, target)
+
 def test_woe_transformer():
     f = WOETransformer().fit_transform(feature, target)
     assert f[451] == -0.17061154127869285
