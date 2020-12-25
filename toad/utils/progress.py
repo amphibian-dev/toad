@@ -8,9 +8,11 @@ class Progress:
         if hasattr(iterable, 'batch_size'):
             self.batch = getattr(iterable, 'batch_size')
         
-        self.size = len(iterable)
+        
         if hasattr(iterable, 'dataset'):
             self.size = len(getattr(iterable, 'dataset'))
+        else:
+            self.size = len(iterable)
 
         self.idx = 0
         self.time = 0
