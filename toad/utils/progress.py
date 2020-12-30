@@ -16,7 +16,7 @@ class Progress:
 
 
         self.idx = 0
-        self.time = 0
+        self.time = None
 
 
         self.BAR_LENGTH = 32
@@ -41,6 +41,8 @@ class Progress:
             self.idx += 1
             self.flush()
         
+        # reset index
+        self.idx = 0
         print()
 
     def flush(self):
