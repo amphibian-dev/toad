@@ -80,10 +80,14 @@ class Module(nn.Module):
         state = torch.load(path)
         self.load_state_dict(state)
     
-    def distributed(self, backend = 'gloo', **kwargs):
+    def distributed(self, backend = None, **kwargs):
         """get distributed model
         """
         if not torch.distributed.is_initialized():
+            if backend is None:
+                # choose a backend
+                backend = 'nccl' if torch.distributed.is_nccl_available() else 'gloo'
+
             torch.distributed.init_process_group(backend, **kwargs)
         
         return DistModule(self)
