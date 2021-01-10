@@ -1,5 +1,7 @@
 import torch
 from torch import nn, optim
+from torch.nn.parallel import DistributedDataParallel
+
 from ..utils.progress import Progress
 
 
@@ -30,9 +32,10 @@ class Module(nn.Module):
         """
         optimizer = self.optimizer()
 
+        # init progress bar
+        p = Progress(loader)
+
         for ep in range(epoch):
-            # init progress bar
-            p = Progress(loader)
             p.prefix = f"Epoch:{ep}"
 
             for x, y in p:
@@ -76,4 +79,24 @@ class Module(nn.Module):
         """
         state = torch.load(path)
         self.load_state_dict(state)
+    
+    def distributed(self, backend = None, **kwargs):
+        """get distributed model
+        """
+        if not torch.distributed.is_initialized():
+            if backend is None:
+                # choose a backend
+                backend = 'nccl' if torch.distributed.is_nccl_available() else 'gloo'
+
+            torch.distributed.init_process_group(backend, **kwargs)
         
+        return DistModule(self)
+        
+
+
+class DistModule(DistributedDataParallel, Module):
+    """distributed module class
+    """
+    pass
+    
+    

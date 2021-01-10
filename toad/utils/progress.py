@@ -1,19 +1,22 @@
 from time import time
 
 class Progress:
-    def __init__(self, iterable):
+    def __init__(self, iterable, size = None):
         self.iterable = iterable
 
         self.batch = 1
         if hasattr(iterable, 'batch_size'):
             self.batch = getattr(iterable, 'batch_size')
         
-        self.size = len(iterable)
-        if hasattr(iterable, 'dataset'):
-            self.size = len(getattr(iterable, 'dataset'))
+        self.size = size
+        if hasattr(iterable, '__len__'):
+            self.size = len(iterable)
+        elif hasattr(iterable, 'dataset'):
+            self.size = len(iterable.dataset)
+
 
         self.idx = 0
-        self.time = 0
+        self.time = None
 
 
         self.BAR_LENGTH = 32
@@ -38,6 +41,8 @@ class Progress:
             self.idx += 1
             self.flush()
         
+        # reset index
+        self.idx = 0
         print()
 
     def flush(self):
