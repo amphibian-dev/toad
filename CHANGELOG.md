@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed tadpole warning of legend. [#52](https://github.com/amphibian-dev/toad/issues/52)
+- Fixed tadpole `title` and `x/y label` display for `UTF8` 
 - Fixed default rule in RuleMixin.
 - Fixed loss function of VAE model.
 - Fixed `decimal` argument in `ScoreCard.export` function

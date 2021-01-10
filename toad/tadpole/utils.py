@@ -46,6 +46,27 @@ def reset_ticklabels(axes):
     return axes
 
 
+def reset_title(axes):
+    title = axes.get_title()
+    
+    if title:
+        axes.set_title(title, fontproperties = myfont)
+    
+    return axes
+
+
+def reset_xylabels(axes):
+    y_label = axes.get_ylabel()
+    if y_label:
+        axes.set_ylabel(y_label, fontproperties = myfont)
+    
+    x_label = axes.get_xlabel()
+    if x_label:
+        axes.set_xlabel(x_label, fontproperties = myfont)
+    
+    return axes
+
+
 def reset_ylim(axes):
     # for axes and twins
     for ax in axes.figure.axes:
@@ -61,7 +82,7 @@ def fix_axes(axes):
     if not isinstance(axes, Axes):
         return axes
 
-    functions = [reset_ticklabels, reset_legend]
+    functions = [reset_title, reset_xylabels, reset_ticklabels, reset_legend]
 
     for func in functions:
         func(axes)
