@@ -18,7 +18,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: pip install numpy cython pytest
-      - run: pip install torch==1.5.1+cpu torchvision==0.6.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      - run: pip install torch torchvision -f https://download.pytorch.org/whl/torch_stable.html
       - run: pip install -e .
       - run: make test
       - run: make dist_wheel
@@ -28,7 +28,8 @@ jobs:
           path: dist/*.whl
   release:
     needs: [test]
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    # release when using `tags` or `release` branch
+    if: ${{ startsWith(github.ref, 'refs/tags') || github.ref == 'refs/heads/release' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
