@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from scipy import stats
-from .merge import merge
+from .metrics import KS, AUC, F1, PSI
 
 from .utils import (
     np_count,
@@ -16,7 +16,7 @@ from .utils import (
     split_target,
 )
 
-from .utils.decorator import support_dataframe
+from .utils.decorator import Decorator, support_dataframe
 
 STATS_EMPTY = np.nan
 
@@ -209,6 +209,7 @@ def IV(feature, target, return_sub = False, **kwargs):
         **kwargs (): other options for merge function
     """
     if is_continuous(feature):
+        from .merge import merge
         feature = merge(feature, target, **kwargs)
 
     iv, sub = _IV(feature, target)
@@ -264,14 +265,38 @@ def VIF(frame):
     return pd.Series(vif, index = index)
 
 
-def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs):
+
+class indicator(Decorator):
+    """indicator decorator
+    """
+    # indicator name
+    name = 'indicator'
+    need_merge = False
+    dtype = None
+
+    def wrapper(self, *args, **kwargs):
+        return self.call(*args, **kwargs)
+
+# default indicators
+INDICATORS = {
+    'iv': indicator(name = 'iv', need_merge = True)(IV),
+    'gini': indicator(name = 'gini')(gini_cond),
+    'entropy': indicator(name = 'entropy')(entropy_cond),
+    'auc': indicator(name = 'auc', dtype = np.number)(AUC),
+    'ks': indicator(name = 'ks', dtype = np.number)(KS),
+    'unique': indicator(name = 'unique')(lambda x, *arg: len(np_unique(x))),
+}
+
+
+def column_quality(feature, target, name = 'feature', indicators = [], need_merge = False, **kwargs):
     """calculate quality of a feature
 
     Args:
         feature (array-like)
         target (array-like)
         name (str): feature's name that will be setted in the returned Series
-        iv_only (bool): if only calculate IV
+        indicators (list): list of indicator functions
+        need_merge (bool): if need merge feature
 
     Returns:
         Series: a list of quality with the feature's name
@@ -282,32 +307,39 @@ def column_quality(feature, target, name = 'feature', iv_only = False, **kwargs)
     if not np.issubdtype(feature.dtype, np.number):
         feature = feature.astype(str)
 
-    c = len(np_unique(feature))
-    iv = g = e = STATS_EMPTY
+    # get bin feature
+    bin_feature = feature
+    if need_merge and is_continuous(feature):
+        from .merge import merge
+        bin_feature = merge(feature, target, **kwargs)
 
-    # skip when unique is too much
-    if is_continuous(feature) or c / len(feature) < 0.5:
-        iv = IV(feature, target, **kwargs)
-        if not iv_only:
-            g = gini_cond(feature, target)
-            e = entropy_cond(feature, target)
+    res = {}  
+    for func in indicators:
+        # filter by dtype
+        if func.dtype is not None and not isinstance(feature.dtype, func.dtype):
+            res[func.name] = STATS_EMPTY
+            continue
 
-    row = pd.Series(
-        index = ['iv', 'gini', 'entropy', 'unique'],
-        data = [iv, g, e, c],
-    )
+        # if function need use bin feature
+        if func.need_merge:
+            res[func.name] = func(bin_feature, target)
+            continue
+        
+        res[func.name] = func(feature, target)
+
+    row = pd.Series(res)
 
     row.name = name
     return row
 
 
-def quality(dataframe, target = 'target', cpu_cores = 0, **kwargs):
+def quality(dataframe, target = 'target', cpu_cores = 0, iv_only = False, indicators = ['iv', 'gini', 'entropy', 'unique'], **kwargs):
     """get quality of features in data
 
     Args:
         dataframe (DataFrame): dataframe that will be calculate quality
         target (str): the target's name in dataframe
-        iv_only (bool): if only calculate IV
+        iv_only (bool): `deprecated`. if only calculate IV
         cpu_cores (int): the maximun number of CPU cores will be used, `0` means all CPUs will be used, 
             `-1` means all CPUs but one will be used.
 
@@ -315,6 +347,37 @@ def quality(dataframe, target = 'target', cpu_cores = 0, **kwargs):
         DataFrame: quality of features with the features' name as row name
     """
     frame, target = split_target(dataframe, target)
+
+    if iv_only:
+        import warnings
+        warnings.warn(
+            """`iv_only` will be deprecated soon,
+                please use `indicators = ['iv']` instead!
+            """,
+            DeprecationWarning,
+        )
+
+        dummy_func = lambda x, t: STATS_EMPTY
+
+        indicators = [
+            'iv',
+            indicator(name = 'gini')(dummy_func),
+            indicator(name = 'entropy')(dummy_func),
+            'unique',
+        ]
+    
+    
+    need_merge = False
+    for i, f in enumerate(indicators):
+        # replace str type indicator to function
+        if isinstance(f, str):
+            assert f in INDICATORS
+
+            indicators[i] = INDICATORS[f]
+        
+        # update need merge flag
+        need_merge |= indicators[i].need_merge
+    
     
     if cpu_cores < 1:
         cpu_cores = cpu_cores - 1
@@ -324,12 +387,19 @@ def quality(dataframe, target = 'target', cpu_cores = 0, **kwargs):
 
     jobs = []
     for name, series in frame.iteritems():
-        jobs.append(delayed(column_quality)(series, target, name = name, **kwargs))
+        jobs.append(delayed(column_quality)(
+            series,
+            target,
+            name = name,
+            indicators = indicators,
+            need_merge = need_merge,
+            **kwargs
+        ))
 
     rows = pool(jobs)
 
 
     return pd.DataFrame(rows).sort_values(
-        by = 'iv',
+        by = indicators[0].name,
         ascending = False,
     )
