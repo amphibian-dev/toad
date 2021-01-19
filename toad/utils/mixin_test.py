@@ -43,5 +43,5 @@ def test_format_bins_with_index():
 
 def test_format_bins_with_ellipsis():
     obj = BinsMixin()
-    formated = obj.format_bins(np.array([['A', 'B', 'C'], ['D', 'E']]), ellipsis = 3)
+    formated = obj.format_bins(np.array([['A', 'B', 'C'], ['D', 'E']], dtype = object), ellipsis = 3)
     assert formated[0] == 'A,B..' and formated[1] == 'D,E'

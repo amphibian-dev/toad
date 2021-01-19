@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `lift` value in `KS_bucket` function
 - Added checking duplicate keys in `Transformer`
 
+### Changed
+
+- `quality` method support `indicators`
+
 ### Fixed
 
 - Fixed tadpole warning of legend. [#52](https://github.com/amphibian-dev/toad/issues/52)
@@ -81,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VIF independent statsmodels.
 
 
-[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.60...HEAD
+[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.61...HEAD
+[0.0.61]: https://github.com/amphibian-dev/toad/compare/0.0.60...0.0.61
 [0.0.60]: https://github.com/amphibian-dev/toad/compare/0.0.59...0.0.60
 [0.0.59]: https://github.com/amphibian-dev/toad/compare/0.0.58...0.0.59
