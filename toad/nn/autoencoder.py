@@ -35,7 +35,7 @@ class BaseAutoEncoder(Module):
         z = self.encode(x)
         return self.decode(z)
     
-    def fit_step(self, x, y):
+    def fit_step(self, x):
         return self.loss(self(x), x)
 
 
@@ -74,7 +74,7 @@ class VAE(Module):
         x_hat = self.decode(z)
         return x_hat, mu, var
     
-    def fit_step(self, x, y):
+    def fit_step(self, x):
         x_hat, mu, var = self(x)
         l = self.loss(x_hat, x)
         kld = -0.5 * torch.sum(1 + var - torch.pow(mu, 2) - torch.exp(var))

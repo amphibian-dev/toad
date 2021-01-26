@@ -6,11 +6,9 @@ from .autoencoder import BaseAutoEncoder, VAE
 
 
 X = torch.Tensor(np.random.rand(20000, 784))
-Y = torch.Tensor(np.random.randint(10, size = (20000, 1)))
 
-dataset = TensorDataset(X, Y)
 loader = DataLoader(
-    dataset,
+    X,
     batch_size = 128,
     shuffle = True,
 )

@@ -38,9 +38,9 @@ class Module(nn.Module):
         for ep in range(epoch):
             p.prefix = f"Epoch:{ep}"
 
-            for x, y in p:
+            for batch in p:
                 # step fit
-                loss = self.fit_step(x, y)
+                loss = self.fit_step(batch)
                 
                 optimizer.zero_grad()
                 loss.backward()
@@ -48,15 +48,15 @@ class Module(nn.Module):
 
                 p.suffix = 'loss:{:.4f}'.format(loss.item())
     
-    def fit_step(self, x, y):
+    def fit_step(self, batch, *args, **kwargs):
         """step for fitting
         Args:
-            x (Tensor)
-            y (Tensor)
+            batch (Any): batch data from dataloader
         
         Returns:
             Tensor: loss of this step
         """
+        x, y = batch
         y_hat = self.__call__(x)
         loss = nn.functional.mse_loss(y_hat, y)
         return loss
