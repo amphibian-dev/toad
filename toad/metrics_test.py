@@ -19,6 +19,7 @@ base_df = pd.DataFrame({
     'B': np.random.rand(500),
 })
 
+FUZZ_THRESHOLD = 1e-10
 
 def test_KS():
     result = KS(feature, target)
@@ -78,7 +79,7 @@ def test_PSI_frame():
         },
     )
 
-    assert result['B'] == 0.014528279995858708
+    assert result['B'] == pytest.approx(0.014528279995858708, FUZZ_THRESHOLD)
 
 def test_PSI_return_frame():
     result, frame = PSI(
