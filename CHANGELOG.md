@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.63] - 2021-02-22
+
+### Fixed
+
+- dependence version of `numpy`
+
 ## [0.0.62] - 2021-02-19
 
 ### Added
@@ -87,7 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VIF independent statsmodels.
 
 
-[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.62...HEAD
+[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.63...HEAD
+[0.0.63]: https://github.com/amphibian-dev/toad/compare/0.0.62...0.0.63
 [0.0.62]: https://github.com/amphibian-dev/toad/compare/0.0.61...0.0.62
 [0.0.61]: https://github.com/amphibian-dev/toad/compare/0.0.60...0.0.61
 [0.0.60]: https://github.com/amphibian-dev/toad/compare/0.0.59...0.0.60
