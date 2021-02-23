@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - run: pip install numpy cython pytest
+      - run: make build_deps
       - run: pip install torch torchvision
       - run: pip install -e .
       - run: make test

@@ -1,7 +1,6 @@
 import os
 import numpy as np
 from setuptools import setup, find_packages, Extension
-from Cython.Build import cythonize
 
 
 NAME = 'toad'
@@ -17,17 +16,28 @@ def get_version():
     return ns['__version__']
 
 
-extensions = [
-    Extension('toad.c_utils', sources = ['toad/c_utils.pyx'], include_dirs = [np.get_include()]),
-    Extension('toad.merge', sources = ['toad/merge.pyx'], include_dirs = [np.get_include()]),
-]
+def get_ext_modules():
+    from Cython.Build import cythonize
 
-extras = {
-    'nn': [
-        'torch',
-        'torchvision',
-    ],
-}
+    extensions = [
+        Extension('toad.c_utils', sources = ['toad/c_utils.pyx'], include_dirs = [np.get_include()]),
+        Extension('toad.merge', sources = ['toad/merge.pyx'], include_dirs = [np.get_include()]),
+    ]
+
+    return cythonize(extensions)
+
+
+def get_requirements(stage = None):
+    file_name = 'requirements'
+
+    if stage is not None:
+        file_name = f"{file_name}-{stage}"
+    
+    with open(f"{file_name}.txt", 'r') as f:
+        requirements = f.read().splitlines()
+    
+    return requirements
+
 
 setup(
     name = NAME,
@@ -40,31 +50,19 @@ setup(
     author_email = 'secbone@gmail.com',
     packages = find_packages(exclude = ['tests']),
     include_dirs = [np.get_include()],
-    ext_modules = cythonize(extensions),
+    ext_modules = get_ext_modules(),
     include_package_data = True,
-    python_requires = '>=3.5',
-    setup_requires = [
-        'setuptools',
-        'Cython >= 0.29.15',
-    ],
-    install_requires = [
-        'numpy >= 1.18.0, < 1.20',
-        'pandas',
-        'scipy',
-        'joblib >= 0.12',
-        'scikit-learn >= 0.21',
-        'seaborn >= 0.10.0',
-    ],
-    extras_require = extras,
-    tests_require = [
-        'pytest'
-    ],
+    python_requires = '>=3.6',
+    install_requires = get_requirements(),
+    extras_require = {
+        'nn': get_requirements('nn')
+    },
+    tests_require = get_requirements('test'),
     license = 'MIT',
     classifiers = [
         'Operating System :: POSIX',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',

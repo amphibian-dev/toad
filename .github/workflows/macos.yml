@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
-      - run: pip install numpy cython pytest
+      - run: make build_deps
       - run: pip install torch torchvision
       - run: pip install -e .
       - run: make test
@@ -28,6 +28,7 @@ jobs:
           path: dist/*.whl
   release:
     needs: [test]
+    # release when using `tags` or `release` branch
     if: ${{ startsWith(github.ref, 'refs/tags') || github.ref == 'refs/heads/release' }}
     runs-on: ubuntu-latest
     steps:

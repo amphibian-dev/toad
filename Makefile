@@ -13,7 +13,6 @@ DOCSDIR = docs
 SOURCEDIR := $(DOCSDIR)/source
 BUILDDIR := $(DOCSDIR)/build
 
-PATCHELF_VERSION = 0.10
 
 ifeq ('$(shell type -P python3)','')
     PYTHON = python
@@ -31,7 +30,7 @@ uninstall:
 	cat files.txt | xargs rm -rf
 
 test_deps:
-	$(SUDO) $(PIP) install pytest
+	$(SUDO) $(PIP) install -r requirements-test.txt
 
 test: test_deps
 	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))
@@ -42,30 +41,19 @@ test: test_deps
 	fi
 
 build_deps:
-	$(SUDO) $(PIP) install numpy Cython setuptools
+	$(SUDO) $(PIP) install -r requirements.txt
 
 build: build_deps
 	$(PYTHON) setup.py build_ext --inplace
 
 dist_deps:
-	$(SUDO) $(PIP) install -U wheel twine
+	$(SUDO) $(PIP) install -U -r requirements-dist.txt
 
 dist: build dist_deps
 	$(SUDO) $(PYTHON) setup.py sdist
 
 dist_wheel: build dist_deps
 	$(SUDO) $(PYTHON) setup.py bdist_wheel --universal
-
-patchelf:
-	wget http://nixos.org/releases/patchelf/patchelf-$(PATCHELF_VERSION)/patchelf-$(PATCHELF_VERSION).tar.bz2
-	tar xf patchelf-$(PATCHELF_VERSION).tar.bz2
-	cd patchelf-$(PATCHELF_VERSION) && ./configure && sudo make install
-
-manylinux_docker:
-	docker pull $(DOCKER_IMAGE)
-
-dist_manylinux: dist manylinux_docker
-	docker run --rm -e PLAT=$(PLAT) -v $(shell pwd):/io $(DOCKER_IMAGE) $(PRE_CMD) /io/scripts/build_wheels.sh
 
 upload:
 	twine check dist/*
