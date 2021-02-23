@@ -33,7 +33,7 @@ jobs:
         with:
           python-version: '3.7'
           architecture: x64
-      - uses: RalfG/python-wheels-manylinux-build@v0.2.2
+      - uses: RalfG/python-wheels-manylinux-build@v0.3.3
         with:
           build-requirements: 'cython numpy'
       - run: make dist
