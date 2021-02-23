@@ -42,7 +42,7 @@ def get_requirements(stage = None):
 setup(
     name = NAME,
     version = get_version(),
-    description = 'python utils for detect data',
+    description = 'Toad is dedicated to facilitating model development process, especially for a scorecard.',
     long_description = open('README.md', encoding = 'utf-8').read(),
     long_description_content_type = 'text/markdown',
     url = 'https://github.com/amphibian-dev/toad',
@@ -66,6 +66,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
     entry_points = {
         'console_scripts': [
