@@ -33,11 +33,10 @@ jobs:
         with:
           python-version: '3.7'
           architecture: x64
+      - run: make dist
       - uses: RalfG/python-wheels-manylinux-build@v0.3.3
         with:
           build-requirements: 'cython numpy'
-      - run: make dist
-      - run: cp wheelhouse/*-manylinux*.whl dist/
       - uses: pypa/gh-action-pypi-publish@master
         name: publish pypi
         with:
