@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- dependence version of `numpy`
+- Fixed dependence version of `numpy`
+- Fixed `DistModule` module
 
 ## [0.0.62] - 2021-02-19
 
