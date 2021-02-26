@@ -94,9 +94,16 @@ class Module(nn.Module):
         
 
 
-class DistModule(DistributedDataParallel, Module):
+class DistModule(DistributedDataParallel):
     """distributed module class
     """
-    pass
+    def fit(self, *args, **kwargs):
+        return self.module.fit(*args, **kwargs)
+    
+    def save(self, *args, **kwargs):
+        return self.module.save(*args, **kwargs)
+    
+    def load(self, *args, **kwargs):
+        return self.module.load(*args, **kwargs)
     
     
