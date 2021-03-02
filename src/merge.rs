@@ -1,9 +1,9 @@
 // use itertools::Itertools;
 use ndarray::prelude::*;
-// use ndarray::{LinalgScalar, NdFloat};
-// use num_traits::{Num, NumOps};
+// use std::iter::FromIterator;
 use num_traits::cast::AsPrimitive;
-use std::cmp::Ordering;
+use std::cmp::{Ordering};
+// use std::hash::Hash;
 use crate::numeric_traits::Numeric;
 
 
@@ -27,24 +27,32 @@ where T: AsPrimitive<f64>,
     let mut chi_vec: Vec<f64> = Vec::new();
 
     for i in 0..l {
-        let mut chi: f64 = 0.0;
         let view: Array2<f64> = groups.slice(s![i..i+2, ..]).mapv(|x| x.as_());
-        let total: f64 = view.sum();
-        let cols: Array1<f64> = view.sum_axis(Axis(0));
-        let rows: Array1<f64> = view.sum_axis(Axis(1));
-
-        for j in 0..rows.len() {
-            for k in 0..cols.len() {
-                let e = rows[j] * cols[k] / total;
-                if e != 0.0 {
-                    chi += (view[[j, k]] - e).powf(2.0) / e;
-                }
-            }
-        }
-        chi_vec.push(chi)
+        let mut chi = calc_chi(&view);
+        chi *= view.sum();
+        chi_vec.push(chi);
     }
 
     Array1::from(chi_vec)
+}
+
+
+fn calc_chi(couple: &Array2<f64>) -> f64 {
+    let mut chi_value: f64 = 0.0;
+    let total: f64 = couple.sum();
+    let cols: Array1<f64> = couple.sum_axis(Axis(0));
+    let rows: Array1<f64> = couple.sum_axis(Axis(1));
+
+    for j in 0..rows.len() {
+        for k in 0..cols.len() {
+            let e = rows[j] * cols[k] / total;
+            if e != 0.0 {
+                chi_value += (couple[[j, k]] - e).powf(2.0) / e;
+            }
+        }
+    }
+    
+    chi_value
 }
 
 
@@ -67,6 +75,7 @@ mod test {
     fn test_unique() {
         let target: Array1<f64> = Array::ones(500);
         // let target = array![9,3,2,5,3,5];
+        // let target = array!['a', 'b', 'a', 'c'];
 
         let res = unique(target);
         // let mut res = vec![1,2,3,2,3,5,1];
@@ -78,11 +87,11 @@ mod test {
     // #[ignore]
     fn test_chi() {
         // let target = Array::ones((500, 3));
-        let target = array![[0,0,1],
-                            [1,0,0],
-                            [0,1,0],
-                            [0,1,0],
-                            [1,1,0]];
+        let target = array![[0.,0.,1.],
+                            [1.,0.,0.],
+                            [0.,1.,0.],
+                            [0.,1.,0.],
+                            [1.,1.,0.]];
 
         let res = chi(target.mapv(|x| x as u8));
         // let mut res = vec![1,2,3,2,3,5,1];
