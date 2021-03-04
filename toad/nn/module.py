@@ -23,7 +23,7 @@ class Module(nn.Module):
         pass
     
 
-    def fit(self, loader, epoch = 10):
+    def fit(self, loader, epoch = 10, callback = None):
         """train model
 
         Args:
@@ -47,6 +47,9 @@ class Module(nn.Module):
                 optimizer.step()
 
                 p.suffix = 'loss:{:.4f}'.format(loss.item())
+            
+            if callable(callback):
+                callback(ep)
     
     def fit_step(self, batch, *args, **kwargs):
         """step for fitting
