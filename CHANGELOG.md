@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added `callback` param in `fit` method for `nn`
 
+### Changed
+
+- Use mean of loss in `nn.Module.fit` instead of the latest loss value
+
 ### Fixed
 
 - Fixed dependence version of `numpy`
