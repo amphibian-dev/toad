@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from torch import nn, optim
 from torch.nn.parallel import DistributedDataParallel
 
@@ -38,6 +39,7 @@ class Module(nn.Module):
         for ep in range(epoch):
             p.prefix = f"Epoch:{ep}"
 
+            loss_history = []
             for batch in p:
                 # step fit
                 loss = self.fit_step(batch)
@@ -46,7 +48,8 @@ class Module(nn.Module):
                 loss.backward()
                 optimizer.step()
 
-                p.suffix = 'loss:{:.4f}'.format(loss.item())
+                loss_history.append(loss.item())
+                p.suffix = 'loss:{:.4f}'.format(np.mean(loss_history))
             
             if callable(callback):
                 callback(ep)
