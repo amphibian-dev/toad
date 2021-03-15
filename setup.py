@@ -33,8 +33,14 @@ def get_requirements(stage = None):
     if stage is not None:
         file_name = f"{file_name}-{stage}"
     
+    requirements = []
     with open(f"{file_name}.txt", 'r') as f:
-        requirements = f.read().splitlines()
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('-'):
+                continue
+            
+            requirements.append(line)
     
     return requirements
 

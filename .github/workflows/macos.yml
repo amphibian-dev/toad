@@ -23,7 +23,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           architecture: x64
       - run: make build_deps
-      - run: pip install torch torchvision
+      - run: pip install -r requirements-nn.txt
       - run: pip install -e .
       - run: make test
       - run: make dist_wheel
