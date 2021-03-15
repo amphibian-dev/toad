@@ -6,9 +6,13 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: ['3.6', '3.7', '3.8', '3.9']
+        python-version: ['3.6', '3.7', '3.8']
+        include:
+          - python-version: '3.9'
+            experimental: true
       fail-fast: false
     runs-on: windows-latest
+    continue-on-error: ${{ matrix.experimental }}
     name: Test py ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@master
