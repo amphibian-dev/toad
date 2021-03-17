@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Use mean of loss in `nn.Module.fit` instead of the latest loss value
+- Set default rotation for x tick labels
 
 ### Fixed
 
