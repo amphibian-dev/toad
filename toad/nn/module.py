@@ -39,20 +39,20 @@ class Module(nn.Module):
         for ep in range(epoch):
             p.prefix = f"Epoch:{ep}"
 
-            loss_history = []
-            for batch in p:
+            loss = 0.
+            for i, batch in enumerate(p, start = 1):
                 # step fit
-                loss = self.fit_step(batch)
+                l = self.fit_step(batch)
                 
                 optimizer.zero_grad()
-                loss.backward()
+                l.backward()
                 optimizer.step()
 
-                loss_history.append(loss.item())
-                p.suffix = 'loss:{:.4f}'.format(np.mean(loss_history))
+                loss += (l.item() - loss) / i
+                p.suffix = 'loss:{:.4f}'.format(loss)
             
             if callable(callback):
-                callback(ep)
+                callback(ep, loss)
     
     def fit_step(self, batch, *args, **kwargs):
         """step for fitting

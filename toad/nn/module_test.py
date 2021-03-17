@@ -39,8 +39,8 @@ def test_model():
 def test_fit_callback():
     history = []
 
-    def func(e):
-        history.append(e)
+    def func(e, loss):
+        history.append(loss)
     
     model = TestModel(NUM_FEATS, NUM_CLASSES)
     model.fit(loader, epoch = 2, callback = func)
