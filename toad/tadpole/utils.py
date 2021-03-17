@@ -45,6 +45,13 @@ def reset_ticklabels(axes):
 
     return axes
 
+def reset_xticks(axes):
+    for label in axes.get_xticklabels():
+        label.set_ha('left')
+        label.set_rotation(-25)
+    
+    return axes
+
 
 def reset_title(axes):
     title = axes.get_title()
@@ -82,7 +89,7 @@ def fix_axes(axes):
     if not isinstance(axes, Axes):
         return axes
 
-    functions = [reset_title, reset_xylabels, reset_ticklabels, reset_legend]
+    functions = [reset_title, reset_xylabels, reset_ticklabels, reset_legend, reset_xticks]
 
     for func in functions:
         func(axes)
