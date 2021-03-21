@@ -22,7 +22,6 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         """
 
         Args:
-            card (dict|str|IOBase): dict of card or io to read json
             combiner (toad.Combiner)
             transer (toad.WOETransformer)
         """
@@ -41,6 +40,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         self._feature_names = None
 
+        self.card = card
         if card is not None:
             # self.generate_card(card = card)
             import warnings

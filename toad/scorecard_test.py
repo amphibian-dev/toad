@@ -57,6 +57,9 @@ FUZZ_THRESHOLD = 1e-4
 TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
 
 
+def test_representation():
+    s = repr(card)
+    print(s)
 
 def test_load():
     card = ScoreCard().load(card_config)
