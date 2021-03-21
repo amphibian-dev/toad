@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added `callback` param in `fit` method for `nn`
+- Added `Trainer` and `EarlyStopping` in `nn.trainer` module
 
 ### Changed
 
