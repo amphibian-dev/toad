@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.64] - 2021-03-22
+
 ### Added
 
 - Added `callback` param in `fit` method for `nn`
@@ -103,7 +105,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VIF independent statsmodels.
 
 
-[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.62...HEAD
+[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.64...HEAD
+[0.0.64]: https://github.com/amphibian-dev/toad/compare/0.0.62...0.0.64
 [0.0.62]: https://github.com/amphibian-dev/toad/compare/0.0.61...0.0.62
 [0.0.61]: https://github.com/amphibian-dev/toad/compare/0.0.60...0.0.61
 [0.0.60]: https://github.com/amphibian-dev/toad/compare/0.0.59...0.0.60
