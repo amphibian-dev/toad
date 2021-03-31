@@ -115,7 +115,8 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', return_splits = F
         agg2['ks'] = -agg2['ks']
         reverse_suffix = '_rev'
     
-    agg2['lift'] = agg2['cum_bads_prop' + reverse_suffix] / agg2['cum_total_prop' + reverse_suffix]
+    agg2['lift'] = agg2['bad_prop'] / agg2['total_prop']
+    agg2['cum_lift'] = agg2['cum_bads_prop' + reverse_suffix] / agg2['cum_total_prop' + reverse_suffix]
 
     if return_splits and splits is not None:
         return agg2, splits

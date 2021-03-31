@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Breaking Changes
+
+- Add new `lift` value and rename the old `lift` value to `cum_lift` in `KS_Bucket`
+
 ## [0.0.64] - 2021-03-22
 
 ### Added
@@ -105,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VIF independent statsmodels.
 
 
-[unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.64...HEAD
+[Unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.64...HEAD
 [0.0.64]: https://github.com/amphibian-dev/toad/compare/0.0.62...0.0.64
 [0.0.62]: https://github.com/amphibian-dev/toad/compare/0.0.61...0.0.62
 [0.0.61]: https://github.com/amphibian-dev/toad/compare/0.0.60...0.0.61
