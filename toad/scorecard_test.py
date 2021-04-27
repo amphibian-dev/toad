@@ -58,14 +58,21 @@ TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
 
 
 def test_representation():
-    s = repr(card)
-    print(s)
+    repr(card)
 
 def test_load():
     card = ScoreCard().load(card_config)
     score = card.predict(df)
     assert score[200] == 600
 
+def test_load_after_init_combiner():
+    card = ScoreCard(
+        combiner = combiner,
+        transer = woe_transer,
+    )
+    card.load(card_config)
+    score = card.predict(df)
+    assert score[200] == 600
 
 def test_proba_to_score():
     model = LogisticRegression()

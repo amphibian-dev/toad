@@ -63,6 +63,9 @@ class RulesMixin:
         else:
             self._rules = rules
         
+        if hasattr(self, 'after_load'):
+            self.after_load(rules)
+        
         return self
     
     @save_to_json(is_class = True)

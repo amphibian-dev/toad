@@ -33,7 +33,6 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         self.factor = pdo / np.log(rate)
         self.offset = base_score - self.factor * np.log(base_odds)
 
-        # self.combiner = combiner
         self._combiner = combiner
         self.transer = transer
         self.model = LogisticRegression(**kwargs)
@@ -254,6 +253,12 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         
         return dict(zip(bins, scores))
 
+
+    def after_load(self, rules):
+        """after load card
+        """
+        # reset combiner
+        self._combiner = {}
 
     def after_export(self, card, to_frame = False, to_json = None, to_csv = None, **kwargs):
         """generate a scorecard object
