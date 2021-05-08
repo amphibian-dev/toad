@@ -44,7 +44,7 @@ class EarlyStopping:
             # model.load_state_dict(self.best_state)
             return True
     
-    def scoring(self, model, loss):
+    def scoring(self, model, loss, epoch = None):
         """scoring function
         """
         return loss
@@ -84,7 +84,7 @@ class Trainer:
 
             self.loss_history.append(loss)
 
-            if self.early_stop and self.early_stop(self.model, loss):
+            if self.early_stop and self.early_stop(self.model, loss, epoch = ep):
                 # set best state to model
                 best_state = self.early_stop.get_best_state()
                 self.model.load_state_dict(best_state)
