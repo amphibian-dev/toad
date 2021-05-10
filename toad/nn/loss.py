@@ -1,7 +1,7 @@
 import torch
 from torch.nn import Module
 
-from .functional import focalloss
+from .functional import focal_loss
 
 
 class FocalLoss(Module):
@@ -13,7 +13,7 @@ class FocalLoss(Module):
         self.reduction = reduction
 
     def forward(self, input, target):
-        return focalloss(
+        return focal_loss(
             input,
             target,
             alpha = self.alpha,
