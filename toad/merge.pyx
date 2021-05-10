@@ -275,7 +275,8 @@ def merge(feature, target = None, method = 'dt', return_splits = False, **kwargs
         array: a array of merged label with the same size of feature
         array: list of split points
     """
-    assert method in ['dt', 'chi', 'quantile', 'step', 'kmeans']
+    method = method.lower()
+    assert method in ['dt', 'chi', 'quantile', 'step', 'kmeans'], "`method` must be in ['dt', 'chi', 'quantile', 'step', 'kmeans']"
     
     feature = to_ndarray(feature)
     method = method.lower()
