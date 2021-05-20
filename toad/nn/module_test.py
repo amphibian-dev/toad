@@ -20,6 +20,8 @@ loader = DataLoader(
 
 class TestModel(Module):
     def __init__(self, in_feats, out_feats):
+        super().__init__()
+        
         self.linear = nn.Linear(in_feats, out_feats)
     
     def forward(self, x):

@@ -22,6 +22,8 @@ loader = DataLoader(
 
 class TestModel(Module):
     def __init__(self, in_feats, out_feats):
+        super().__init__()
+
         self.linear = nn.Linear(in_feats, out_feats)
     
     def forward(self, x):
@@ -38,7 +40,7 @@ def test_trainer():
     model = TestModel(NUM_FEATS, NUM_CLASSES)
     trainer = Trainer(model, loader)
     trainer.train(epoch = 2)
-    assert len(trainer.loss_history) == 2
+    assert len(trainer.history) == 2
 
 
 def test_trainer_early_stopping():
@@ -46,4 +48,4 @@ def test_trainer_early_stopping():
     early_stopping = EarlyStopping(delta = -1.0, patience = 3)
     trainer = Trainer(model, loader, early_stopping = early_stopping)
     trainer.train(epoch = 200)
-    assert len(trainer.loss_history) == 4
+    assert len(trainer.history) == 4

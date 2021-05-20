@@ -1,3 +1,4 @@
+import numpy as np
 from ..utils.progress import Progress
 
 class EarlyStopping:
@@ -59,6 +60,38 @@ class EarlyStopping:
         return loss
         
 
+
+class History:
+    """model history
+    """
+    def __init__(self):
+        self._store = {}
+    
+
+    def __getitem__(self, key):
+        return self._store[key]
+    
+
+    def __setitem__(self, key, value):
+        return self.push(key, value)
+    
+    def push(self, key, value):
+        """push value into history
+
+        Args:
+            key (str): key of history
+            value (np.ndarray): an array of values
+        """
+        if key not in self._store:
+            self._store[key] = value
+            return
+
+        self._store[key] = np.concatenate([
+            self._store[key],
+            value,
+        ])
+
+
         
 class Trainer:
     def __init__(self, model, loader, optimizer = None, early_stopping = None):
@@ -70,19 +103,35 @@ class Trainer:
         self.optimizer = optimizer
 
         self.early_stop = early_stopping
-        self.loss_history = []
+        self.history = []
+
 
     def train(self, epoch = 10, callback = None):
+        """
+        Args:
+            epoch (int): number of epoch for training loop
+            callback (callable): callable function will be called every epoch
+        """
         # init progress bar
         p = Progress(self.loader)
 
+        
+
         for ep in range(epoch):
             p.prefix = f"Epoch:{ep}"
+
+            # setup a new history for model in each epoch
+            history = History()
+            self.history.append(history)
+            self.model._history = history
 
             loss = 0.
             for i, batch in enumerate(p, start = 1):
                 # step fit
                 l = self.model.fit_step(batch)
+
+                # log loss
+                self.model.log('loss', l)
                 
                 self.optimizer.zero_grad()
                 l.backward()
@@ -91,7 +140,6 @@ class Trainer:
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
 
-            self.loss_history.append(loss)
 
             if self.early_stop and self.early_stop(self.model, loss, epoch = ep):
                 # set best state to model
@@ -100,6 +148,6 @@ class Trainer:
                 break
             
             if callable(callback):
-                callback(ep, loss)
+                callback(ep, history)
         
         return self.model

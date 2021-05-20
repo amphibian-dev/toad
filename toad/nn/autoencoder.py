@@ -9,6 +9,7 @@ from ..utils.progress import Progress
 
 class BaseAutoEncoder(Module):
     def __init__(self, input, hidden, zipped):
+        super().__init__()
 
         self.encoder = nn.Sequential(
             nn.Linear(input, hidden),
@@ -42,6 +43,8 @@ class BaseAutoEncoder(Module):
 
 class VAE(Module):
     def __init__(self, input, hidden, zipped):
+        super().__init__()
+        
         self.hidden_layer = nn.Linear(input, hidden)
 
         self.mu_layer = nn.Linear(hidden, zipped)

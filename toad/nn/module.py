@@ -10,50 +10,37 @@ from ..utils.progress import Progress
 class Module(nn.Module):
     """base module for every model
     """
-    def __new__(cls, *args, **kwargs):
-        instance = super().__new__(cls)
-        
-        # call `__init__` of `nn.Module`
-        super(Module, instance).__init__()
-
-        return instance
-    
     def __init__(self):
         """define model struct
         """
-        pass
+        super().__init__()
+
+        self._history = None
     
 
-    def fit(self, loader, epoch = 10, callback = None):
+    @property
+    def device(self):
+        """device of model
+        """
+        return next(self.parameters()).device
+
+
+    def fit(self, loader, trainer = None, **kwargs):
         """train model
 
         Args:
             loader (DataLoader): loader for training model
+            trainer (Trainer): trainer for train model
             epoch (int): number of epoch for training loop
+            callback (callable): callable function will be called every epoch
         """
-        optimizer = self.optimizer()
-
-        # init progress bar
-        p = Progress(loader)
-
-        for ep in range(epoch):
-            p.prefix = f"Epoch:{ep}"
-
-            loss = 0.
-            for i, batch in enumerate(p, start = 1):
-                # step fit
-                l = self.fit_step(batch)
-                
-                optimizer.zero_grad()
-                l.backward()
-                optimizer.step()
-
-                loss += (l.item() - loss) / i
-                p.suffix = 'loss:{:.4f}'.format(loss)
-            
-            if callable(callback):
-                callback(ep, loss)
+        if trainer is None:
+            from .trainer import Trainer
+            trainer = Trainer(self, loader)
+        
+        trainer.train(**kwargs)
     
+
     def fit_step(self, batch, *args, **kwargs):
         """step for fitting
         Args:
@@ -75,17 +62,39 @@ class Module(nn.Module):
         """
         return optim.Adam(self.parameters(), lr = 1e-3)
     
+
     def save(self, path):
         """save model
         """
         torch.save(self.state_dict(), path)
     
+
     def load(self, path):
         """load model
         """
         state = torch.load(path)
         self.load_state_dict(state)
     
+
+    def log(self, key, value):
+        if self._history is None:
+            return
+        
+        if isinstance(value, torch.Tensor):
+            value = value.detach().cpu().numpy()
+            
+            # fix scaler tensor
+            if value.ndim == 0:
+                value = value.reshape(-1)
+
+        elif np.isscalar(value):
+            value = np.array([value])
+        else:
+            raise TypeError("value should be `torch.Tensor` or `scalar`")
+        
+        self._history.push(key, value)
+        
+        
     def distributed(self, backend = None, **kwargs):
         """get distributed model
         """
