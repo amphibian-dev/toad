@@ -11,9 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add new `lift` value and rename the old `lift` value to `cum_lift` in `KS_Bucket`
 
+### Add
+
+- Added `label_smoothing`, `focal_loss` function in `nn` module
+- Added some features in `nn.trainer`
+
 ### Fixed
 
 - Fixed combiner error after `ScoreCard` reload. [#67](https://github.com/amphibian-dev/toad/issues/67)
+
 
 ## [0.0.64] - 2021-03-22
 
