@@ -3,8 +3,9 @@ from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 
-from .module import Module
-from .trainer import Trainer, EarlyStopping
+from ..module import Module
+from .trainer import Trainer
+from .earlystopping import EarlyStopping
 
 
 DATASET_SIZE = 20000

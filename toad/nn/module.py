@@ -77,22 +77,16 @@ class Module(nn.Module):
     
 
     def log(self, key, value):
+        """log values to history
+
+        Args:
+            key (str): name of message
+            value (Tensor): tensor of values
+        """
         if self._history is None:
             return
         
-        if isinstance(value, torch.Tensor):
-            value = value.detach().cpu().numpy()
-            
-            # fix scaler tensor
-            if value.ndim == 0:
-                value = value.reshape(-1)
-
-        elif np.isscalar(value):
-            value = np.array([value])
-        else:
-            raise TypeError("value should be `torch.Tensor` or `scalar`")
-        
-        self._history.push(key, value)
+        return self._history.log(key, value)
         
         
     def distributed(self, backend = None, **kwargs):
