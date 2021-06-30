@@ -1,4 +1,6 @@
 import numpy as np
+from torch import optim
+
 from .history import History
 from .earlystopping import EarlyStopping
 from ...utils.progress import Progress
@@ -20,7 +22,7 @@ class Trainer:
         self.loader = loader
 
         if optimizer is None:
-            optimizer = model.optimizer()
+            optimizer = optim.Adam(model.parameters(), lr = 1e-3)
         
         self.optimizer = optimizer
 

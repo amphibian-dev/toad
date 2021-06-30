@@ -54,14 +54,6 @@ class Module(nn.Module):
         loss = nn.functional.mse_loss(y_hat, y)
         return loss
 
-    def optimizer(self):
-        """config optimizer
-
-        Returns:
-            Optimizer
-        """
-        return optim.Adam(self.parameters(), lr = 1e-3)
-    
 
     def save(self, path):
         """save model
