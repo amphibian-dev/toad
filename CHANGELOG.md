@@ -10,11 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking Changes
 
 - Add new `lift` value and rename the old `lift` value to `cum_lift` in `KS_Bucket`
+- Move `nn.autoencoder` to `nn.zoo.autoencoder`
 
 ### Add
 
 - Added `label_smoothing`, `focal_loss` function in `nn` module
 - Added some features in `nn.trainer`
+- Added default `early_stopping` for `nn.Trainer`
 
 ### Fixed
 
