@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update `numpy` version to `>=1.20`
+- Python `3.6` is no longer supported
 
 ### Fixed
 
