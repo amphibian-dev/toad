@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added some features in `nn.trainer`
 - Added default `early_stopping` for `nn.Trainer`
 
+### Changed
+
+- Update `numpy` version to `>=1.20`
+
 ### Fixed
 
 - Fixed combiner error after `ScoreCard` reload. [#67](https://github.com/amphibian-dev/toad/issues/67)
