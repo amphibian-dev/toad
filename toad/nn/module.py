@@ -115,4 +115,7 @@ class DistModule(DistributedDataParallel):
     def load(self, *args, **kwargs):
         return self.module.load(*args, **kwargs)
     
+    def log(self, *args, **kwargs):
+        return self.module.log(*args, **kwargs)
+    
     

@@ -6,16 +6,28 @@ from ...utils.progress import Progress
 
         
 class Trainer:
-    def __init__(self, model, loader, optimizer = None, early_stopping = None):
+    def __init__(self, model, loader, optimizer = None, keep_history = None,
+                early_stopping = EarlyStopping()):
+        """
+        Args:
+            model (nn.Module)
+            loader (torch.DataLoader)
+            optimizer (torch.Optimier)
+            early_stopping (EarlyStopping)
+            keep_history (int): keep the last n-th epoch logs, `None` will keep all
+        """
         self.model = model
         self.loader = loader
 
         if optimizer is None:
             optimizer = model.optimizer()
+        
         self.optimizer = optimizer
 
         self.early_stop = early_stopping
-        self.history = []
+
+        from collections import deque
+        self.history = deque(maxlen = keep_history)
 
 
     def train(self, epoch = 10, callback = None):
