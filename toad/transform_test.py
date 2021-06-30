@@ -35,20 +35,20 @@ def test_duplicated_keys():
 
 def test_woe_transformer():
     f = WOETransformer().fit_transform(feature, target)
-    assert f[451] == -0.17061154127869285
+    assert f[451] == pytest.approx(-0.17061154127869285)
 
 def test_woe_transformer_with_str():
     f = WOETransformer().fit_transform(str_feat, target)
-    assert f[451] == -0.2198594761130199
+    assert f[451] == pytest.approx(-0.2198594761130199)
 
 def test_woe_transformer_with_unknown_group():
     transer = WOETransformer().fit(str_feat, target)
     res = transer.transform(['Z'], default = 'min')
-    assert res[0] == -0.2198594761130199
+    assert res[0] == pytest.approx(-0.2198594761130199)
 
 def test_woe_transformer_frame():
     res = WOETransformer().fit_transform(df, target)
-    assert res.iloc[451, 1] == -0.2198594761130199
+    assert res.iloc[451, 1] == pytest.approx(-0.2198594761130199)
 
 def test_woe_transformer_select_dtypes():
     res = WOETransformer().fit_transform(df, target, select_dtypes = 'object')
@@ -61,7 +61,7 @@ def test_woe_transformer_exclude():
 def test_woe_transformer_export_single():
     transer = WOETransformer().fit(feature, target)
     t = transer.export()
-    assert t[transer._default_name][5] == 0.3938235330926786
+    assert t[transer._default_name][5] == pytest.approx(0.3938235330926786)
 
 def test_woe_transformer_export():
     transer = WOETransformer().fit(df, target)

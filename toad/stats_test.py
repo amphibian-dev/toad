@@ -23,24 +23,24 @@ df = pd.DataFrame({
 
 def test_woe():
     value = WOE(0.2, 0.3)
-    assert value == -0.4054651081081643
+    assert value == pytest.approx(-0.4054651081081643)
 
 def test_iv_priv():
     value, _ = _IV(df['feature'], df['target'])
-    assert value == 0.010385942643745403
+    assert value == pytest.approx(0.010385942643745403)
 
 def test_iv():
     value = IV(df['feature'], df['target'], n_bins = 10, method = 'dt')
-    assert value == 0.2735917707743619
+    assert value == pytest.approx(0.2735917707743619)
 
 def test_iv_return_sub():
     _, sub = IV(mask, df['target'], return_sub = True, n_bins = 10, method = 'dt')
     assert len(sub) == 8
-    assert sub[4] == 0.006449386778057019
+    assert sub[4] == pytest.approx(0.006449386778057019)
 
 def test_iv_frame():
     res = IV(df, 'target', n_bins = 10, method = 'chi')
-    assert res.loc[0, 'A'] == 0.226363832867123
+    assert res.loc[0, 'A'] == pytest.approx(0.226363832867123)
 
 def test_gini():
     value = gini(df['target'])
@@ -48,11 +48,11 @@ def test_gini():
 
 def test_gini_cond():
     value = gini_cond(df['feature'], df['target'])
-    assert value == 0.4970162601626016
+    assert value == pytest.approx(0.4970162601626016)
 
 def test_entropy_cond():
     value = entropy_cond(df['feature'], df['target'])
-    assert value == 0.6924990371522171
+    assert value == pytest.approx(0.6924990371522171)
 
 def test_quality():
     result = quality(df, 'target')
