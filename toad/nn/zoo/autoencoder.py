@@ -1,9 +1,8 @@
 import torch
-from torch import nn, optim
+from torch import nn
 from torch.nn.functional import relu, binary_cross_entropy
 
-from .module import Module
-from ..utils.progress import Progress
+from ..module import Module
 
 
 
