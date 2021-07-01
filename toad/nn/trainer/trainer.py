@@ -32,11 +32,12 @@ class Trainer:
         self.history = deque(maxlen = keep_history)
 
 
-    def train(self, epoch = 10, callback = None):
+    def train(self, epoch = 10, callback = None, backward_rounds = 1):
         """
         Args:
             epoch (int): number of epoch for training loop
             callback (callable): callable function will be called every epoch
+            backward_rounds (int): backward after every n rounds 
         """
         # init progress bar
         p = Progress(self.loader)
@@ -59,9 +60,10 @@ class Trainer:
                 # log loss
                 self.model.log('loss', l)
                 
-                self.optimizer.zero_grad()
-                l.backward()
-                self.optimizer.step()
+                if i % backward_rounds == 0 or i == len(p):
+                    self.optimizer.zero_grad()
+                    l.backward()
+                    self.optimizer.step()
 
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
