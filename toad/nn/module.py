@@ -25,7 +25,7 @@ class Module(nn.Module):
         return next(self.parameters()).device
 
 
-    def fit(self, loader, trainer = None, **kwargs):
+    def fit(self, loader, trainer = None, optimizer = None, **kwargs):
         """train model
 
         Args:
@@ -36,7 +36,7 @@ class Module(nn.Module):
         """
         if trainer is None:
             from .trainer import Trainer
-            trainer = Trainer(self, loader)
+            trainer = Trainer(self, loader, optimizer = optimizer)
         
         trainer.train(**kwargs)
     
