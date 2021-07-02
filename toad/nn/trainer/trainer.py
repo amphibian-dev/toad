@@ -42,8 +42,6 @@ class Trainer:
         # init progress bar
         p = Progress(self.loader)
 
-        
-
         for ep in range(epoch):
             p.prefix = f"Epoch:{ep}"
 
@@ -76,6 +74,32 @@ class Trainer:
                 break
             
             if callable(callback):
-                callback(ep, history)
+                callback(history, ep)
         
         return self.model
+    
+
+    def evaluate(self, loader, callback = None):
+        """evalute model
+        """
+        # init progress bar
+        p = Progress(loader)
+
+        history = History()
+        self.model._history = history
+
+        loss = 0.
+        for i, batch in enumerate(p, start = 1):
+            # step fit
+            l = self.model.fit_step(batch)
+
+            # log loss
+            self.model.log('loss', l)
+
+            loss += (l.item() - loss) / i
+            p.suffix = 'loss:{:.4f}'.format(loss)
+        
+        if callable(callback):
+            callback(history)
+        
+        return history

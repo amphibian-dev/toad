@@ -41,7 +41,7 @@ def test_model():
 def test_fit_callback():
     history = []
 
-    def func(e, logs):
+    def func(logs, e):
         history.append(logs)
     
     model = TestModel(NUM_FEATS, NUM_CLASSES)
