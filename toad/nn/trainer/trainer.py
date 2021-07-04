@@ -1,15 +1,26 @@
+from toad.nn import trainer
 import numpy as np
 from torch import optim
 
 from .history import History
-from .earlystopping import EarlyStopping
+from .callback import callback as Callback
+from .earlystopping import earlystopping
+
 from ...utils.progress import Progress
-        
+
+
+
+@earlystopping
+def loss_scoring(history):
+    """scoring function
+    """
+    return history['loss'].mean()
+
 
         
 class Trainer:
     def __init__(self, model, loader, optimizer = None, keep_history = None,
-                early_stopping = EarlyStopping()):
+                early_stopping = loss_scoring):
         """
         Args:
             model (nn.Module)
@@ -39,6 +50,9 @@ class Trainer:
             callback (callable): callable function will be called every epoch
             backward_rounds (int): backward after every n rounds 
         """
+        if callback and not isinstance(callback, Callback):
+            callback = Callback(callback)
+        
         # init progress bar
         p = Progress(self.loader)
 
@@ -66,15 +80,22 @@ class Trainer:
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
 
+            # setup callback params
+            callback_params = {
+                "model": self.model,
+                "history": history,
+                "epoch": ep,
+                "trainer": self,
+            }
 
-            if self.early_stop and self.early_stop(self.model, history, epoch = ep):
+            if self.early_stop and self.early_stop(**callback_params):
                 # set best state to model
                 best_state = self.early_stop.get_best_state()
                 self.model.load_state_dict(best_state)
                 break
             
             if callable(callback):
-                callback(history, ep)
+                callback(**callback_params)
         
         return self.model
     
@@ -82,6 +103,9 @@ class Trainer:
     def evaluate(self, loader, callback = None):
         """evalute model
         """
+        if callback and not isinstance(callback, Callback):
+            callback = Callback(callback)
+        
         # init progress bar
         p = Progress(loader)
 
@@ -100,6 +124,11 @@ class Trainer:
             p.suffix = 'loss:{:.4f}'.format(loss)
         
         if callable(callback):
-            callback(history)
+            callback(
+                epoch = None,
+                history = history,
+                trainer = self,
+                model = self.model,
+            )
         
         return history

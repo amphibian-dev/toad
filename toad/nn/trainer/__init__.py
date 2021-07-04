@@ -1,3 +1,4 @@
 from .history import History
-from .earlystopping import EarlyStopping
+from .callback import callback
+from .earlystopping import earlystopping
 from .trainer import Trainer

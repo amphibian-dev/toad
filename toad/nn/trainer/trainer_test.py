@@ -1,3 +1,4 @@
+from toad.nn.trainer.history import History
 import torch
 from torch import nn
 import torch.nn.functional as F
@@ -5,7 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 from ..module import Module
 from .trainer import Trainer
-from .earlystopping import EarlyStopping
+from .earlystopping import earlystopping
 
 
 DATASET_SIZE = 20000
@@ -46,7 +47,11 @@ def test_trainer():
 
 def test_trainer_early_stopping():
     model = TestModel(NUM_FEATS, NUM_CLASSES)
-    early_stopping = EarlyStopping(delta = -1.0, patience = 3)
-    trainer = Trainer(model, loader, early_stopping = early_stopping)
+    
+    @earlystopping(delta = -1.0, patience = 3)
+    def scoring(history):
+        return history['loss'].mean()
+
+    trainer = Trainer(model, loader, early_stopping = scoring)
     trainer.train(epoch = 200)
     assert len(trainer.history) == 4
