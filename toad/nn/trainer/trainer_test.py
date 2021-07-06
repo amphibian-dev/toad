@@ -6,7 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 from ..module import Module
 from .trainer import Trainer
-from .earlystopping import earlystopping
+from .earlystop import earlystopping
 
 
 DATASET_SIZE = 20000

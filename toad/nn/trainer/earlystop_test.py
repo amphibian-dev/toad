@@ -1,5 +1,5 @@
 import torch
-from .earlystopping import earlystopping
+from .earlystop import earlystopping
 
 
 

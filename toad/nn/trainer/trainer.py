@@ -4,7 +4,7 @@ from torch import optim
 
 from .history import History
 from .callback import callback as Callback
-from .earlystopping import earlystopping
+from .earlystop import earlystopping
 
 from ...utils.progress import Progress
 
