@@ -67,6 +67,7 @@ class Trainer:
             self.model._history = history
 
             loss = 0.
+            backward_loss = 0.
             for i, batch in enumerate(p, start = 1):
                 # step fit
                 l = self.model.fit_step(batch)
@@ -74,10 +75,14 @@ class Trainer:
                 # log loss
                 self.model.log('loss', l)
                 
+                backward_loss = l + backward_loss
                 if i % backward_rounds == 0 or i == len(p):
                     self.optimizer.zero_grad()
-                    l.backward()
+                    backward_loss.backward()
                     self.optimizer.step()
+                    
+                    # reset backward loss
+                    backward_loss = 0.
 
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
