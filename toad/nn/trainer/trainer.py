@@ -56,6 +56,8 @@ class Trainer:
         # init progress bar
         p = Progress(self.loader)
 
+        self.model.train()
+
         for ep in range(start, epoch):
             p.prefix = f"Epoch:{ep}"
 
@@ -112,6 +114,8 @@ class Trainer:
         history = History()
         self.model._history = history
 
+        self.model.eval()
+        
         loss = 0.
         for i, batch in enumerate(p, start = 1):
             # step fit
