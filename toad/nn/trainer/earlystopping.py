@@ -32,17 +32,14 @@ class earlystopping(Decorator):
         self.best_score = float('inf') * (-self.direction)
         self.best_state = None
         self._times = 0
-        self._round = -1
     
 
-    def wrapper(self, model, **kwargs):
-        self._round += 1
-
+    def wrapper(self, model, epoch = 0, **kwargs):
         # set skip round
-        if self._round < self.skip:
+        if epoch < self.skip:
             return False
         
-        score = self.call(model = model, **kwargs)
+        score = self.call(model = model, epoch = epoch, **kwargs)
         diff = (score - self.best_score) * self.direction
         
         if diff > self.delta:

@@ -43,7 +43,7 @@ class Trainer:
         self.history = deque(maxlen = keep_history)
 
 
-    def train(self, epoch = 10, callback = None, backward_rounds = 1):
+    def train(self, epoch = 10, callback = None, start = 0, backward_rounds = 1):
         """
         Args:
             epoch (int): number of epoch for training loop
@@ -56,7 +56,7 @@ class Trainer:
         # init progress bar
         p = Progress(self.loader)
 
-        for ep in range(epoch):
+        for ep in range(start, epoch):
             p.prefix = f"Epoch:{ep}"
 
             # setup a new history for model in each epoch
