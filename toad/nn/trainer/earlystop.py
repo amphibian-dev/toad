@@ -53,3 +53,9 @@ class earlystopping(Decorator):
             # model.load_state_dict(self.best_state)
             return True
         
+
+@earlystopping
+def loss_scoring(history):
+    """scoring function
+    """
+    return history['loss'].mean()

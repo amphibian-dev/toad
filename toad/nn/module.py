@@ -25,20 +25,37 @@ class Module(nn.Module):
         return next(self.parameters()).device
 
 
-    def fit(self, loader, trainer = None, optimizer = None, **kwargs):
+    def fit(self, loader, trainer = None, optimizer = None, early_stopping = None, **kwargs):
         """train model
 
         Args:
             loader (DataLoader): loader for training model
-            trainer (Trainer): trainer for train model
+            trainer (Trainer): trainer for training model
+            optimizer (torch.Optimier): the default optimizer is `Adam(lr = 1e-3)`
+            early_stopping (earlystopping): the default value is `loss_earlystopping`, 
+                you can set it to `False` to disable early stopping
             epoch (int): number of epoch for training loop
             callback (callable): callable function will be called every epoch
         """
         if trainer is None:
             from .trainer import Trainer
-            trainer = Trainer(self, loader, optimizer = optimizer)
+            trainer = Trainer(self, loader, optimizer = optimizer, early_stopping = early_stopping)
         
         trainer.train(**kwargs)
+    
+
+    def evaluate(self, loader, trainer = None):
+        """evaluate model
+        Args:
+            loader (DataLoader): loader for evaluate model
+            trainer (Trainer): trainer for evaluate model
+        """
+        if trainer is None:
+            from .trainer import Trainer
+            trainer = Trainer(self)
+        
+        return trainer.evaluate(loader)
+
     
 
     def fit_step(self, batch, *args, **kwargs):

@@ -4,29 +4,21 @@ from torch import optim
 
 from .history import History
 from .callback import callback as Callback
-from .earlystop import earlystopping
 
 from ...utils.progress import Progress
 
 
-
-@earlystopping
-def loss_scoring(history):
-    """scoring function
-    """
-    return history['loss'].mean()
-
-
         
 class Trainer:
-    def __init__(self, model, loader, optimizer = None, keep_history = None,
-                early_stopping = loss_scoring):
+    def __init__(self, model, loader = None, optimizer = None, keep_history = None,
+                early_stopping = None):
         """
         Args:
-            model (nn.Module)
-            loader (torch.DataLoader)
-            optimizer (torch.Optimier)
-            early_stopping (EarlyStopping)
+            model (nn.Module): model will be trained
+            loader (torch.DataLoader): training data loader
+            optimizer (torch.Optimier): the default optimizer is `Adam(lr = 1e-3)`
+            early_stopping (earlystopping): the default value is `loss_earlystopping`, 
+                you can set it to `False` to disable early stopping
             keep_history (int): keep the last n-th epoch logs, `None` will keep all
         """
         self.model = model
@@ -37,19 +29,31 @@ class Trainer:
         
         self.optimizer = optimizer
 
+        # set default early stopping
+        if early_stopping is None:
+            from .earlystop import loss_scoring
+            early_stopping = loss_scoring
+        
         self.early_stop = early_stopping
 
         from collections import deque
         self.history = deque(maxlen = keep_history)
 
 
-    def train(self, epoch = 10, callback = None, start = 0, backward_rounds = 1):
+    def train(self, loader = None, epoch = 10, callback = None, start = 0, backward_rounds = 1):
         """
         Args:
+            loader (torch.DataLoader): training data loader
             epoch (int): number of epoch for training loop
             callback (callable): callable function will be called every epoch
             backward_rounds (int): backward after every n rounds 
         """
+        if loader is not None:
+            self.loader = loader
+        
+        if self.loader is None:
+            raise ValueError("loader is not set, please set a loader for trainning!")
+
         if callback and not isinstance(callback, Callback):
             callback = Callback(callback)
         
