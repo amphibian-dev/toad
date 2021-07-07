@@ -115,6 +115,7 @@ class Trainer:
         
         # init progress bar
         p = Progress(loader)
+        p.prefix = f"Evaluate"
 
         history = History()
         self.model._history = history
