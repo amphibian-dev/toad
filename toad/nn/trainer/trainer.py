@@ -1,4 +1,4 @@
-from toad.nn import trainer
+import torch
 import numpy as np
 from torch import optim
 
@@ -60,9 +60,10 @@ class Trainer:
         # init progress bar
         p = Progress(self.loader)
 
-        self.model.train()
-
         for ep in range(start, epoch):
+            # set model to train mode
+            self.model.train()
+
             p.prefix = f"Epoch:{ep}"
 
             # setup a new history for model in each epoch
@@ -99,18 +100,20 @@ class Trainer:
                 "trainer": self,
             }
 
-            if self.early_stop and self.early_stop(**callback_params):
-                # set best state to model
-                best_state = self.early_stop.get_best_state()
-                self.model.load_state_dict(best_state)
-                break
-            
-            if callable(callback):
-                callback(**callback_params)
+            with torch.no_grad():
+                if self.early_stop and self.early_stop(**callback_params):
+                    # set best state to model
+                    best_state = self.early_stop.get_best_state()
+                    self.model.load_state_dict(best_state)
+                    break
+                
+                if callable(callback):
+                    callback(**callback_params)
         
         return self.model
     
 
+    @torch.no_grad()
     def evaluate(self, loader, callback = None):
         """evalute model
         """
