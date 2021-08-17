@@ -1,6 +1,8 @@
 from time import time
 
 class Progress:
+    """
+    """
     def __init__(self, iterable, size = None):
         self.iterable = iterable
 
@@ -25,7 +27,11 @@ class Progress:
         self.SYMBOL_REST = '.'
         self.prefix = ""
         self.suffix = ""
-        self.template = "{prefix} {percent:3.0f}%|{bar}| [{done}/{size}] {time:.2f}s {suffix}"
+
+        if self.size is None:
+            self.template = "{prefix} {done} iters {time:.2f}s {suffix}"
+        else:
+            self.template = "{prefix} {percent:3.0f}%|{bar}| [{done}/{size}] {time:.2f}s {suffix}"
 
 
     def __len__(self):
@@ -46,10 +52,15 @@ class Progress:
         print()
 
     def flush(self):
-        done = min(self.idx * self.batch, self.size)
-        percent = done / self.size
+        if self.size is None:
+            done = self.idx * self.batch
+            percent = 0
+            bar = None
+        else:
+            done = min(self.idx * self.batch, self.size)
+            percent = done / self.size
 
-        bar = (self.SYMBOL_DONE * int(percent * self.BAR_LENGTH)).ljust(self.BAR_LENGTH, self.SYMBOL_REST)
+            bar = (self.SYMBOL_DONE * int(percent * self.BAR_LENGTH)).ljust(self.BAR_LENGTH, self.SYMBOL_REST)
 
         print('\r' + self.template.format(
             percent = percent * 100,
@@ -57,6 +68,7 @@ class Progress:
             done = done,
             size = self.size,
             time = self.time,
+            tps = done / self.time,
             prefix = self.prefix,
             suffix = self.suffix,
         ), end = '')
