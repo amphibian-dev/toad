@@ -91,9 +91,19 @@ def test_predict():
     score = card.predict(df)
     assert score[404] == TEST_SCORE
 
+
 def test_predict_proba():
     proba = card.predict_proba(df)
     assert proba[404,1] == 0.4673929989138551
+
+def test_card_feature_effect():
+    """
+    verify the `base effect of each feature` is consistent with assumption
+    FEATURE_EFFECT is manually calculated with following logic:
+    FEATURE_EFFECT = np.median(card.woe_to_score(df),axis = 0)
+    """
+    FEATURE_EFFECT = pytest.approx(np.array([142.26722434, 152.81922244, 148.82801326, 0.]), FUZZ_THRESHOLD)
+    assert card.base_effect_of_features == FEATURE_EFFECT
 
 def test_predict_sub_score():
     score, sub = card.predict(df, return_sub = True)
@@ -183,4 +193,25 @@ def test_card_with_less_X():
 
     card.fit(x, target)
     assert card.predict(x)[200] == pytest.approx(411.968588097131, FUZZ_THRESHOLD)
+    
+def test_get_score_reason():
+    """
+    verify the score reason of df is consistent with assumption
+    DF_REASON is manually calculated with following logic:
+    if score is lower than base_odds, select top k feature with lowest subscores where their corresponding  subscores are lower than the base effect of features.
+    if score is higher than base_odds, select top k feature with highest subscores where their corresponding  subscores are higher than the base effect of features.
 
+    e.g. xx.iloc[404]
+    sub_scores:  151    159 143 0
+    base_effect: 142    153 149 0
+    diff_effect:  +9     +6  -6 0
+
+    total_score: 453 > base_odds(35)
+    find_largest_top_3:  A(+9) B(+6) D(+0)
+    """
+    # list of list
+    # the outer list has length `keep`, which means the top `keep` features who contributed most
+    # the inner list means tuple of <feature_name, sub_score, raw_value>
+    DF_REASON = [['A', '+151.4', 3], ['B', '+159.2', 'D'], ['D', '+0.0', 1.0]]
+    pred, sub_score, reason = card.predict(df, return_reason=True)
+    assert reason.iloc[404]['reason'] == DF_REASON

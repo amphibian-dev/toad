@@ -38,6 +38,9 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         self.model = LogisticRegression(**kwargs)
 
         self._feature_names = None
+        # keep track of median-effect of each feature during fit(), as `self.base_effect_of_features`
+        # for reason-calculation later during predict()
+        self.base_effect_of_features = None
 
         self.card = card
         if card is not None:
@@ -99,25 +102,53 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
                 raise Exception('column \'{f}\' is not in transer'.format(f = f))
 
         self.model.fit(X, y)
-
         self.rules = self._generate_rules()
 
-        return self
-    
+        # keep sub_score-median of each feature, as `base_effect_of_features` for reason-calculation
+        sub_score = self.woe_to_score(X)
+        self.base_effect_of_features = np.median(sub_score, axis=0)
 
-    def predict(self, X, **kwargs):
+        return self
+
+    def predict(self, X, return_sub=False, return_reason=False, keep=3):
         """predict score
         Args:
             X (2D array-like): X to predict
+            return_reason (bool): if need to return reason, default 'False'
             return_sub (bool): if need to return sub score, default `False`
+            keep(int): top k most important reasons to keep, default `3`
 
         Returns:
-            array-like: predicted score
-            DataFrame: sub score for each feature
+            Components:
+            A. array-like: predicted score
+            B. DataFrame(optional): sub score for each feature
+            C. DataFrame(optional): score and top k most important reasons for each feature
+
+            for cases:
+            1. return_sub=False, return_reason=False
+                just return A
+            2. return_sub=True, return_reason=False
+                return a tuple of <A, B>
+            3. return_sub=False, return_reason=True
+                return a tuple of <A, C> CAUTION: SAME FORMAT AS CASE 2
+            4. return_sub=True, return_reason=True
+                return a tuple of <A, B, C>
         """
         bins = self.combiner.transform(X[self.features_])
-        return self.bin_to_score(bins, **kwargs)
-    
+        if return_reason is False:
+            return self.bin_to_score(bins, return_sub=return_sub)
+
+        pred, sub_score = self.bin_to_score(bins, return_sub=True)
+        score_reason = (
+            pd.concat([
+                X.rename(mapper=lambda c: f'raw_val_{c}', axis=1),  # raw value of features
+                sub_score,  # score of features
+                pd.Series(pred, name='score')  # predicted total score
+            ], axis=1)
+                .assign(reason=lambda df: df.apply(self._get_reason_column, axis=1, keep=keep))
+                .loc[:, ['score', 'reason']]  # keep only the predicted-total-score and reason columns
+        )
+        return pred, sub_score, score_reason
 
     def predict_proba(self, X):
         """predict probability
@@ -129,7 +160,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             2d array: probability of all classes
         """
         proba = self.score_to_proba(self.predict(X))
-        return np.stack((1-proba, proba), axis = 1)
+        return np.stack((1 - proba, proba), axis=1)
     
 
     def _generate_rules(self):
@@ -212,11 +243,10 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         score = np.sum(res.values, axis = 1)
 
-        if return_sub is False:
+        if return_sub:
+            return score, res
+        else:
             return score
-
-        return score, res
-
 
 
     def woe_to_score(self, woe, weight = None):
@@ -237,6 +267,35 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         return (s + b / self.n_features_) * mask
 
+    def _get_reason_column(self, row, keep=3):
+        """ calculate top `keep` reasons of the prediction
+        Args:
+            row (pd.Series): row to predict
+            keep (int): top k most important features to keep
+        Returns:
+            reason (list of list) : top k most important reason(feature name, sub_score, raw feature value)
+        """
+        is_raw_val = row.index.str.startswith('raw_val_')
+        s_score = row[~is_raw_val].drop('score')  # sub_score columns, except the total-score-column
+        pd_s_score = pd.DataFrame({
+            'sub_score': s_score,
+            'score_diff': s_score.values - self.base_effect_of_features,
+        })
+
+        # if total score is lower than base_odds, select top k feature who contribute most negativity
+        # vice versa
+        df_reason = (pd_s_score
+                     .sort_values(by='score_diff', ascending=(row.score <= self.base_odds))['sub_score']
+                     .head(keep)
+                     .apply('{:+.1f}'.format)
+                     .to_frame(name='score')
+                     # append raw value for reference. note: len('raw_val_') == 8
+                     .join(row[is_raw_val].rename('value').rename(index=lambda name: name[8:]), how='left')
+                     .reset_index()
+                     )
+
+        reason = df_reason.values.tolist()
+        return reason
 
     def _parse_rule(self, rule, **kwargs):
         bins = self.parse_bins(list(rule.keys()))
