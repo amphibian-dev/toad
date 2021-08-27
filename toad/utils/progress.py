@@ -1,10 +1,18 @@
+import sys
 from time import time
 
 class Progress:
     """
     """
-    def __init__(self, iterable, size = None):
+    def __init__(self, iterable, size = None, interval = 0.1):
+        """
+        Args:
+            iterable
+            size (int): max size of iterable
+            interval (float): update bar interval second, default is `0.1`
+        """
         self.iterable = iterable
+        self.interval = interval
 
         self.batch = 1
         self.size = size
@@ -40,18 +48,30 @@ class Progress:
 
     def __iter__(self):
         start = time()
+        last_time = start
         for item in self.iterable:
             yield item
 
-            self.time = time() - start
             self.idx += 1
+
+            curr_time = time()
+            # skip update if delta is too small
+            if curr_time - last_time < self.interval:
+                continue
+            
+            last_time = curr_time
+            self.time = curr_time - start
+            
+            # update bar
             self.flush()
         
+        # finally updating for the status of end
+        self.flush(end = '\n')
         # reset index
         self.idx = 0
-        print()
+    
 
-    def flush(self):
+    def flush(self, end = ''):
         if self.size is None:
             done = self.idx * self.batch
             percent = 0
@@ -62,7 +82,7 @@ class Progress:
 
             bar = (self.SYMBOL_DONE * int(percent * self.BAR_LENGTH)).ljust(self.BAR_LENGTH, self.SYMBOL_REST)
 
-        print('\r' + self.template.format(
+        self.print('\r' + self.template.format(
             percent = percent * 100,
             bar = bar,
             done = done,
@@ -71,7 +91,12 @@ class Progress:
             tps = done / self.time,
             prefix = self.prefix,
             suffix = self.suffix,
-        ), end = '')
+        ), end = end)
+    
+
+    def print(self, text, end = ''):
+        sys.stdout.write(text + end)
+        sys.stdout.flush()
 
 
 

@@ -1,4 +1,4 @@
-from time import sleep
+from time import sleep, time
 from .progress import Progress
 
 
@@ -25,3 +25,10 @@ def test_iterator():
     for i in Progress(ti):
         sleep(0.01)
         pass
+
+def test_speed():
+    p = Progress(range(1000))
+    for i in p:
+        sleep(0.001)
+        pass
+    assert p.time < 1.4
