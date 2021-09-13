@@ -1,6 +1,3 @@
-import numpy
-import pyximport
-pyximport.install(setup_args={"include_dirs":numpy.get_include()})
 from .merge import merge, DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
 from .detector import detect
 from .metrics import KS, KS_bucket, F1
