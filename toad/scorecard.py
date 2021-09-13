@@ -38,6 +38,9 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         self.model = LogisticRegression(**kwargs)
 
         self._feature_names = None
+        # keep track of median-effect of each feature during fit(), as `self.base_effect_of_features`
+        # for reason-calculation later during predict()
+        self.base_effect_of_features = None
 
         self.card = card
         if card is not None:
@@ -99,25 +102,193 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
                 raise Exception('column \'{f}\' is not in transer'.format(f = f))
 
         self.model.fit(X, y)
-
         self.rules = self._generate_rules()
 
-        return self
-    
+        # keep sub_score-median of each feature, as `base_effect_of_features` for reason-calculation
+        sub_score = self.woe_to_score(X)
+        self.base_effect_of_features = pd.Series(np.median(sub_score, axis=0), index=self.features_)
 
-    def predict(self, X, **kwargs):
+        return self
+
+    def predict(self, X, return_sub=False, return_reason=False, keep=3, min_vector_size=2):
         """predict score
         Args:
-            X (2D array-like): X to predict
+            X (2D dataframe / list): X to predict.
+                or maybe list of dict for small batch (size < min_vector_size)
+                to avoid pandas infrastructure time cost.
+            return_reason (bool): if need to return reason, default 'False'
             return_sub (bool): if need to return sub score, default `False`
+            keep(int): top k most important reasons to keep, default `3`
+            min_vector_size(int): min_vector_size to use vectorized inference
 
         Returns:
-            array-like: predicted score
-            DataFrame: sub score for each feature
+            Components:
+            A. array-like: predicted score
+            B. DataFrame/dict(optional): sub score for each feature
+            C. DataFrame/list(optional): top k most important reasons for each feature
+
+            for cases:
+            1. return_sub=False, return_reason=False
+                just return A
+            2. return_sub=True, return_reason=False
+                return a tuple of <A, B>
+                - vector-version: `sub_score` as DataFrame
+                - scalar-version: `sub_score` as dict. e.g. TODO
+            3. return_sub=False, return_reason=True
+                return a tuple of <A, C> CAUTION: SAME RESULT LENGTH AS CASE 2
+                - vector-version: `reason` as DataFrame
+                - scalar-version: `reason` as dict. e.g. TODO
+            4. return_sub=True, return_reason=True
+                return a tuple of <A, B, C>
+                - vector-version: `sub_score, reason` as DataFrames
+                - scalar-version: `sub_score, reason` as dict, as above
+
+        these two features are provided by:
+        - top-effects-as-reason: qianjiaying@bytedance.com, qianweishuo@bytedance.com
+        - scalar-inference:  qianjiaying@bytedance.com, qianweishuo@bytedance.com
         """
+        # case1: small batch; use scalar-loop to speed up
+        if isinstance(X, list):
+            assert len(X) < min_vector_size, f'too large list for scalar-loop, len(X)={len(X)}'
+            rows = X
+            # scalar version of `self.combiner.transform()`, which returns a dict instead of DataFrame
+            bins = self.comb_to_bins(rows)
+            return self.reason_scalar(bins, rows, return_sub=return_sub, return_reason=return_reason, keep=keep)
+
         bins = self.combiner.transform(X[self.features_])
-        return self.bin_to_score(bins, **kwargs)
-    
+        if return_reason is False:  # case2: (the original case) large batch, without reason; use pandas
+            return self.bin_to_score(bins, return_sub=return_sub)
+        else:  # case3: large batch, with reason; use pandas
+            return self.reason_pd(X, bins, return_sub=return_sub, keep=keep)
+
+    @staticmethod
+    def none_to_nan(allows_nan, v):
+        return np.nan if allows_nan and v is None else v
+
+    def comb_to_bins(self, X):
+        """ scalar-loop version of `self.combiner.transform(X)` """
+        bins = dict()  # dict of <key,list>
+        # CAUTION: self.combiner may have some unused columns than self.rules
+        for key in self.features_:  # column-wise
+            rule_bins = self.combiner.rules[key]
+            if np.issubdtype(rule_bins.dtype, np.number):
+                allows_nan = np.isnan(rule_bins).any()
+            else:
+                allows_nan = False
+            try:
+                col = [self.none_to_nan(allows_nan, r[key]) for r in X]
+                bins[key] = self.combiner.transform_(rule_bins, col)
+            except Exception as e:
+                e.args += ('on column "{key}"'.format(key=key),)
+                raise e
+        return bins
+
+    def bin_to_score(self, bins, return_sub=False):
+        """predict score from bins
+        """
+        res = bins.copy()
+        for col in self.rules:
+            s_map = self.rules[col]['scores']
+            b = bins[col].values
+            # set default group to min score
+            b[b == self.EMPTY_BIN] = np.argmin(s_map)
+            # replace score
+            res[col] = s_map[b]
+
+        score = np.sum(res.values, axis=1)
+
+        if return_sub:
+            return score, res
+        else:
+            return score
+
+    def reason_pd(self, X, bins, return_sub=False, keep=3):
+        """predict score and reasons, using pandas
+        """
+        pred, sub_scores = self.bin_to_score(bins, return_sub=True)
+        score_reason = (
+            pd.concat([
+                X.rename(mapper=lambda c: f'raw_val_{c}', axis=1),  # raw value of features
+                sub_scores,  # score of features
+                pd.Series(pred, name='score', index=sub_scores.index)  # predicted total score
+            ], axis=1)
+                .assign(reason=lambda df: df.apply(self._get_reason_column, axis=1, keep=keep))
+                .loc[:, ['reason']]  # keep only the predicted-total-score and reason columns
+        )
+        if return_sub:
+            return pred, sub_scores, score_reason
+        else:
+            return pred, score_reason
+
+    def _get_reason_column(self, row, keep=3):
+        """predict score
+        Args:
+            row (pd.Series): row to predict
+            keep (int): top k most important features to keep
+        Returns:
+            reason (list of tuple) : top k most important reason(feature name, subscore, raw feature value)
+        """
+        is_raw_val = row.index.str.startswith('raw_val_')
+        s_score = row[~is_raw_val].drop('score')  # sub_score columns, except the total-score-column
+        pd_s_score = pd.DataFrame({
+            'sub_score': s_score,
+            'bias': s_score.values - self.base_effect_of_features.values,
+        })
+
+        # if total score is lower than base_odds, select top k feature who contribute most negativity
+        # vice versa
+        df_reason = (pd_s_score
+                     .sort_values(by='bias', ascending=(row.score <= self.base_odds))['sub_score']
+                     .head(keep)
+                     .apply('{:+.1f}'.format)
+                     .to_frame(name='score')
+                     # append raw value for reference. note: len('raw_val_') == 8
+                     .join(row[is_raw_val].rename('value').rename(index=lambda name: name[8:]), how='left')
+                     .reset_index()
+                     )
+
+        reason = df_reason.apply(tuple, axis=1).values.tolist()
+        return reason
+
+    def reason_scalar(self, bins, X, return_sub=False, return_reason=False, keep=3):
+        """predict score and reasons, using scala inference
+        """
+        sub_scores = bins
+        for col_name, col_attrs in self.rules.items():
+            s_map = col_attrs['scores']
+            b = bins[col_name]
+            b[b == self.EMPTY_BIN] = np.argmin(s_map)  # set default group to min score
+            sub_scores[col_name] = s_map[b]  # replace score
+
+        if return_reason is False:  # TODO manually test
+            scores = [sum({f: sub_scores[f][i] for f in self.features_}.values()) for i in range(len(X))]
+            if return_sub:
+                return scores, sub_scores
+            return scores
+
+        scores, reasons = [], []
+        for i, row_raw_value_dict in enumerate(X):
+            bias_of_features = {f: sub_scores[f][i] - self.base_effect_of_features[f] for f in self.features_}
+            row_total_score = sum(sub_scores[f][i] for f in self.features_)
+
+            # for feature name `f`, get a list of tuple of <f, bias_of_f, sub_score_of_f, raw_val_of_f>
+            dimensions = []
+            for f in self.features_:
+                bias, ss, raw = bias_of_features[f], sub_scores[f][i], row_raw_value_dict[f]
+                dimensions.append((f, bias, ss, raw))
+            dimensions.sort(key=lambda t: t[1],  # sort by bias
+                            # when row_total_score < base_odds, find which contributed most negativity, vice versa
+                            reverse=row_total_score >= self.base_odds)
+            dimensions = dimensions[:keep]
+            # organize into list of tuple
+            reason = [(f, f'{ss:+.1f}', raw) for f, bias, ss, raw in dimensions]
+
+            # scores.append(row_total_score)
+            reasons.append(reason)
+        if return_sub:  # caution, scalar-version returns dict/list instead of DataFrames
+            return scores, sub_scores, reasons
+        return scores, reasons
+
 
     def predict_proba(self, X):
         """predict probability
@@ -129,7 +300,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             2d array: probability of all classes
         """
         proba = self.score_to_proba(self.predict(X))
-        return np.stack((1-proba, proba), axis = 1)
+        return np.stack((1 - proba, proba), axis=1)
     
 
     def _generate_rules(self):
@@ -196,27 +367,6 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             array-like|float: the probability of `1`
         """
         return 1 / (np.e ** ((score - self.offset) / self.factor) + 1)
-
-
-    def bin_to_score(self, bins, return_sub = False):
-        """predict score from bins
-        """
-        res = bins.copy()
-        for col in self.rules:
-            s_map = self.rules[col]['scores']
-            b = bins[col].values
-            # set default group to min score
-            b[b == self.EMPTY_BIN] = np.argmin(s_map)
-            # replace score
-            res[col] = s_map[b]
-
-        score = np.sum(res.values, axis = 1)
-
-        if return_sub is False:
-            return score
-
-        return score, res
-
 
 
     def woe_to_score(self, woe, weight = None):
