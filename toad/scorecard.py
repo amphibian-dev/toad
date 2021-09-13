@@ -8,17 +8,15 @@ from .transform import WOETransformer, Combiner
 from .utils import to_ndarray, bin_by_splits, save_json, read_json
 from .utils.mixin import RulesMixin, BinsMixin
 
-
 NUMBER_EMPTY = -9999999
 NUMBER_INF = 1e10
 FACTOR_EMPTY = 'MISSING'
 FACTOR_UNKNOWN = 'UNKNOWN'
 
 
-
 class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
-    def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750,
-        card = None, combiner = {}, transer = None, **kwargs):
+    def __init__(self, pdo=60, rate=2, base_odds=35, base_score=750,
+                 card=None, combiner={}, transer=None, **kwargs):
         """
 
         Args:
@@ -54,28 +52,28 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             )
 
             self.load(card)
-        
+
     @property
     def coef_(self):
         """ coef of LR model
         """
         return self.model.coef_[0]
-    
+
     @property
     def intercept_(self):
         return self.model.intercept_[0]
-    
+
     @property
     def n_features_(self):
         return (self.coef_ != 0).sum()
-    
+
     @property
     def features_(self):
         if not self._feature_names:
             self._feature_names = list(self.rules.keys())
-        
+
         return self._feature_names
-    
+
     @property
     def combiner(self):
         if not self._combiner:
@@ -83,11 +81,10 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             rules = {}
             for key in self.rules:
                 rules[key] = self.rules[key]['bins']
-            
-            self._combiner = Combiner().load(rules)
-        
-        return self._combiner
 
+            self._combiner = Combiner().load(rules)
+
+        return self._combiner
 
     def fit(self, X, y):
         """
@@ -99,7 +96,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         for f in self.features_:
             if f not in self.transer:
-                raise Exception('column \'{f}\' is not in transer'.format(f = f))
+                raise Exception('column \'{f}\' is not in transer'.format(f=f))
 
         self.model.fit(X, y)
         self.rules = self._generate_rules()
@@ -110,38 +107,19 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         return self
 
-    def predict(self, X, return_sub=False, return_reason=False, keep=3, min_vector_size=2):
+    def predict(self, X, return_sub=False, min_vector_size=2):
         """predict score
         Args:
             X (2D dataframe / list): X to predict.
                 or maybe list of dict for small batch (size < min_vector_size)
                 to avoid pandas infrastructure time cost.
             return_reason (bool): if need to return reason, default 'False'
-            return_sub (bool): if need to return sub score, default `False`
-            keep(int): top k most important reasons to keep, default `3`
             min_vector_size(int): min_vector_size to use vectorized inference
 
         Returns:
             Components:
             A. array-like: predicted score
             B. DataFrame/dict(optional): sub score for each feature
-            C. DataFrame/list(optional): top k most important reasons for each feature
-
-            for cases:
-            1. return_sub=False, return_reason=False
-                just return A
-            2. return_sub=True, return_reason=False
-                return a tuple of <A, B>
-                - vector-version: `sub_score` as DataFrame
-                - scalar-version: `sub_score` as dict. e.g. TODO
-            3. return_sub=False, return_reason=True
-                return a tuple of <A, C> CAUTION: SAME RESULT LENGTH AS CASE 2
-                - vector-version: `reason` as DataFrame
-                - scalar-version: `reason` as dict. e.g. TODO
-            4. return_sub=True, return_reason=True
-                return a tuple of <A, B, C>
-                - vector-version: `sub_score, reason` as DataFrames
-                - scalar-version: `sub_score, reason` as dict, as above
 
         these two features are provided by:
         - top-effects-as-reason: qianjiaying@bytedance.com, qianweishuo@bytedance.com
@@ -153,13 +131,40 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             rows = X
             # scalar version of `self.combiner.transform()`, which returns a dict instead of DataFrame
             bins = self.comb_to_bins(rows)
-            return self.reason_scalar(bins, rows, return_sub=return_sub, return_reason=return_reason, keep=keep)
+            return self.score_scalar(bins, rows, return_sub=return_sub)
 
         bins = self.combiner.transform(X[self.features_])
-        if return_reason is False:  # case2: (the original case) large batch, without reason; use pandas
-            return self.bin_to_score(bins, return_sub=return_sub)
-        else:  # case3: large batch, with reason; use pandas
-            return self.reason_pd(X, bins, return_sub=return_sub, keep=keep)
+        return self.bin_to_score(bins, return_sub=return_sub)
+
+    def get_reason(self, X, base_effect_of_features=None, keep=3, min_vector_size=2):
+        """predict reason
+               Args:
+                   X (2D array-like): X to predict
+                   X (2D dataframe / list): X to predict.
+                       or maybe list of dict for small batch (size < min_vector_size)
+                       to avoid pandas infrastructure time cost.
+                   keep(int): top k most important reasons to keep, default `3`
+                   min_vector_size(int): min_vector_size to use vectorized inference
+               Returns:
+                   DataFrame/list: top k most important reasons for each feature
+               these two features are provided by:
+               - top-effects-as-reason: qianjiaying@bytedance.com, qianweishuo@bytedance.com
+               - scalar-inference:  qianjiaying@bytedance.com, qianweishuo@bytedance.com
+        """
+
+
+        if base_effect_of_features is None:
+            base_effect_of_features = self.base_effect_of_features if self.base_effect_of_features is not None else pd.Series(
+                0, index=self.features_)
+        if isinstance(X, list):
+            assert len(X) < min_vector_size, f'too large list for scalar-loop, len(X)={len(X)}'
+            rows = X
+            # scalar version of `self.combiner.transform()`, which returns a dict instead of DataFrame
+            bins = self.comb_to_bins(rows)
+            return self.reason_scalar(bins, rows, base_effect_of_features, keep=keep)
+
+        bins = self.combiner.transform(X[self.features_])
+        return self.reason_pd(X, bins, base_effect_of_features, keep=keep)
 
     @staticmethod
     def none_to_nan(allows_nan, v):
@@ -202,7 +207,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         else:
             return score
 
-    def reason_pd(self, X, bins, return_sub=False, keep=3):
+    def reason_pd(self, X, bins, base_effect_of_features, keep=3):
         """predict score and reasons, using pandas
         """
         pred, sub_scores = self.bin_to_score(bins, return_sub=True)
@@ -212,15 +217,12 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
                 sub_scores,  # score of features
                 pd.Series(pred, name='score', index=sub_scores.index)  # predicted total score
             ], axis=1)
-                .assign(reason=lambda df: df.apply(self._get_reason_column, axis=1, keep=keep))
+                .assign(reason=lambda df: df.apply(self._get_reason_column, axis=1, args=(base_effect_of_features, keep)))
                 .loc[:, ['reason']]  # keep only the predicted-total-score and reason columns
         )
-        if return_sub:
-            return pred, sub_scores, score_reason
-        else:
-            return pred, score_reason
+        return score_reason
 
-    def _get_reason_column(self, row, keep=3):
+    def _get_reason_column(self, row, base_effect_of_features, keep=3):
         """predict score
         Args:
             row (pd.Series): row to predict
@@ -232,7 +234,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         s_score = row[~is_raw_val].drop('score')  # sub_score columns, except the total-score-column
         pd_s_score = pd.DataFrame({
             'sub_score': s_score,
-            'bias': s_score.values - self.base_effect_of_features.values,
+            'bias': s_score.values - base_effect_of_features.values,
         })
 
         # if total score is lower than base_odds, select top k feature who contribute most negativity
@@ -250,7 +252,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         reason = df_reason.apply(tuple, axis=1).values.tolist()
         return reason
 
-    def reason_scalar(self, bins, X, return_sub=False, return_reason=False, keep=3):
+    def score_scalar(self, bins, X, return_sub=False):
         """predict score and reasons, using scala inference
         """
         sub_scores = bins
@@ -260,15 +262,24 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             b[b == self.EMPTY_BIN] = np.argmin(s_map)  # set default group to min score
             sub_scores[col_name] = s_map[b]  # replace score
 
-        if return_reason is False:  # TODO manually test
-            scores = [sum({f: sub_scores[f][i] for f in self.features_}.values()) for i in range(len(X))]
-            if return_sub:
-                return scores, sub_scores
-            return scores
+        scores = [sum({f: sub_scores[f][i] for f in self.features_}.values()) for i in range(len(X))]
+        if return_sub:
+            return scores, sub_scores
+        return scores
 
-        scores, reasons = [], []
+    def reason_scalar(self, bins, X,base_effect_of_features, keep=3):
+        """predict score and reasons, using scala inference
+        """
+        sub_scores = bins
+        for col_name, col_attrs in self.rules.items():
+            s_map = col_attrs['scores']
+            b = bins[col_name]
+            b[b == self.EMPTY_BIN] = np.argmin(s_map)  # set default group to min score
+            sub_scores[col_name] = s_map[b]  # replace score
+
+        reasons = []
         for i, row_raw_value_dict in enumerate(X):
-            bias_of_features = {f: sub_scores[f][i] - self.base_effect_of_features[f] for f in self.features_}
+            bias_of_features = {f: sub_scores[f][i] - base_effect_of_features[f] for f in self.features_}
             row_total_score = sum(sub_scores[f][i] for f in self.features_)
 
             # for feature name `f`, get a list of tuple of <f, bias_of_f, sub_score_of_f, raw_val_of_f>
@@ -283,12 +294,8 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             # organize into list of tuple
             reason = [(f, f'{ss:+.1f}', raw) for f, bias, ss, raw in dimensions]
 
-            scores.append(row_total_score)
             reasons.append(reason)
-        if return_sub:  # caution, scalar-version returns dict/list instead of DataFrames
-            return scores, sub_scores, reasons
-        return scores, reasons
-
+        return reasons
 
     def predict_proba(self, X):
         """predict probability
@@ -301,12 +308,11 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         """
         proba = self.score_to_proba(self.predict(X))
         return np.stack((1 - proba, proba), axis=1)
-    
 
     def _generate_rules(self):
         if not self._check_rules(self.combiner, self.transer):
             raise Exception('generate failed')
-        
+
         rules = {}
 
         for idx, key in enumerate(self.features_):
@@ -314,26 +320,25 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
             if weight == 0:
                 continue
-            
+
             woe = self.transer[key]['woe']
-            
+
             rules[key] = {
                 'bins': self.combiner[key],
                 'woes': woe,
                 'weight': weight,
-                'scores': self.woe_to_score(woe, weight = weight),
+                'scores': self.woe_to_score(woe, weight=weight),
             }
-        
-        return rules
 
+        return rules
 
     def _check_rules(self, combiner, transer):
         for col in self.features_:
             if col not in combiner:
-                raise Exception('column \'{col}\' is not in combiner'.format(col = col))
-            
+                raise Exception('column \'{col}\' is not in combiner'.format(col=col))
+
             if col not in transer:
-                raise Exception('column \'{col}\' is not in transer'.format(col = col))
+                raise Exception('column \'{col}\' is not in transer'.format(col=col))
 
             l_c = len(combiner[col])
             l_t = len(transer[col]['woe'])
@@ -343,13 +348,16 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
             if np.issubdtype(combiner[col].dtype, np.number):
                 if l_c != l_t - 1:
-                    raise Exception('column \'{col}\' is not matched, assert {l_t} bins but given {l_c}'.format(col = col, l_t = l_t, l_c = l_c + 1))
+                    raise Exception(
+                        'column \'{col}\' is not matched, assert {l_t} bins but given {l_c}'.format(col=col, l_t=l_t,
+                                                                                                    l_c=l_c + 1))
             else:
                 if l_c != l_t:
-                    raise Exception('column \'{col}\' is not matched, assert {l_t} bins but given {l_c}'.format(col = col, l_t = l_t, l_c = l_c))
+                    raise Exception(
+                        'column \'{col}\' is not matched, assert {l_t} bins but given {l_c}'.format(col=col, l_t=l_t,
+                                                                                                    l_c=l_c))
 
         return True
-
 
     def proba_to_score(self, prob):
         """covert probability to score
@@ -358,7 +366,6 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         score = factor * log(odds) * offset
         """
         return self.factor * (np.log(1 - prob) - np.log(prob)) + self.offset
-    
 
     def score_to_proba(self, score):
         """covert score to probability
@@ -368,8 +375,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         """
         return 1 / (np.e ** ((score - self.offset) / self.factor) + 1)
 
-
-    def woe_to_score(self, woe, weight = None):
+    def woe_to_score(self, woe, weight=None):
         """calculate score by woe
         """
         woe = to_ndarray(woe)
@@ -387,7 +393,6 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         return (s + b / self.n_features_) * mask
 
-
     def _parse_rule(self, rule, **kwargs):
         bins = self.parse_bins(list(rule.keys()))
         scores = np.array(list(rule.values()))
@@ -396,13 +401,12 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             'bins': bins,
             'scores': scores,
         }
-    
-    def _format_rule(self, rule, decimal = 2, **kwargs):
-        bins = self.format_bins(rule['bins'])
-        scores = np.around(rule['scores'], decimals = decimal).tolist()
-        
-        return dict(zip(bins, scores))
 
+    def _format_rule(self, rule, decimal=2, **kwargs):
+        bins = self.format_bins(rule['bins'])
+        scores = np.around(rule['scores'], decimals=decimal).tolist()
+
+        return dict(zip(bins, scores))
 
     def after_load(self, rules):
         """after load card
@@ -410,7 +414,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         # reset combiner
         self._combiner = {}
 
-    def after_export(self, card, to_frame = False, to_json = None, to_csv = None, **kwargs):
+    def after_export(self, card, to_frame=False, to_json=None, to_csv=None, **kwargs):
         """generate a scorecard object
 
         Args:
@@ -436,15 +440,12 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
             card = pd.DataFrame(rows)
 
-
         if to_csv is not None:
             return card.to_csv(to_csv)
 
         return card
 
-
-
-    def _generate_testing_frame(self, maps, size = 'max', mishap = True, gap = 1e-2):
+    def _generate_testing_frame(self, maps, size='max', mishap=True, gap=1e-2):
         """
         Args:
             maps (dict): map of values or splits to generate frame

@@ -306,7 +306,7 @@ def test_card_with_less_X():
 sub_df_for_vector = df.iloc[[404, 410]]
 
 
-def test_get_score_reason_vector():
+def test_get_reason_vector():
     """
     verify the score reason of df is consistent with assumption
     DF_REASON is manually calculated with following logic:
@@ -322,7 +322,7 @@ def test_get_score_reason_vector():
         which is larger than base, hence, we try to find top `keep` features who contributed most to positivity
     find_largest_top_3:  A(+9) B(+6) D(+0)
     """
-    pred, sub_score, reason = card.predict(sub_df_for_vector, return_sub=True, return_reason=True)
+    reason = card.get_reason(sub_df_for_vector)
     # list of tuple
     # the list has length `keep`, which means the top `keep` features who contributed most
     # the tuple means tuple of <feature_name, sub_score, raw_value>
@@ -332,13 +332,8 @@ def test_get_score_reason_vector():
 rows_for_scalar = df.iloc[[404]].to_dict(orient='records')  # use list for scalar-loop
 
 
-def test_get_score_reason_scalar():
-    pred, sub_score, reason = card.predict(rows_for_scalar, return_sub=True, return_reason=True)
-    assert pred == pytest.approx([453.5491351039002])
-    # print(sub_score) as follows
-    #     {'A': np.array([151.35825557]), 'B': np.array([159.23912912]),
-    #      'C': np.array([142.95175042]), 'D': np.array([0])})
-    assert sub_score['A'] == pytest.approx([151.35825557])
+def test_get_reason_scalar():
+    reason = card.get_reason(rows_for_scalar)
     # list of list of tuple
     # the outer-most list has length batch_size
     # the list-in-middle has length `keep`, which means the top `keep` features who contributed most
@@ -347,18 +342,18 @@ def test_get_score_reason_scalar():
 
 
 @pytest.mark.timeout(0.030)
-def test_get_score_reason_vector_wide():
+def test_get_reason_vector_wide():
     """ a test for vector inference time cost """
     # prepare wide dataframe for vector inference
     df_wide = pd.DataFrame(samples_in_wide_dict)
-    pred, sub_score, reason = card_wide.predict(df_wide, return_sub=True, return_reason=True)
+    reason = card_wide.get_reason(df_wide)
     assert True
 
 
 @pytest.mark.timeout(0.004)
-def test_get_score_reason_scalar_wide():
+def test_get_reason_scalar_wide():
     """ a test for scalar inference time cost """
-    pred, sub_score, reason = card_wide.predict(samples_in_wide_dict, return_sub=True, return_reason=True)
+    reason = card_wide.get_reason(samples_in_wide_dict)
     assert True
 
 
