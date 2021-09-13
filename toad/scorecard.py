@@ -283,7 +283,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             # organize into list of tuple
             reason = [(f, f'{ss:+.1f}', raw) for f, bias, ss, raw in dimensions]
 
-            # scores.append(row_total_score)
+            scores.append(row_total_score)
             reasons.append(reason)
         if return_sub:  # caution, scalar-version returns dict/list instead of DataFrames
             return scores, sub_scores, reasons
