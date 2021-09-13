@@ -8,7 +8,6 @@ from functools import wraps, WRAPPER_ASSIGNMENTS
 class Decorator:
     """base decorater class
     """
-    _fn = None
     _cls = None
     is_class = False
 
@@ -16,13 +15,28 @@ class Decorator:
         self.is_class = is_class
 
         if len(args) == 1 and callable(args[0]):
-            self._fn = args[0]
+            self.fn = args[0]
         else:
             self.setup(*args, **kwargs)
+    
+
+    @property
+    def fn(self):
+        if hasattr(self, '__wrapped__'):
+            return self.__wrapped__
+        
+        return None
+    
+    @fn.setter
+    def fn(self, func):
+        if hasattr(self, 'setup_func'):
+            func = self.setup_func(func)
+        
+        self.__wrapped__ = func
 
     def __call__(self, *args, **kwargs):
-        if self._fn is None:
-            self._fn = args[0]
+        if self.fn is None:
+            self.fn = args[0]
             return self
 
         if self.is_class:
@@ -36,7 +50,7 @@ class Decorator:
         self.is_class = True
         self._cls = instance
 
-        @wraps(self._fn)
+        @wraps(self.__wrapped__)
         def func(*args, **kwargs):
             return self.__call__(instance, *args, **kwargs)
 
@@ -45,7 +59,7 @@ class Decorator:
 
     def __getattribute__(self, name):
         if name in WRAPPER_ASSIGNMENTS:
-            return getattr(self._fn, name)
+            return getattr(self.__wrapped__, name)
 
         return object.__getattribute__(self, name)
 
@@ -58,7 +72,7 @@ class Decorator:
         if self._cls is not None:
             args = (self._cls, *args)
 
-        return self._fn(*args, **kwargs)
+        return self.fn(*args, **kwargs)
 
     def wrapper(self, *args, **kwargs):
         return self.call(*args, **kwargs)

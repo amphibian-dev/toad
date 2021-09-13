@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+
+- Added `backward_rounds` for `nn.Trainer.train`
+
 ## [0.0.65] - 2021-06-30
 
 ### Breaking Changes

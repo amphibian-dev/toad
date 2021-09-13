@@ -1,16 +1,13 @@
 name: Test on Linux
 
-on: push
+on: [push, pull_request]
 
 jobs:
   test:
     strategy:
       matrix:
-        python-version: ['3.7', '3.8']
+        python-version: ['3.7', '3.8', '3.9']
         experimental: [false]
-        include:
-          - python-version: '3.9'
-            experimental: true
       fail-fast: false
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}

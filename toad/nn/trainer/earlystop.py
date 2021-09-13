@@ -1,19 +1,24 @@
-class EarlyStopping:
-    def __init__(self, delta = -1e-3, patience = 10, skip = 0):
-        """
-        Args:
-            delta (float): the smallest change that considered as an improvement.
-                If is positive, means larger is better, negative means smaller is better.
-            patience (int): how many times will be stop when score has no improvement
-            skip (int): how many rounds should skip after start training
-        """
+from .callback import callback
+from ...utils.decorator import Decorator
+
+
+class earlystopping(Decorator):
+    def __init__(self, *args, delta = -1e-3, patience = 10, skip = 0, **kwargs):
+        super().__init__(*args, **kwargs)
+        
         self.direction = 1.0 if delta > 0 else -1.0
         self.delta = delta * self.direction
         self.patience = patience
         self.skip = skip
         
         self.reset()
+    
 
+    def setup_func(self, func):
+        if not isinstance(func, callback):
+            func = callback(func)
+        
+        return func
     
     def get_best_state(self):
         """get best state of model
@@ -27,17 +32,14 @@ class EarlyStopping:
         self.best_score = float('inf') * (-self.direction)
         self.best_state = None
         self._times = 0
-        self._round = -1
     
 
-    def __call__(self, model, *args, **kwargs):
-        self._round += 1
-
+    def wrapper(self, model, epoch = 0, **kwargs):
         # set skip round
-        if self._round < self.skip:
+        if epoch < self.skip:
             return False
         
-        score = self.scoring(model, *args, **kwargs)
+        score = self.call(model = model, epoch = epoch, **kwargs)
         diff = (score - self.best_score) * self.direction
         
         if diff > self.delta:
@@ -50,8 +52,10 @@ class EarlyStopping:
         if self._times >= self.patience:
             # model.load_state_dict(self.best_state)
             return True
-    
-    def scoring(self, model, history, epoch = None):
-        """scoring function
-        """
-        return history['loss'].mean()
+        
+
+@earlystopping
+def loss_scoring(history):
+    """scoring function
+    """
+    return history['loss'].mean()

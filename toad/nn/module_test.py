@@ -39,11 +39,11 @@ def test_model():
 
 
 def test_fit_callback():
-    history = []
+    h_list = []
 
-    def func(e, logs):
-        history.append(logs)
+    def func(history, epoch):
+        h_list.append(history)
     
     model = TestModel(NUM_FEATS, NUM_CLASSES)
     model.fit(loader, epoch = 2, callback = func)
-    assert len(history) == 2
+    assert len(h_list) == 2

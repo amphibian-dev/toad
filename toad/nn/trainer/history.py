@@ -47,9 +47,10 @@ class History:
             if value.ndim == 0:
                 value = value.reshape(-1)
 
-        elif np.isscalar(value):
+        if np.isscalar(value):
             value = np.array([value])
-        else:
+        
+        if not isinstance(value, np.ndarray):
             raise TypeError("value should be `torch.Tensor` or `scalar`")
         
         self._push(key, value)
