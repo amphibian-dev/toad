@@ -31,4 +31,3 @@ def test_speed():
     for i in p:
         sleep(0.001)
         pass
-    assert p.time < 1.4
