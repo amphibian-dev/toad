@@ -137,34 +137,39 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         return self.bin_to_score(bins, return_sub=return_sub)
 
     def get_reason(self, X, base_effect_of_features=None, keep=3, min_vector_size=2):
-        """predict reason
-               Args:
-                   X (2D array-like): X to predict
-                   X (2D dataframe / list): X to predict.
-                       or maybe list of dict for small batch (size < min_vector_size)
-                       to avoid pandas infrastructure time cost.
-                   keep(int): top k most important reasons to keep, default `3`
-                   min_vector_size(int): min_vector_size to use vectorized inference
-               Returns:
-                   DataFrame/list: top k most important reasons for each feature
-               these two features are provided by:
-               - top-effects-as-reason: qianjiaying@bytedance.com, qianweishuo@bytedance.com
-               - scalar-inference:  qianjiaying@bytedance.com, qianweishuo@bytedance.com
+        """
+        calculate top-effect-of-features as reasons
+
+        Args:
+            X (2D dataframe / list): X to predict.
+                or maybe list of dict for small batch (size < min_vector_size)
+                to avoid pandas infrastructure time cost.
+            keep(int): top k most important reasons to keep, default `3`
+            min_vector_size(int): min_vector_size to use vectorized inference
+        Returns:
+            DataFrame/list: top k most important reasons for each feature
+
+        these two features are provided by:
+        - top-effects-as-reason: qianjiaying@bytedance.com, qianweishuo@bytedance.com
+        - scalar-inference:  qianjiaying@bytedance.com, qianweishuo@bytedance.com
         """
 
+        if base_effect_of_features is not None:  # use-as-is if not None
+            pass
+        elif self.base_effect_of_features is not None:  # or use the memory during `fit()`
+            base_effect_of_features = self.base_effect_of_features
+        else:  # or use zero-vector
+            base_effect_of_features = pd.Series(0, index=self.features_)
 
-        if base_effect_of_features is None:
-            base_effect_of_features = self.base_effect_of_features if self.base_effect_of_features is not None else pd.Series(
-                0, index=self.features_)
-        if isinstance(X, list):
+        if isinstance(X, list):  # scalar case
             assert len(X) < min_vector_size, f'too large list for scalar-loop, len(X)={len(X)}'
             rows = X
             # scalar version of `self.combiner.transform()`, which returns a dict instead of DataFrame
             bins = self.comb_to_bins(rows)
             return self.reason_scalar(bins, rows, base_effect_of_features, keep=keep)
-
-        bins = self.combiner.transform(X[self.features_])
-        return self.reason_pd(X, bins, base_effect_of_features, keep=keep)
+        else:  # pandas case
+            bins = self.combiner.transform(X[self.features_])
+            return self.reason_pd(X, bins, base_effect_of_features, keep=keep)
 
     @staticmethod
     def none_to_nan(allows_nan, v):
