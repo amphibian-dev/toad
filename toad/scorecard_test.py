@@ -341,29 +341,26 @@ def test_get_reason_scalar():
     assert reason == [[('A', '+151.4', 3), ('B', '+159.2', 'D'), ('D', '+0.0', 1.0)]]
 
 
-@pytest.mark.timeout(0.021)
+@pytest.mark.timeout(0.061)
 def test_predict_vector_wide():
     """ a test for vector inference time cost """
     # prepare wide dataframe for vector inference
     df_wide = pd.DataFrame(samples_in_wide_dict)
-    proba = card_wide.predict_proba(df_wide)
-    assert True
+    proba = card_wide.predict(df_wide)
 
 
 @pytest.mark.timeout(0.007)
 def test_predict_scalar_wide():
     """ a test for scalar inference time cost """
-    proba = card_wide.predict_proba(samples_in_wide_dict)
-    assert True
+    proba = card_wide.predict(samples_in_wide_dict[0])
 
 
-@pytest.mark.timeout(0.040)
+@pytest.mark.timeout(0.060)
 def test_get_reason_vector_wide():
     """ a test for vector inference time cost """
     # prepare wide dataframe for vector inference
     df_wide = pd.DataFrame(samples_in_wide_dict)
     reason = card_wide.get_reason(df_wide)
-    assert True
 
 
 @pytest.mark.timeout(0.005)

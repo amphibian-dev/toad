@@ -96,6 +96,8 @@ def to_ndarray(s, dtype = None):
         arr = np.copy(s)
     elif isinstance(s, pd.core.base.PandasObject):
         arr = np.copy(s.values)
+    elif s is None:
+        arr = np.array(np.nan)
     else:
         arr = np.array(s)
 

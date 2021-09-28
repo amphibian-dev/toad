@@ -110,34 +110,21 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         return self
 
-    def predict(self, X, return_sub=False, min_vector_size=2):
+    def predict(self, X, return_sub=False):
         """predict score
         Args:
-            X (2D dataframe / list): X to predict.
-                or maybe list of dict for small batch (size < min_vector_size)
-                to avoid pandas infrastructure time cost.
-            return_reason (bool): if need to return reason, default 'False'
-            min_vector_size(int): min_vector_size to use vectorized inference
+            X (2D-DataFrame|dict): X to predict
 
         Returns:
-            Components:
-            A. array-like: predicted score
-            B. DataFrame/dict(optional): sub score for each feature
-
-        these two features are provided by:
-        - top-effects-as-reason: qianjiaying@bytedance.com, qianweishuo@bytedance.com
-        - scalar-inference:  qianjiaying@bytedance.com, qianweishuo@bytedance.com
+            array-like: predicted score
+            DataFrame|dict: sub score for each feature
         """
-        # case1: small batch; use scalar-loop to speed up
-        if isinstance(X, list):
-            assert len(X) < min_vector_size, f'too large list for scalar-loop, len(X)={len(X)}'
-            rows = X
-            # scalar version of `self.combiner.transform()`, which returns a dict instead of DataFrame
-            bins = self.comb_to_bins(rows)
-            return self.score_scalar(bins, rows, return_sub=return_sub)
-
-        bins = self.combiner.transform(X[self.features_])
-        return self.bin_to_score(bins, return_sub=return_sub)
+        if isinstance(X, pd.DataFrame):
+            X = X[self.features_]
+        
+        bins = self.combiner.transform(X)
+        res = self.bin_to_score(bins, return_sub=return_sub)
+        return res
 
     def get_reason(self, X, base_effect_of_features=None, keep=3, min_vector_size=2):
         """
@@ -199,16 +186,21 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
     def bin_to_score(self, bins, return_sub=False):
         """predict score from bins
         """
+        score = 0
         res = bins.copy()
-        for col in self.rules:
-            s_map = self.rules[col]['scores']
-            b = bins[col].values
+        for col, rule in self.rules.items():
+            s_map = rule['scores']
+            b = bins[col]
+
             # set default group to min score
-            b[b == self.EMPTY_BIN] = np.argmin(s_map)
+            if np.isscalar(b):
+                b = np.argmin(s_map) if b == self.EMPTY_BIN else b
+            else:
+                b[b == self.EMPTY_BIN] = np.argmin(s_map)
+
             # replace score
             res[col] = s_map[b]
-
-        score = np.sum(res.values, axis=1)
+            score += res[col]
 
         if return_sub:
             return score, res
@@ -259,21 +251,6 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         reason = df_reason.apply(tuple, axis=1).values.tolist()
         return reason
-
-    def score_scalar(self, bins, X, return_sub=False):
-        """predict score and reasons, using scala inference
-        """
-        sub_scores = bins
-        for col_name, col_attrs in self.rules.items():
-            s_map = col_attrs['scores']
-            b = bins[col_name]
-            b[b == self.EMPTY_BIN] = np.argmin(s_map)  # set default group to min score
-            sub_scores[col_name] = s_map[b]  # replace score
-
-        scores = [sum({f: sub_scores[f][i] for f in self.features_}.values()) for i in range(len(X))]
-        if return_sub:
-            return scores, sub_scores
-        return scores
 
     def reason_scalar(self, bins, X,base_effect_of_features, keep=3):
         """predict score and reasons, using scala inference
