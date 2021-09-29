@@ -303,9 +303,6 @@ def test_card_with_less_X():
     assert card.predict(x)[200] == pytest.approx(411.968588097131, FUZZ_THRESHOLD)
 
 
-sub_df_for_vector = df.iloc[[404, 410]]
-
-
 def test_get_reason_vector():
     """
     verify the score reason of df is consistent with assumption
@@ -322,57 +319,13 @@ def test_get_reason_vector():
         which is larger than base, hence, we try to find top `keep` features who contributed most to positivity
     find_largest_top_3:  A(+9) B(+6) D(+0)
     """
-    reason = card.get_reason(sub_df_for_vector)
-    # list of tuple
-    # the list has length `keep`, which means the top `keep` features who contributed most
-    # the tuple means tuple of <feature_name, sub_score, raw_value>
-    assert reason.iloc[0]['reason'] == [('A', '+151.4', 3), ('B', '+159.2', 'D'), ('D', '+0.0', 1.0)]
-
-
-rows_for_scalar = df.iloc[[404]].to_dict(orient='records')  # use list for scalar-loop
-
-
-def test_get_reason_scalar():
-    reason = card.get_reason(rows_for_scalar)
-    # list of list of tuple
-    # the outer-most list has length batch_size
-    # the list-in-middle has length `keep`, which means the top `keep` features who contributed most
-    # the inner tuple means tuple of <feature_name, sub_score, raw_value>
-    assert reason == [[('A', '+151.4', 3), ('B', '+159.2', 'D'), ('D', '+0.0', 1.0)]]
-
-
-@pytest.mark.timeout(0.061)
-def test_predict_vector_wide():
-    """ a test for vector inference time cost """
-    # prepare wide dataframe for vector inference
-    df_wide = pd.DataFrame(samples_in_wide_dict)
-    proba = card_wide.predict(df_wide)
+    reason = card.get_reason(df)
+    assert reason.iloc[404]['top1'].tolist() == ['D', 0.0, 1.0]
 
 
 @pytest.mark.timeout(0.007)
-def test_predict_scalar_wide():
+def test_predict_dict():
     """ a test for scalar inference time cost """
-    proba = card_wide.predict(samples_in_wide_dict[0])
+    proba = card.predict(df.iloc[404].to_dict())
+    assert proba == TEST_SCORE
 
-
-@pytest.mark.timeout(0.060)
-def test_get_reason_vector_wide():
-    """ a test for vector inference time cost """
-    # prepare wide dataframe for vector inference
-    df_wide = pd.DataFrame(samples_in_wide_dict)
-    reason = card_wide.get_reason(df_wide)
-
-
-@pytest.mark.timeout(0.005)
-def test_get_reason_scalar_wide():
-    """ a test for scalar inference time cost """
-    reason = card_wide.get_reason(samples_in_wide_dict)
-    assert True
-
-
-def test_empty_predict():  # TODO
-    rows = []
-    ...
-
-    X = pd.DataFrame(data=[])
-    ...

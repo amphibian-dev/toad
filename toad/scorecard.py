@@ -40,7 +40,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         self._feature_names = None
         # keep track of median-effect of each feature during fit(), as `self.base_effect_of_features`
         # for reason-calculation later during predict()
-        self.base_effect_of_features = None
+        self.base_effect = None
 
         self.card = card
         if card is not None:
@@ -106,7 +106,10 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         # keep sub_score-median of each feature, as `base_effect_of_features` for reason-calculation
         sub_score = self.woe_to_score(X)
-        self.base_effect_of_features = pd.Series(np.median(sub_score, axis=0), index=self.features_)
+        self.base_effect_of_features = pd.Series(
+            np.median(sub_score, axis=0),
+            index = self.features_
+        )
 
         return self
 
@@ -123,65 +126,64 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             X = X[self.features_]
         
         bins = self.combiner.transform(X)
-        res = self.bin_to_score(bins, return_sub=return_sub)
+        res = self.bin_to_score(bins, return_sub = return_sub)
         return res
 
-    def get_reason(self, X, base_effect_of_features=None, keep=3, min_vector_size=2):
+    def get_reason(self, X, base_effect = None, threshold_score = None, keep = 3):
         """
         calculate top-effect-of-features as reasons
 
         Args:
-            X (2D dataframe / list): X to predict.
-                or maybe list of dict for small batch (size < min_vector_size)
-                to avoid pandas infrastructure time cost.
+            X (2D DataFrame): X to find reason
+            base_effect (Series): base effect score of each feature 
+            threshold_score (float): threshold to find top k most important features,
+                show the highest top k features when prediction score > threshold
+                and show the lowest top k when prediction score <= threshold
+                default is the sum of `base_effect` score
             keep(int): top k most important reasons to keep, default `3`
-            min_vector_size(int): min_vector_size to use vectorized inference
+        
         Returns:
-            DataFrame/list: top k most important reasons for each feature
-
-        these two features are provided by:
-        - top-effects-as-reason: qianjiaying@bytedance.com, qianweishuo@bytedance.com
-        - scalar-inference:  qianjiaying@bytedance.com, qianweishuo@bytedance.com
+            DataFrame: top k most important reasons for each feature
         """
 
-        if base_effect_of_features is not None:  # use-as-is if not None
-            pass
-        elif self.base_effect_of_features is not None:  # or use the memory during `fit()`
-            base_effect_of_features = self.base_effect_of_features
-        else:  # or use zero-vector
-            base_effect_of_features = pd.Series(0, index=self.features_)
+        # use the memory during `fit()` by default
+        if base_effect is None:
+            base_effect = self.base_effect
+        
+        # use zero-vector if scorecard doesn't have `base_effect`
+        if base_effect is None:  
+            base_effect = pd.Series(0, index = self.features_)
+        
+        # set default threshold score
+        if threshold_score is None:
+            threshold_score = np.sum(base_effect.values)
 
-        if isinstance(X, list):  # scalar case
-            assert len(X) < min_vector_size, f'too large list for scalar-loop, len(X)={len(X)}'
-            rows = X
-            # scalar version of `self.combiner.transform()`, which returns a dict instead of DataFrame
-            bins = self.comb_to_bins(rows)
-            return self.reason_scalar(bins, rows, base_effect_of_features, keep=keep)
-        else:  # pandas case
-            bins = self.combiner.transform(X[self.features_])
-            return self.reason_pd(X, bins, base_effect_of_features, keep=keep)
+        # get score and sub scores
+        score, sub = self.predict(X, return_sub = True)
 
-    @staticmethod
-    def none_to_nan(allows_nan, v):
-        return np.nan if allows_nan and v is None else v
+        bias = sub - base_effect
+        # find direction for each row, `-1` means keep high bias, `1` keeps low bias
+        direction = 1 - 2 * (score > threshold_score).reshape(-1, 1).astype(np.uint8)
 
-    def comb_to_bins(self, X):
-        """ scalar-loop version of `self.combiner.transform(X)` """
-        bins = dict()  # dict of <key,list>
-        # CAUTION: self.combiner may have some unused columns than self.rules
-        for key in self.features_:  # column-wise
-            rule_bins = self.combiner.rules[key]
-            if np.issubdtype(rule_bins.dtype, np.number):
-                allows_nan = np.isnan(rule_bins).any()
-            else:
-                allows_nan = False
-            try:
-                col = [self.none_to_nan(allows_nan, r[key]) for r in X]
-                bins[key] = self.combiner.transform_(rule_bins, col)
-            except Exception as e:
-                e.args += ('on column "{key}"'.format(key=key),)
-                raise e
-        return bins
+        # sort by bias and keep top k columns
+        idx = np.argsort(direction * bias.values, axis = -1)[:,:keep]
+        # get effect data by sorted index
+        effect_bias = np.take_along_axis(sub.values, idx, axis = -1)
+        effect_values = np.take_along_axis(X[self.features_].values, idx, axis = -1)
+        effect_feats = np.take(self.features_, idx)
+
+        # merge effect data into a DataFrame
+        effect_matrix = np.dstack((effect_feats.T, effect_bias.T, effect_values.T))
+        cols = pd.MultiIndex.from_product(
+            [[f"top{i}" for i in range(1, keep+1)], ['feats', 'bias', 'value']]
+        )
+        reason = pd.DataFrame(
+            np.hstack(effect_matrix),
+            columns = cols,
+        )
+
+        return reason
+
 
     def bin_to_score(self, bins, return_sub=False):
         """predict score from bins
@@ -200,87 +202,13 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
             # replace score
             res[col] = s_map[b]
-            score += res[col]
+            score += s_map[b]
 
         if return_sub:
             return score, res
         else:
             return score
 
-    def reason_pd(self, X, bins, base_effect_of_features, keep=3):
-        """predict score and reasons, using pandas
-        """
-        pred, sub_scores = self.bin_to_score(bins, return_sub=True)
-        score_reason = (
-            pd.concat([
-                X.rename(mapper=lambda c: f'raw_val_{c}', axis=1),  # raw value of features
-                sub_scores,  # score of features
-                pd.Series(pred, name='score', index=sub_scores.index)  # predicted total score
-            ], axis=1)
-                .assign(reason=lambda df: df.apply(self._get_reason_column, axis=1, args=(base_effect_of_features, keep)))
-                .loc[:, ['reason']]  # keep only the predicted-total-score and reason columns
-        )
-        return score_reason
-
-    def _get_reason_column(self, row, base_effect_of_features, keep=3):
-        """predict score
-        Args:
-            row (pd.Series): row to predict
-            keep (int): top k most important features to keep
-        Returns:
-            reason (list of tuple) : top k most important reason(feature name, subscore, raw feature value)
-        """
-        is_raw_val = row.index.str.startswith('raw_val_')
-        s_score = row[~is_raw_val].drop('score')  # sub_score columns, except the total-score-column
-        pd_s_score = pd.DataFrame({
-            'sub_score': s_score,
-            'bias': s_score.values - base_effect_of_features.values,
-        })
-
-        # if total score is lower than base_odds, select top k feature who contribute most negativity
-        # vice versa
-        df_reason = (pd_s_score
-                     .sort_values(by='bias', ascending=(row.score <= self.base_odds))['sub_score']
-                     .head(keep)
-                     .apply('{:+.1f}'.format)
-                     .to_frame(name='score')
-                     # append raw value for reference. note: len('raw_val_') == 8
-                     .join(row[is_raw_val].rename('value').rename(index=lambda name: name[8:]), how='left')
-                     .reset_index()
-                     )
-
-        reason = df_reason.apply(tuple, axis=1).values.tolist()
-        return reason
-
-    def reason_scalar(self, bins, X,base_effect_of_features, keep=3):
-        """predict score and reasons, using scala inference
-        """
-        sub_scores = bins
-        for col_name, col_attrs in self.rules.items():
-            s_map = col_attrs['scores']
-            b = bins[col_name]
-            b[b == self.EMPTY_BIN] = np.argmin(s_map)  # set default group to min score
-            sub_scores[col_name] = s_map[b]  # replace score
-
-        reasons = []
-        for i, row_raw_value_dict in enumerate(X):
-            bias_of_features = {f: sub_scores[f][i] - base_effect_of_features[f] for f in self.features_}
-            row_total_score = sum(sub_scores[f][i] for f in self.features_)
-
-            # for feature name `f`, get a list of tuple of <f, bias_of_f, sub_score_of_f, raw_val_of_f>
-            dimensions = []
-            for f in self.features_:
-                bias, ss, raw = bias_of_features[f], sub_scores[f][i], row_raw_value_dict[f]
-                dimensions.append((f, bias, ss, raw))
-            dimensions.sort(key=lambda t: t[1],  # sort by bias
-                            # when row_total_score < base_odds, find which contributed most negativity, vice versa
-                            reverse=row_total_score >= self.base_odds)
-            dimensions = dimensions[:keep]
-            # organize into list of tuple
-            reason = [(f, f'{ss:+.1f}', raw) for f, bias, ss, raw in dimensions]
-
-            reasons.append(reason)
-        return reasons
 
     def predict_proba(self, X):
         """predict probability
