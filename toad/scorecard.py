@@ -38,7 +38,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         self.model = LogisticRegression(**kwargs)
 
         self._feature_names = None
-        # keep track of median-effect of each feature during fit(), as `self.base_effect_of_features`
+        # keep track of median-effect of each feature during fit(), as `self.base_effect`
         # for reason-calculation later during predict()
         self.base_effect = None
 
@@ -104,9 +104,9 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         self.model.fit(X, y)
         self.rules = self._generate_rules()
 
-        # keep sub_score-median of each feature, as `base_effect_of_features` for reason-calculation
+        # keep sub_score-median of each feature, as `base_effect` for reason-calculation
         sub_score = self.woe_to_score(X)
-        self.base_effect_of_features = pd.Series(
+        self.base_effect = pd.Series(
             np.median(sub_score, axis=0),
             index = self.features_
         )
