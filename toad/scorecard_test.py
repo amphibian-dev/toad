@@ -10,8 +10,8 @@ np.random.seed(1)
 # Create a testing dataframe and a scorecard model.
 
 ab = np.array(list('ABCDEFG'))
-feature = np.random.randint(10, size=500)
-target = np.random.randint(2, size=500)
+feature = np.random.randint(10, size = 500)
+target = np.random.randint(2, size = 500)
 str_feat = ab[np.random.choice(7, 500)]
 
 df = pd.DataFrame({
@@ -41,14 +41,14 @@ card_config = {
 }
 
 combiner = Combiner()
-bins = combiner.fit_transform(df, target, n_bins=5)
+bins = combiner.fit_transform(df, target, n_bins = 5)
 woe_transer = WOETransformer()
 woe = woe_transer.fit_transform(bins, target)
 
 # create a score card
 card = ScoreCard(
-    combiner=combiner,
-    transer=woe_transer,
+    combiner = combiner,
+    transer = woe_transer,
 )
 card.fit(woe, target)
 
@@ -69,8 +69,8 @@ def test_load():
 
 def test_load_after_init_combiner():
     card = ScoreCard(
-        combiner=combiner,
-        transer=woe_transer,
+        combiner = combiner,
+        transer = woe_transer,
     )
     card.load(card_config)
     score = card.predict(df)
@@ -109,7 +109,7 @@ def test_card_feature_effect():
     FEATURE_EFFECT = np.median(card.woe_to_score(df),axis = 0)
     """
     FEATURE_EFFECT = pytest.approx(np.array([142.26722434, 152.81922244, 148.82801326, 0.]), FUZZ_THRESHOLD)
-    assert card.base_effect_of_features.values == FEATURE_EFFECT
+    assert card.base_effect.values == FEATURE_EFFECT
 
 
 def test_predict_sub_score():
@@ -227,7 +227,7 @@ def test_get_reason_vector():
     find_largest_top_3:  A(+9) B(+6) D(+0)
     """
     reason = card.get_reason(df)
-    assert reason.iloc[404]['top1'].tolist() == ['D', 0.0, 1.0]
+    assert reason.iloc[404]['top1'].tolist() == ['C', 142.95175042081146, 'B']
 
 
 @pytest.mark.timeout(0.007)
