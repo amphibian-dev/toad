@@ -63,7 +63,7 @@ class Transformer(TransformerMixin, RulesMixin):
         return self
 
 
-    def transform(self, X, *args, to_frame = True, **kwargs):
+    def transform(self, X, *args, **kwargs):
         """transform method, see details in `transform_` method
         """
         if not self._fitted:
