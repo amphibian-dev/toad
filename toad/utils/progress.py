@@ -10,6 +10,14 @@ class Progress:
             iterable
             size (int): max size of iterable
             interval (float): update bar interval second, default is `0.1`
+        
+        Attrs:
+            BAR_LENGTH (int): bar length, default is `32`
+            SYMBOL_DONE (str): symbol indicating complation
+            SYMBOL_REST (str): symbol indicating remaining
+            prefix (str): string template before progress bar
+            suffix (str): string template after progress bar
+            template (str): string template for rendering, `{prefix} {bar} {suffix}`
         """
         self.iterable = iterable
         self.interval = interval
@@ -47,6 +55,8 @@ class Progress:
     
 
     def __iter__(self):
+        self.reset()
+        # reset time
         start = time()
         last_time = start
         for item in self.iterable:
@@ -55,23 +65,32 @@ class Progress:
             self.idx += 1
 
             curr_time = time()
+            self.time = curr_time - start
+
             # skip update if delta is too small
             if curr_time - last_time < self.interval:
                 continue
             
             last_time = curr_time
-            self.time = curr_time - start
             
             # update bar
             self.flush()
         
         # finally updating for the status of end
-        self.flush(end = '\n')
+        self.flush()
+        self.end()
+    
+
+    def reset(self):
         # reset index
         self.idx = 0
     
 
-    def flush(self, end = ''):
+    def end(self):
+        self.print('\n')
+
+
+    def flush(self):
         if self.size is None:
             done = self.idx * self.batch
             percent = 0
@@ -91,11 +110,11 @@ class Progress:
             tps = done / self.time,
             prefix = self.prefix,
             suffix = self.suffix,
-        ), end = end)
+        ))
     
 
-    def print(self, text, end = ''):
-        sys.stdout.write(text + end)
+    def print(self, text):
+        sys.stdout.write(text)
         sys.stdout.flush()
 
 

@@ -46,6 +46,7 @@ class Trainer:
             loader (torch.DataLoader): training data loader
             epoch (int): number of epoch for training loop
             callback (callable): callable function will be called every epoch
+            start (int): epoch start from n round
             backward_rounds (int): backward after every n rounds 
         """
         if loader is not None:
@@ -116,6 +117,10 @@ class Trainer:
     @torch.no_grad()
     def evaluate(self, loader, callback = None):
         """evalute model
+
+        Args:
+            loader (torch.DataLoader): evaluation data loader
+            callback (callable): callback function
         """
         if callback and not isinstance(callback, Callback):
             callback = Callback(callback)

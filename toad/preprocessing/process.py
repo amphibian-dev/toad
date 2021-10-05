@@ -6,7 +6,7 @@ _ALL_SYMBOL_ = '__all_symbol__'
 class Processing:
     """
 
-    Example:
+    Examples:
 
     >>> (Processing(data)
     ...     .groupby('id')

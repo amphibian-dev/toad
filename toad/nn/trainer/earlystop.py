@@ -4,6 +4,17 @@ from ...utils.decorator import Decorator
 
 class earlystopping(Decorator):
     def __init__(self, *args, delta = -1e-3, patience = 10, skip = 0, **kwargs):
+        """
+        Args:
+            delta (float): stop training if diff of new score is smaller than delta
+            patience (int): patience of rounds to stop training
+            skip (int): n rounds from starting training to warm up
+        
+        Examples:
+            >>> @earlystopping(delta = 1e-3, patience = 5)
+            ... def auc(history):
+            ...     return AUC(history['y_hat'], history['y'])
+        """
         super().__init__(*args, **kwargs)
         
         self.direction = 1.0 if delta > 0 else -1.0
