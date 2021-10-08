@@ -8,6 +8,7 @@ def flooding(loss, b):
 
 def focal_loss(input, target, alpha = 1., gamma = 2., reduction = 'mean'):
     """focal loss
+    
     Args:
         input (Tensor): N x C, C is the number of classes
         target (Tensor): N, each value is the index of classes
