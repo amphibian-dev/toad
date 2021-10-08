@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Add
 
 - Added `backward_rounds` for `nn.Trainer.train`
+- Added `evalute` func in `nn.Module`
+- Added `get_reason` func in `ScoreCard`, [#79](https://github.com/amphibian-dev/toad/issues/79) thanks @qianweishuo
+- Added dict type input support for `ScoreCard.predict` and `Combiner.transform`, [#79](https://github.com/amphibian-dev/toad/issues/79) thanks @qianweishuo
+- Added iterator support for `Progress`
+
+### Changed
+
+- Change `callback` and `earlystopping` to python decorator
+
 
 ## [0.0.65] - 2021-06-30
 
