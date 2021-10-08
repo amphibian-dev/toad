@@ -50,6 +50,16 @@ def test_woe_transformer_frame():
     res = WOETransformer().fit_transform(df, target)
     assert res.iloc[451, 1] == pytest.approx(-0.2198594761130199)
 
+def test_woe_transformer_dict():
+    transer = WOETransformer().fit(df, 'target')
+    res = transer.transform({
+        "A": 6,
+        "B": "C",
+        "C": 1,
+        "D": 2,
+    })
+    assert res['B'].item() == pytest.approx(-0.09149433112609942)
+
 def test_woe_transformer_select_dtypes():
     res = WOETransformer().fit_transform(df, target, select_dtypes = 'object')
     assert res.loc[451, 'A'] == 3

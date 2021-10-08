@@ -73,7 +73,7 @@ class Transformer(TransformerMixin, RulesMixin):
         if self._fit_frame:
             return self.transform_(self.rules, X, *args, **kwargs)
 
-        if getattr(X, 'ndim', 1) == 1:
+        if getattr(X, 'ndim', 1) == 1 and not isinstance(X, dict):
             if len(self.rules) == 1:
                 return self.transform_(self.default_rule(), X, *args, **kwargs)
             elif hasattr(X, 'name') and X.name in self:
@@ -147,7 +147,7 @@ class WOETransformer(Transformer):
             array-like
         """
         X = to_ndarray(X)
-        res = np.zeros(len(X))
+        res = np.zeros(X.shape)
 
         value = rule['value']
         woe = rule['woe']
@@ -249,7 +249,7 @@ class Combiner(Transformer, BinsMixin):
             bins = self._raw_to_bin(X, rule)
 
         else:
-            bins = np.zeros(len(X), dtype = int)
+            bins = np.zeros(X.shape, dtype = int)
 
             if len(rule):
                 # empty to a separate group

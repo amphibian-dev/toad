@@ -38,6 +38,9 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         self.model = LogisticRegression(**kwargs)
 
         self._feature_names = None
+        # keep track of median-effect of each feature during fit(), as `self.base_effect`
+        # for reason-calculation later during predict()
+        self.base_effect = None
 
         self.card = card
         if card is not None:
@@ -99,25 +102,113 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
                 raise Exception('column \'{f}\' is not in transer'.format(f = f))
 
         self.model.fit(X, y)
-
         self.rules = self._generate_rules()
 
-        return self
-    
+        # keep sub_score-median of each feature, as `base_effect` for reason-calculation
+        sub_score = self.woe_to_score(X)
+        self.base_effect = pd.Series(
+            np.median(sub_score, axis=0),
+            index = self.features_
+        )
 
-    def predict(self, X, **kwargs):
+        return self
+
+    def predict(self, X, return_sub=False):
         """predict score
         Args:
-            X (2D array-like): X to predict
-            return_sub (bool): if need to return sub score, default `False`
+            X (2D-DataFrame|dict): X to predict
 
         Returns:
             array-like: predicted score
-            DataFrame: sub score for each feature
+            DataFrame|dict: sub score for each feature
         """
-        bins = self.combiner.transform(X[self.features_])
-        return self.bin_to_score(bins, **kwargs)
-    
+        if isinstance(X, pd.DataFrame):
+            X = X[self.features_]
+        
+        bins = self.combiner.transform(X)
+        res = self.bin_to_score(bins, return_sub = return_sub)
+        return res
+
+    def get_reason(self, X, base_effect = None, threshold_score = None, keep = 3):
+        """
+        calculate top-effect-of-features as reasons
+
+        Args:
+            X (2D DataFrame): X to find reason
+            base_effect (Series): base effect score of each feature 
+            threshold_score (float): threshold to find top k most important features,
+                show the highest top k features when prediction score > threshold
+                and show the lowest top k when prediction score <= threshold
+                default is the sum of `base_effect` score
+            keep(int): top k most important reasons to keep, default `3`
+        
+        Returns:
+            DataFrame: top k most important reasons for each feature
+        """
+
+        # use the memory during `fit()` by default
+        if base_effect is None:
+            base_effect = self.base_effect
+        
+        # use zero-vector if scorecard doesn't have `base_effect`
+        if base_effect is None:  
+            base_effect = pd.Series(0, index = self.features_)
+        
+        # set default threshold score
+        if threshold_score is None:
+            threshold_score = np.sum(base_effect.values)
+
+        # get score and sub scores
+        score, sub = self.predict(X, return_sub = True)
+
+        bias = sub - base_effect
+        # find direction for each row, `-1` means keep high bias, `1` keeps low bias
+        direction = 1 - 2 * (score > threshold_score).reshape(-1, 1).astype(np.uint8)
+
+        # sort by bias and keep top k columns
+        idx = np.argsort(direction * bias.values, axis = -1)[:,:keep]
+        # get effect data by sorted index
+        effect_bias = np.take_along_axis(sub.values, idx, axis = -1)
+        effect_values = np.take_along_axis(X[self.features_].values, idx, axis = -1)
+        effect_feats = np.take(self.features_, idx)
+
+        # merge effect data into a DataFrame
+        effect_matrix = np.dstack((effect_feats.T, effect_bias.T, effect_values.T))
+        cols = pd.MultiIndex.from_product(
+            [[f"top{i}" for i in range(1, keep+1)], ['feats', 'bias', 'value']]
+        )
+        reason = pd.DataFrame(
+            np.hstack(effect_matrix),
+            columns = cols,
+        )
+
+        return reason
+
+
+    def bin_to_score(self, bins, return_sub=False):
+        """predict score from bins
+        """
+        score = 0
+        res = bins.copy()
+        for col, rule in self.rules.items():
+            s_map = rule['scores']
+            b = bins[col]
+
+            # set default group to min score
+            if np.isscalar(b):
+                b = np.argmin(s_map) if b == self.EMPTY_BIN else b
+            else:
+                b[b == self.EMPTY_BIN] = np.argmin(s_map)
+
+            # replace score
+            res[col] = s_map[b]
+            score += s_map[b]
+
+        if return_sub:
+            return score, res
+        else:
+            return score
+
 
     def predict_proba(self, X):
         """predict probability
@@ -129,7 +220,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             2d array: probability of all classes
         """
         proba = self.score_to_proba(self.predict(X))
-        return np.stack((1-proba, proba), axis = 1)
+        return np.stack((1 - proba, proba), axis=1)
     
 
     def _generate_rules(self):
@@ -196,27 +287,6 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             array-like|float: the probability of `1`
         """
         return 1 / (np.e ** ((score - self.offset) / self.factor) + 1)
-
-
-    def bin_to_score(self, bins, return_sub = False):
-        """predict score from bins
-        """
-        res = bins.copy()
-        for col in self.rules:
-            s_map = self.rules[col]['scores']
-            b = bins[col].values
-            # set default group to min score
-            b[b == self.EMPTY_BIN] = np.argmin(s_map)
-            # replace score
-            res[col] = s_map[b]
-
-        score = np.sum(res.values, axis = 1)
-
-        if return_sub is False:
-            return score
-
-        return score, res
-
 
 
     def woe_to_score(self, woe, weight = None):

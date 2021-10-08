@@ -11,3 +11,4 @@ dist/
 *.c
 *.so
 *.pyc
+.idea/
