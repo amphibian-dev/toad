@@ -29,7 +29,7 @@ A [basic tutorial](tutorial) is provided.
 
 ```eval_rst
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    toad
 ```
