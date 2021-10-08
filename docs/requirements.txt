@@ -1,5 +1,6 @@
 numpy
 Cython
+docutils==0.16
 recommonmark
 sphinx-readable-theme
 ipykernel
