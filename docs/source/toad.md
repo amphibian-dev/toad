@@ -17,6 +17,7 @@
    toad.stats
    toad.transform
    toad.preprocessing
+   toad.nn
    toad.utils
 ```
 
