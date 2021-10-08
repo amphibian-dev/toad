@@ -3,6 +3,6 @@
 ```eval_rst
 .. automodule:: toad.nn.module
    :members:
-   :undoc-members:
+   :special-members: __init__
    :show-inheritance:
 ```

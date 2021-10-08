@@ -3,6 +3,6 @@
 ```eval_rst
 .. automodule:: toad.preprocessing.partition
    :members:
-   :undoc-members:
+   :special-members: __init__
    :show-inheritance:
 ```

@@ -26,6 +26,6 @@
 ```eval_rst
 .. automodule:: toad
    :members:
-   :undoc-members:
+   :special-members: __init__
    :show-inheritance:
 ```
