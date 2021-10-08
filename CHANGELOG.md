@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [0.1.0] - 2021-10-08
+
 ### Add
 
 - Added `backward_rounds` for `nn.Trainer.train`
@@ -141,7 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VIF independent statsmodels.
 
 
-[Unreleased]: https://github.com/amphibian-dev/toad/compare/0.0.65...HEAD
+[Unreleased]: https://github.com/amphibian-dev/toad/compare/0.1.0...HEAD
+[0.1.0]: https://github.com/amphibian-dev/toad/compare/0.0.65...0.1.0
 [0.0.65]: https://github.com/amphibian-dev/toad/compare/0.0.64...0.0.65
 [0.0.64]: https://github.com/amphibian-dev/toad/compare/0.0.62...0.0.64
 [0.0.62]: https://github.com/amphibian-dev/toad/compare/0.0.61...0.0.62
