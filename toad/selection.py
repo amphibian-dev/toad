@@ -490,7 +490,7 @@ def select(frame, target = 'target', empty = 0.9, iv = 0.02, corr = 0.7,
     Args:
         frame (DataFrame)
         target (str): target's name in dataframe
-        empty (number): drop the features which empty num is greater than threshold. if threshold is float, it will be use as percentage
+        empty (number): drop the features which empty num is greater than threshold. if threshold is less than `1`, it will be use as percentage
         iv (float): drop the features whose IV is less than threshold
         corr (float): drop features that has the smallest IV in each groups which correlation is greater than threshold
         return_drop (bool): if need to return features' name who has been dropped
