@@ -9,6 +9,37 @@ from ..utils.progress import Progress
 
 class Module(nn.Module):
     """base module for every model
+
+    Examples:
+        >>> from toad.nn import Module
+        ... from torch import nn
+        ... 
+        ... class Net(Module):
+        ...     def __init__(self, inputs, hidden, outputs):
+        ...         self.model = nn.Sequential(
+        ...             nn.Linear(inputs, hidden),
+        ...             nn.ReLU(),
+        ...             nn.Linear(hidden, outputs),
+        ...             nn.Sigmoid(),
+        ...         )
+        ...     
+        ...     def forward(self, x):
+        ...         return self.model(x)
+        ...     
+        ...     def fit_step(self, batch):
+        ...         x, y = batch
+        ...         y_hat = self(x)
+        ... 
+        ...         # log into history
+        ...         self.log('y', y)
+        ...         self.log('y_hat', y_hat)
+        ... 
+        ...         return nn.functional.mse_loss(y_hat, y)
+        ... 
+        ... model = Net(10, 4, 1)
+        ... 
+        ... model.fit(train_loader)
+
     """
     def __init__(self):
         """define model struct
