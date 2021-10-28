@@ -77,6 +77,7 @@ class Module(nn.Module):
 
     def evaluate(self, loader, trainer = None):
         """evaluate model
+        
         Args:
             loader (DataLoader): loader for evaluate model
             trainer (Trainer): trainer for evaluate model
@@ -91,6 +92,7 @@ class Module(nn.Module):
 
     def fit_step(self, batch, *args, **kwargs):
         """step for fitting
+        
         Args:
             batch (Any): batch data from dataloader
         

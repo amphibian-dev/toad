@@ -1,7 +1,8 @@
 from ...utils.decorator import Decorator
 
 class callback(Decorator):
-    """
+    """callback for trainer
+    
     Examples:
         >>> @callback
         ... def savemodel(model):

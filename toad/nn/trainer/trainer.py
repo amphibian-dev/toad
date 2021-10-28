@@ -10,9 +10,12 @@ from ...utils.progress import Progress
 
         
 class Trainer:
+    """trainer for training models
+    """
     def __init__(self, model, loader = None, optimizer = None, keep_history = None,
                 early_stopping = None):
-        """
+        """initialization
+
         Args:
             model (nn.Module): model will be trained
             loader (torch.DataLoader): training data loader
@@ -46,8 +49,16 @@ class Trainer:
             loader (torch.DataLoader): training data loader
             epoch (int): number of epoch for training loop
             callback (callable): callable function will be called every epoch
+                - parameters of callback
+                    model (nn.Module): the training model
+                    history (History): history of total log records
+                    epoch (int): current epoch number
+                    trainer (Trainer): self trainer
             start (int): epoch start from n round
             backward_rounds (int): backward after every n rounds 
+        
+        Returns:
+            Module: the model with best performents
         """
         if loader is not None:
             self.loader = loader
