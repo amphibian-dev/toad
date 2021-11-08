@@ -12,14 +12,15 @@ from ...utils.progress import Progress
 class Trainer:
     """trainer for training models
     """
-    def __init__(self, model, loader = None, optimizer = None, keep_history = None,
-                early_stopping = None):
+    def __init__(self, model, loader = None, optimizer = None, loss = None, keep_history = None,
+                 early_stopping = None):
         """initialization
 
         Args:
             model (nn.Module): model will be trained
             loader (torch.DataLoader): training data loader
             optimizer (torch.Optimier): the default optimizer is `Adam(lr = 1e-3)`
+            loss (Callable): could be called as 'loss(y_hat, y)'
             early_stopping (earlystopping): the default value is `loss_earlystopping`, 
                 you can set it to `False` to disable early stopping
             keep_history (int): keep the last n-th epoch logs, `None` will keep all
@@ -31,6 +32,8 @@ class Trainer:
             optimizer = optim.Adam(model.parameters(), lr = 1e-3)
         
         self.optimizer = optimizer
+
+        self.loss = loss
 
         # set default early stopping
         if early_stopping is None:
@@ -87,7 +90,10 @@ class Trainer:
             backward_loss = 0.
             for i, batch in enumerate(p, start = 1):
                 # step fit
-                l = self.model.fit_step(batch)
+                if self.loss is None:
+                    l = self.model.fit_step(batch)
+                else:
+                    l = self.model.fit_step(batch, loss=self.loss)
 
                 # log loss
                 self.model.log('loss', l)
@@ -148,7 +154,10 @@ class Trainer:
         loss = 0.
         for i, batch in enumerate(p, start = 1):
             # step fit
-            l = self.model.fit_step(batch)
+            if self.loss is None:
+                l = self.model.fit_step(batch)
+            else:
+                l = self.model.fit_step(batch, loss=self.loss)
 
             # log loss
             self.model.log('loss', l)
