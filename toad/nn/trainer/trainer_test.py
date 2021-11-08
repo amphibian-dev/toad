@@ -55,3 +55,17 @@ def test_trainer_early_stopping():
     trainer = Trainer(model, loader, early_stopping = scoring)
     trainer.train(epoch = 200)
     assert len(trainer.history) == 4
+
+
+class TestModel2(TestModel):
+    def fit_step(self, batch, loss=None):
+        x, y = batch
+        y_hat = self(x)
+        return loss(y_hat, y)
+
+
+def test_trainer_loss():
+    model = TestModel2(NUM_FEATS, NUM_CLASSES)
+    trainer = Trainer(model, loader, loss = F.cross_entropy)
+    trainer.train(epoch = 2)
+    assert len(trainer.history) == 2

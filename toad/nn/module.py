@@ -56,13 +56,14 @@ class Module(nn.Module):
         return next(self.parameters()).device
 
 
-    def fit(self, loader, trainer = None, optimizer = None, early_stopping = None, **kwargs):
+    def fit(self, loader, trainer = None, optimizer = None, loss = None, early_stopping = None, **kwargs):
         """train model
 
         Args:
             loader (DataLoader): loader for training model
             trainer (Trainer): trainer for training model
             optimizer (torch.Optimier): the default optimizer is `Adam(lr = 1e-3)`
+            loss (Callable): could be called as 'loss(y_hat, y)'
             early_stopping (earlystopping): the default value is `loss_earlystopping`, 
                 you can set it to `False` to disable early stopping
             epoch (int): number of epoch for training loop
@@ -70,7 +71,7 @@ class Module(nn.Module):
         """
         if trainer is None:
             from .trainer import Trainer
-            trainer = Trainer(self, loader, optimizer = optimizer, early_stopping = early_stopping)
+            trainer = Trainer(self, loader, optimizer = optimizer, loss = loss, early_stopping = early_stopping)
         
         trainer.train(**kwargs)
     
@@ -90,19 +91,21 @@ class Module(nn.Module):
 
     
 
-    def fit_step(self, batch, *args, **kwargs):
+    def fit_step(self, batch, loss = None, *args, **kwargs):
         """step for fitting
         
         Args:
             batch (Any): batch data from dataloader
+            loss (Callable): could be called as 'loss(y_hat, y)'
         
         Returns:
             Tensor: loss of this step
         """
         x, y = batch
         y_hat = self.__call__(x)
-        loss = nn.functional.mse_loss(y_hat, y)
-        return loss
+        if loss is None:
+            loss = nn.functional.mse_loss
+        return loss(y_hat, y)
 
 
     def save(self, path):
