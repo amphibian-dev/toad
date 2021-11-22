@@ -208,7 +208,7 @@ def roc_plot(score, target, compare = None):
     return ax
 
 
-def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f"):
+def bin_plot(frame, x = None, target = 'target', by = None, iv = True, annotate_format = ".2f"):
     """plot for bins
 
     Args:
@@ -229,7 +229,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         target = temp_name
     
     
-    group = frame.groupby(x)
+    group = frame.groupby(x if x == None else [x,by])
 
     table = group[target].agg(['sum', 'count']).reset_index()
     table['badrate'] = table['sum'] / table['count']
@@ -240,6 +240,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         y = 'prop',
         data = table,
         color = '#82C6E2',
+        hue = by,
     )
 
     prop_ax = add_annotate(prop_ax, format = annotate_format)
@@ -253,6 +254,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         data = table,
         color = '#D65F5F',
         ax = badrate_ax,
+        hue = by,
     )
 
     badrate_ax.set_ylim([0, None])
@@ -263,3 +265,4 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         prop_ax = add_text(prop_ax, 'IV: {:.5f}'.format(IV(frame[x],frame[target])))
 
     return prop_ax
+
