@@ -119,14 +119,14 @@ class Trainer:
             }
 
             with torch.no_grad():
+                if callable(callback):
+                    callback(**callback_params)
+                
                 if self.early_stop and self.early_stop(**callback_params):
                     # set best state to model
                     best_state = self.early_stop.get_best_state()
                     self.model.load_state_dict(best_state)
                     break
-                
-                if callable(callback):
-                    callback(**callback_params)
         
         return self.model
     
