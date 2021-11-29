@@ -9,7 +9,20 @@ class callback(Decorator):
         ...     model.save("path_to_file")
         ...
         ... trainer.train(model, callback = savemodel)
+    
     """
+    def __init__(self, *args, **kwargs):
+        if hasattr(self, 'wrapped'):
+            # use `wrapped` func as core func
+            super().__init__(getattr(self, 'wrapped'))
+            # setup configuration
+            self.setup(*args, **kwargs)
+            return
+        
+        # init normal decorator
+        super().__init__(*args, **kwargs)
+
+
     def setup_func(self, func):
         import inspect
         self._params = inspect.signature(func).parameters
@@ -21,3 +34,32 @@ class callback(Decorator):
         params = {k: v for k ,v in kwargs.items() if k in self._params.keys()}
 
         return self.call(**params)
+
+
+
+class checkpoint(callback):
+    """
+    Args:
+        dir (string): dir name for saving checkpoint
+        every (int): every epoch for saving
+        format (string): checkpoint file format
+    """
+    dirpath = "model_checkpoints"
+    every = 1
+    filename = "{name}-{epoch}.pt"
+    
+    def wrapped(self, model, epoch):
+        name = type(model).__name__
+
+        from pathlib import Path
+        dirpath = Path(self.dirpath.format(name = name))
+        dirpath.mkdir(parents = True, exist_ok = True)
+        filename = self.filename.format(
+            name = name,
+            epoch = epoch,
+        )
+        
+        if epoch % self.every == 0:
+            model.save(path = dirpath / filename)
+        
+
