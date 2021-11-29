@@ -37,8 +37,8 @@ class Trainer:
 
         # set default early stopping
         if early_stopping is None:
-            from .earlystop import loss_scoring
-            early_stopping = loss_scoring
+            from .earlystop import loss_stopping
+            early_stopping = loss_stopping()
         
         self.early_stop = early_stopping
 
@@ -46,7 +46,7 @@ class Trainer:
         self.history = deque(maxlen = keep_history)
 
 
-    def train(self, loader = None, epoch = 10, callback = None, start = 0, backward_rounds = 1):
+    def train(self, loader = None, epoch = 10, callback = [], start = 0, backward_rounds = 1):
         """
         Args:
             loader (torch.DataLoader): training data loader
@@ -69,8 +69,11 @@ class Trainer:
         if self.loader is None:
             raise ValueError("loader is not set, please set a loader for trainning!")
 
-        if callback and not isinstance(callback, Callback):
+        if callable(callback) and not isinstance(callback, Callback):
             callback = Callback(callback)
+        
+        if not isinstance(callback, list):
+            callback = [callback]
         
         # init progress bar
         p = Progress(self.loader)
@@ -119,8 +122,9 @@ class Trainer:
             }
 
             with torch.no_grad():
-                if callable(callback):
-                    callback(**callback_params)
+                if isinstance(callback, list):
+                    for hook in callback:
+                        hook(**callback_params)
                 
                 if self.early_stop and self.early_stop(**callback_params):
                     # set best state to model

@@ -6,6 +6,7 @@ from torch.utils.data import TensorDataset, DataLoader
 
 from ..module import Module
 from .trainer import Trainer
+from .callback import callback
 from .earlystop import earlystopping
 
 
@@ -55,6 +56,25 @@ def test_trainer_early_stopping():
     trainer = Trainer(model, loader, early_stopping = scoring)
     trainer.train(epoch = 200)
     assert len(trainer.history) == 4
+
+
+def test_multi_callbacks():
+    log = {}
+    
+    @callback
+    def log_epoch(epoch):
+        log['epoch'] = epoch
+    
+    @callback
+    def log_loss(history):
+        log['loss'] = history['loss']
+
+    model = TestModel(NUM_FEATS, NUM_CLASSES)
+    trainer = Trainer(model)
+    trainer.train(loader, epoch = 2, callback = [log_epoch, log_loss])
+    
+    assert log['epoch'] == 1
+    assert len(log['loss']) == 157
 
 
 class TestModel2(TestModel):

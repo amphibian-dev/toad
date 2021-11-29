@@ -62,8 +62,8 @@ class earlystopping(callback):
             return True
         
 
-@earlystopping
-def loss_scoring(history):
+class loss_stopping(earlystopping):
     """scoring function
     """
-    return history['loss'].mean()
+    def wrapped(self, history):
+        return history['loss'].mean()
