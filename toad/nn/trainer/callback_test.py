@@ -1,6 +1,6 @@
 from torch import nn
 
-from .callback import callback, checkpoint
+from .callback import callback, savemodel
 from ..module import Module
 
 class TestModel(Module):
@@ -21,5 +21,5 @@ def test_callback():
 
 def test_checkpoint():
     model = TestModel(10, 2)
-    hook = checkpoint(dirpath = '/dev', filename = "null")
+    hook = savemodel(dirpath = '/dev', filename = "null")
     hook(model = model, epoch = 1)

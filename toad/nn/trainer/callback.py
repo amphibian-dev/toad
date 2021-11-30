@@ -48,18 +48,36 @@ class checkpoint(callback):
     every = 1
     filename = "{name}-{epoch}.pt"
     
-    def wrapped(self, model, epoch):
+
+    def wrapper(self, epoch, model, **kwargs):
         name = type(model).__name__
 
         from pathlib import Path
-        dirpath = Path(self.dirpath.format(name = name))
+        dirpath = Path(self.dirpath)
         dirpath.mkdir(parents = True, exist_ok = True)
+
         filename = self.filename.format(
             name = name,
             epoch = epoch,
         )
-        
-        if epoch % self.every == 0:
-            model.save(path = dirpath / filename)
-        
 
+        path = dirpath / filename
+
+        if epoch % self.every == 0:
+            super().wrapper(
+                epoch = epoch,
+                model = model,
+                path = path,
+                **kwargs
+            )
+
+
+class savemodel(checkpoint):
+    """
+    Args:
+        dir (string): dir name for saving checkpoint
+        every (int): every epoch for saving
+        format (string): checkpoint file format, default is `{name}-{epoch}.pt`
+    """
+    def wrapped(self, model, path):
+        model.save(path)
