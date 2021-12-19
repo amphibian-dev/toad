@@ -80,4 +80,5 @@ class savemodel(checkpoint):
         format (string): checkpoint file format, default is `{name}-{epoch}.pt`
     """
     def wrapped(self, model, path):
-        model.save(path)
+        import torch
+        torch.save(model.state_dict(), path)
