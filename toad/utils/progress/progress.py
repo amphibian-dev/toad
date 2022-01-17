@@ -33,8 +33,7 @@ class Progress:
             self.size = len(iterable.dataset)
 
 
-        self.idx = 0
-        self.time = None
+        self.reset()
 
 
         self.BAR_LENGTH = 32
@@ -56,39 +55,61 @@ class Progress:
 
     def __iter__(self):
         self.reset()
-        # reset time
-        start = time()
-        last_time = start
-        for item in self.iterable:
-            yield item
+        self.iterator = iter(self.iterable)
+        return self
+    
 
-            self.idx += 1
-
-            curr_time = time()
-            self.time = curr_time - start
-
-            # skip update if delta is too small
-            if curr_time - last_time < self.interval:
-                continue
-            
-            last_time = curr_time
-            
-            # update bar
-            self.flush()
-        
-        # finally updating for the status of end
-        self.flush()
-        self.end()
+    def __next__(self):
+        try:
+            return self.next()
+        except StopIteration as e:
+            self.end()
+            raise e      
     
 
     def reset(self):
         # reset index
         self.idx = 0
+
+        # reset time
+        self.time = None
+        self.start_time = time()
+        self._last_time = self.start_time
+        self.iterator = iter(self.iterable)
+    
+
+    def next(self):
+        item = next(self.iterator)
+        self.update()
+        return item
+    
+
+    def update(self, idx = None, force = False):
+        # update idx
+        if idx is None:
+            idx = self.idx + 1
+        
+        self.idx = idx
+
+        curr_time = time()
+        self.time = curr_time - self.start_time
+
+        # skip update if delta is too small
+        if not force and curr_time - self._last_time < self.interval:
+            return
+        
+        self._last_time = curr_time
+        
+        # update bar
+        self.flush()
     
 
     def end(self):
+        """progress end
+        """
+        self.update(idx = self.idx, force = True)
         self.print('\n')
-
+    
 
     def flush(self):
         if self.size is None:
@@ -116,6 +137,9 @@ class Progress:
     def print(self, text):
         sys.stdout.write(text)
         sys.stdout.flush()
+    
+
+
 
 
 
