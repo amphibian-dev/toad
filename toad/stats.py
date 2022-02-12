@@ -415,7 +415,7 @@ def feature_bin_stats(df_bin,feature,target):
     Returns:
         DataFrame: contains good, bad, badrate, prop, y_prop, n_prop, woe, iv
     """
-    table = df_bin.groupby([col, target]).agg(len).unstack()
+    table = df_bin[[feature, target]].groupby([feature, target]).agg(len).unstack().reset_index()
     table = table.rename(columns = {0 : 'good', 1 : 'bad'}) 
     table['total'] = table['good'] + table['bad']
     table['badrate'] = table['bad'] / table['total']
