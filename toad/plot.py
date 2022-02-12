@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from .stats import IV， feature_bin_stats
+from .stats import IV, feature_bin_stats
 from .metrics import AUC
 from .tadpole import tadpole
 from .tadpole.utils import HEATMAP_CMAP, MAX_STYLE, add_annotate, add_text, reset_ylim
