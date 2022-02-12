@@ -403,3 +403,25 @@ def quality(dataframe, target = 'target', cpu_cores = 0, iv_only = False, indica
         by = indicators[0].name,
         ascending = False,
     )
+
+
+def feature_bin_stats(df_bin,feature,target):
+    """calculate the detail info of a feature after bin
+
+    Args:
+        df_bin (dataframe has featute and target columns)
+        feature (str)
+        target (str)
+    Returns:
+        DataFrame: contains good, bad, badrate, prop, y_prop, n_prop, woe, iv
+    """
+    table = df_bin.groupby([col, target]).agg(len).unstack()
+    table = table.rename(columns = {0 : 'good', 1 : 'bad'}) 
+    table['total'] = table['good'] + table['bad']
+    table['badrate'] = table['bad'] / table['total']
+    table['prop'] = table['total'] / table['total'].sum()
+    table['y_prop'] = table['good'] / table['good'].sum()
+    table['n_prop'] = table['bad'] / table['bad'].sum()
+    table['woe'] = table.apply(lambda x : WOE(x['y_prop'], x['n_prop']),axis=1)
+    table['iv'] = table.apply(lambda x : (x['y_prop'] - x['n_prop']) * WOE(x['y_prop'], x['n_prop']), axis=1)
+    return table
