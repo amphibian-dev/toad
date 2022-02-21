@@ -72,3 +72,8 @@ def test_roc_plot():
 
 def test_bin_plot():
     g = bin_plot(frame, x = 'B', target = 'target')
+
+
+def test_bin_plot_return_frame():
+    g, df = bin_plot(frame, x = 'B', target = 'target', return_frame = True)
+    assert df.shape == (100, 10)

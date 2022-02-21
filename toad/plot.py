@@ -208,7 +208,7 @@ def roc_plot(score, target, compare = None):
     return ax
 
 
-def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f"):
+def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f", return_frame = False):
     """plot for bins
 
     Args:
@@ -217,6 +217,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         target (str): target column in frame
         iv (bool): if need to show iv in plot
         annotate_format (str): format str for axis annotation of chart
+        return_frame (bool): if need return bin frame
 
     Returns:
         Dataframe: contains good, bad, badrate, prop, y_prop, n_prop, woe, iv
@@ -256,4 +257,9 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         prop_ax = reset_ylim(prop_ax)
         prop_ax = add_text(prop_ax, 'IV: {:.5f}'.format(table['iv'].sum()))
 
-    return table
+    res = (prop_ax,)
+    
+    if return_frame:
+        res += (table,)
+
+    return unpack_tuple(res)
