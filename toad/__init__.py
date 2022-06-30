@@ -1,4 +1,4 @@
-from .merge import merge, DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
+# from .merge import merge, DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
 from .detector import detect
 from .metrics import KS, KS_bucket, F1
 from .stats import quality, IV, VIF, WOE, entropy, entropy_cond, gini, gini_cond
