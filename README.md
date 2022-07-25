@@ -103,6 +103,8 @@ print(card.export())
 
 - [docs][docs-url]
 
+- [Contributing](CONTRIBUTING.md)
+
 ## Community · 社区
 We welcome public feedback and new PRs. We hold a WeChat group for questions and suggestions. 
 

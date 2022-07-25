@@ -44,7 +44,7 @@ class Progress:
         self.suffix = ""
 
         if self.size is None:
-            self.template = "{prefix} {done} iters {time:.2f}s {suffix}"
+            self.template = "{prefix} {done} iters {time:.2f}s {tps}it/s {suffix}"
         else:
             self.template = "{prefix} {percent:3.0f}%|{bar}| [{done}/{size}] {time:.2f}s {suffix}"
 
@@ -128,7 +128,7 @@ class Progress:
             done = done,
             size = self.size,
             time = self.time,
-            tps = done / self.time,
+            tps = done / max(self.time, 1),
             prefix = self.prefix,
             suffix = self.suffix,
         ))
