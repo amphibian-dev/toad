@@ -57,39 +57,8 @@ class Trainer:
         self.num_works=num_works
         self.use_gpu=use_gpu
         if not ray.is_initialized():
-            ray.init('ray://172.20.159.144:10001')  # ray server address
-        self._distribute_trainer = Trainer(backend="torch", num_workers=self.num_workers, use_gpu=self.use_gpu)
-        
-
-    # def _train(self,lr,batch_size,epoches):
-    #     import ray.train as train
-    #     loss_fn = torch.nn.CrossEntropyLoss()
-    #     # optimizer = torch.optim.SGD(model.parameters(), lr=lr)
-    #     p=Progress(self.loader)
-    #     loss_results = []
-    #     for _ in range(epoches):
-    #         size = len(datatrain_loader) // train.world_size()
-    #         model.train()
-    #         p.prefix = f"Epoch:{_}"
-    #         history = History()
-    #         self.history.append(history)
-    #         self.model._history = history
-    #         for batch, (X, y) in enumerate(datatrain_loader):
-    #             # Compute prediction error
-    #             # pred = model(X)
-    #             pred=self.model.fit_step(X)
-    #             loss = loss_fn(pred, y)
-    #             self.model.log('loss', loss)
-    #             # Backpropagation
-    #             self.optimizer.zero_grad()
-    #             loss.backward()
-    #             self.optimizer.step()
-    #             if batch % 100 == 0:
-    #                 loss, current = loss.item(), batch * len(X)
-    #                 print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-    #     train.report(loss=loss)
-    #     loss_results.append(loss)
-
+            ray.init('ray://172.20.159.144:10001')  
+        self._distribute_trainer = Trainer(backend="torch", num_workers=self.num_works, use_gpu=self.use_gpu)
 
     def _train(self, epoch, callback = None, start=0, backward_rounds = 1):
 
