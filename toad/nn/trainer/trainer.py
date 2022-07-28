@@ -62,7 +62,7 @@ class Trainer:
             
             loader = train.torch.prepare_data_loader(self.loader)
             model = train.torch.prepare_model(self.model)
-            model.fit_step=self.fit_step
+            model.fit_step=self.model.fit_step
         else:
             loader = self.loader
             model = self.model
