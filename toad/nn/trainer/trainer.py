@@ -43,27 +43,23 @@ class Trainer:
     # initialize enviroment setting
     def distributed(self,num_works=4,use_gpu=False):
         '''
-        
         Args: 
-
-
-
-
         '''
         import ray
         from ray.train.trainer import Trainer
-        from ray.train.callbacks import JsonLoggerCallback
         self._distrubution_train=True
         self.num_works=num_works
         self.use_gpu=use_gpu
         if not ray.is_initialized():
             ray.init('ray://172.20.159.144:10001')  
-        self._distribute_trainer = Trainer(backend="torch", num_workers=self.num_works, use_gpu=self.use_gpu)
-
-    def _train(self, epoch, callback = None, start=0, backward_rounds = 1):
-
+    def _train(self,config:dict):
         if self._distrubution_train:
             import ray.train as train
+            print("ok: this is  ok ")
+            epoch=config.get("epoch",10)
+            start=config.get("start",0)
+            backward_rounds=config.get("backward_rounds",1)
+            
             loader = train.torch.prepare_data_loader(self.loader)
             model = train.torch.prepare_model(self.model)
         else:
@@ -79,18 +75,19 @@ class Trainer:
             p.prefix = f"Epoch:{ep}"
 
             # setup a new history for model in each epoch
-            history = History()
-            self.history.append(history)
-            model._history = history
+            #history = History()
+            #self.history.append(history)
+            #model._history = history
 
             loss = 0.
             backward_loss = 0.
             for i, batch in enumerate(p, start = 1):
                 # step fit
+                print("this step is ok")
                 l = model.fit_step(batch)
 
                 # log loss
-                model.log('loss', l)
+                #model.log('loss', l)
                 
                 backward_loss = l + backward_loss
                 if i % backward_rounds == 0 or i == len(p):
@@ -104,24 +101,24 @@ class Trainer:
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
 
-            # setup callback params
-            callback_params = {
-                "model": model,
-                "history": history,
-                "epoch": ep,
-                "trainer": self,
-            }
+            #setup callback params
+            # callback_params = {
+            #    "model": model,
+            #    "history": history,
+            #    "epoch": ep,
+            #    "trainer": self,
+            # }
 
-            with torch.no_grad():
-                if self.early_stop and self.early_stop(**callback_params):
-                    # set best state to model
-                    best_state = self.early_stop.get_best_state()
-                    model.load_state_dict(best_state)
-                    break
+            # with torch.no_grad():
+            #    if self.early_stop and self.early_stop(**callback_params):
+            #        # set best state to model
+            #        best_state = self.early_stop.get_best_state()
+            #        model.load_state_dict(best_state)
+            #        break
                 
-                if callable(callback):
-                    callback(**callback_params)
-
+            #    if callable(callback):
+            #        callback(**callback_params)
+        
 
 
 
@@ -145,17 +142,19 @@ class Trainer:
             callback = Callback(callback)
 
         # distrubution trainning
-        if self._distrubution:
-            self._distribute_trainer.start()
-            result = self._distribute_trainer.run(
+        if self._distrubution_train:
+            from ray.train.trainer import Trainer
+            distribute_trainer = Trainer(backend="torch", num_workers=self.num_works, use_gpu=self.use_gpu)
+            distribute_trainer.start()
+            print("writting here")
+            result = distribute_trainer.run(
                 train_func=self._train,
-                config={"epoch": epoch,**kwargs},
-                # callbacks=[JsonLoggerCallback()],  
+                config={"epoch": epoch,"start": 0,"backward_rounds": 1}  
             )
             print(result)
-            self._distribute_trainer.shutdown()
+            distribute_trainer.shutdown()
         else:
-            self._train(self, epoch, callback = None, start=0, backward_rounds = 1) 
+            self._train(self, epoch, start=0, backward_rounds = 1) 
         return self.model
     
 
