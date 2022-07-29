@@ -42,8 +42,12 @@ class Trainer:
     
     # initialize enviroment setting
     def distributed(self,address,num_works=4,use_gpu=False):
-        '''
+        '''setting distribution enviroment and initial a ray cluster connection
+
         Args: 
+            address: the head of ray cluster address
+            num_works: compute task's resource
+            use_gpu: whether use GPU, "True" or "False"
         '''
         import ray
         from ray.train.trainer import Trainer
@@ -54,6 +58,10 @@ class Trainer:
             # ray.init('ray://172.20.144.131:10001')  
             ray.init(address)
     def _train(self,config:dict):
+        """distribut training details about prepare model and datasets
+        Args:
+            config: use dict,the parameter about lr, epoch , ...
+        """
         if self._distrubution_train:
             import ray.train as train
             epoch=config.get("epoch",10)
@@ -150,6 +158,7 @@ class Trainer:
             print(result)
             distribute_trainer.shutdown()
         else:
+            config={"epoch":epoch,"start": 0, "backward_rounds": 1}
             self._train(self, epoch, start=0, backward_rounds = 1) 
         return self.model
     
