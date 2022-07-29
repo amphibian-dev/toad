@@ -51,11 +51,10 @@ class Trainer:
         self.num_works=num_works
         self.use_gpu=use_gpu
         if not ray.is_initialized():
-            ray.init('ray://172.20.144.127:10001')  
+            ray.init('ray://172.20.144.131:10001')  
     def _train(self,config:dict):
         if self._distrubution_train:
             import ray.train as train
-#             print("ok: this is  ok ")
             epoch=config.get("epoch",10)
             start=config.get("start",0)
             backward_rounds=config.get("backward_rounds",1)
@@ -63,7 +62,7 @@ class Trainer:
             loader = train.torch.prepare_data_loader(self.loader)
             model = train.torch.prepare_model(self.model)
             model.fit_step=self.model.fit_step
-            model.named_parameters=self.model.named_parameters
+            model.state_dict=self.model.state_dict
         else:
             loader = self.loader
             model = self.model
@@ -85,9 +84,6 @@ class Trainer:
             backward_loss = 0.
             for i, batch in enumerate(p, start = 1):
                 # step fit
-                print(help(model))
-                for item in dir(model):
-                    print(item)
                 l = model.fit_step(batch)
 
                 # log loss
@@ -96,6 +92,7 @@ class Trainer:
                 backward_loss = l + backward_loss
                 if i % backward_rounds == 0 or i == len(p):
                     self.optimizer.zero_grad()
+                    print("backward  gradinet",backward_loss.grad)
                     backward_loss.backward()
                     self.optimizer.step()
                     
@@ -103,12 +100,10 @@ class Trainer:
                     backward_loss = 0.
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
-            print("******************each work *************")
-            for name, parameter in model.named_parameters():
-                print(name, ':', parameter.size())
-            print("         grad    of l")
-            print(backward_loss.grad)
-            print("------------------end --------------------")
+            for name in model.state_dict():
+                print("name :",name,"\n")
+                print(model.state_dict()[name])
+                print("\n")
             #setup callback params
             # callback_params = {
             #    "model": model,
@@ -154,7 +149,6 @@ class Trainer:
             from ray.train.trainer import Trainer
             distribute_trainer = Trainer(backend="torch", num_workers=self.num_works, use_gpu=self.use_gpu)
             distribute_trainer.start()
-            print("writting here")
             result = distribute_trainer.run(
                 train_func=self._train,
                 config={"epoch": epoch,"start": 0,"backward_rounds": 1}  
