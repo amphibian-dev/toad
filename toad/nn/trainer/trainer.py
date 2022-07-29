@@ -41,7 +41,7 @@ class Trainer:
         self.history = deque(maxlen = keep_history)
     
     # initialize enviroment setting
-    def distributed(self,num_works=4,use_gpu=False):
+    def distributed(self,address,num_works=4,use_gpu=False):
         '''
         Args: 
         '''
@@ -51,14 +51,14 @@ class Trainer:
         self.num_works=num_works
         self.use_gpu=use_gpu
         if not ray.is_initialized():
-            ray.init('ray://172.20.144.131:10001')  
+            # ray.init('ray://172.20.144.131:10001')  
+            ray.init(address)
     def _train(self,config:dict):
         if self._distrubution_train:
             import ray.train as train
             epoch=config.get("epoch",10)
             start=config.get("start",0)
             backward_rounds=config.get("backward_rounds",1)
-            
             loader = train.torch.prepare_data_loader(self.loader)
             model = train.torch.prepare_model(self.model)
             model.fit_step=self.model.fit_step
@@ -76,9 +76,9 @@ class Trainer:
             p.prefix = f"Epoch:{ep}"
 
             # setup a new history for model in each epoch
-            #history = History()
-            #self.history.append(history)
-            #model._history = history
+            history = History()
+            self.history.append(history)
+            model._history = history
 
             loss = 0.
             backward_loss = 0.
@@ -92,7 +92,6 @@ class Trainer:
                 backward_loss = l + backward_loss
                 if i % backward_rounds == 0 or i == len(p):
                     self.optimizer.zero_grad()
-                    print("backward  gradinet",backward_loss.grad)
                     backward_loss.backward()
                     self.optimizer.step()
                     
@@ -100,24 +99,19 @@ class Trainer:
                     backward_loss = 0.
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
-            for name in model.state_dict():
-                print("name :",name,"\n")
-                print(model.state_dict()[name])
-                print("\n")
-            #setup callback params
-            # callback_params = {
-            #    "model": model,
-            #    "history": history,
-            #    "epoch": ep,
-            #    "trainer": self,
-            # }
-
-            # with torch.no_grad():
-            #    if self.early_stop and self.early_stop(**callback_params):
-            #        # set best state to model
-            #        best_state = self.early_stop.get_best_state()
-            #        model.load_state_dict(best_state)
-            #        break
+            # setup callback params
+            callback_params = {
+               "model": model,
+               "history": history,
+               "epoch": ep,
+               "trainer": self,
+            }
+            with torch.no_grad():
+               if self.early_stop and self.early_stop(**callback_params):
+                   # set best state to model
+                   best_state = self.early_stop.get_best_state()
+                   model.load_state_dict(best_state)
+                   break
                 
             #    if callable(callback):
             #        callback(**callback_params)
