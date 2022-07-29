@@ -51,11 +51,11 @@ class Trainer:
         self.num_works=num_works
         self.use_gpu=use_gpu
         if not ray.is_initialized():
-            ray.init('ray://172.20.159.144:10001')  
+            ray.init('ray://172.20.144.127:10001')  
     def _train(self,config:dict):
         if self._distrubution_train:
             import ray.train as train
-            print("ok: this is  ok ")
+#             print("ok: this is  ok ")
             epoch=config.get("epoch",10)
             start=config.get("start",0)
             backward_rounds=config.get("backward_rounds",1)
@@ -63,6 +63,7 @@ class Trainer:
             loader = train.torch.prepare_data_loader(self.loader)
             model = train.torch.prepare_model(self.model)
             model.fit_step=self.model.fit_step
+            model.named_parameters=self.model.named_parameters
         else:
             loader = self.loader
             model = self.model
@@ -84,7 +85,9 @@ class Trainer:
             backward_loss = 0.
             for i, batch in enumerate(p, start = 1):
                 # step fit
-                print("this step is ok")
+                print(help(model))
+                for item in dir(model):
+                    print(item)
                 l = model.fit_step(batch)
 
                 # log loss
@@ -98,10 +101,14 @@ class Trainer:
                     
                     # reset backward loss
                     backward_loss = 0.
-
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
-
+            print("******************each work *************")
+            for name, parameter in model.named_parameters():
+                print(name, ':', parameter.size())
+            print("         grad    of l")
+            print(backward_loss.grad)
+            print("------------------end --------------------")
             #setup callback params
             # callback_params = {
             #    "model": model,
