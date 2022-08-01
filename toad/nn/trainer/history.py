@@ -1,6 +1,17 @@
 import torch
 import numpy as np
 
+
+_history_stack = [None]
+
+
+def get_current_history():
+    global _history_stack
+
+    return _history_stack[-1]
+
+
+
 class History:
     """model history
     """
@@ -54,3 +65,23 @@ class History:
             raise TypeError("value should be `torch.Tensor` or `scalar`")
         
         self._push(key, value)
+    
+
+    def start(self):
+        global _history_stack
+        _history_stack.append(self)
+        
+        return self
+    
+
+    def end(self):
+        global _history_stack
+        return _history_stack.pop()
+    
+
+    def __enter__(self):
+        return self.start()
+    
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self.end()

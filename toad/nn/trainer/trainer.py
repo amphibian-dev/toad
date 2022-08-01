@@ -41,7 +41,7 @@ class Trainer:
         self.history = deque(maxlen = keep_history)
     
     # initialize enviroment setting
-    def distributed(self,address,num_works=4,use_gpu=False):
+    def distributed(self, address, num_works = 4, use_gpu = False):
         '''setting distribution enviroment and initial a ray cluster connection
 
         Args: 
@@ -56,24 +56,26 @@ class Trainer:
         self.use_gpu=use_gpu
         if not ray.is_initialized():
             ray.init(address)
+    
     def _train(self,config:dict):
         """distribut training details about prepare model and datasets
         Args:
             config: use dict,the parameter about lr, epoch , ...
         """
+        epoch = config.get("epoch", 10)
+        start = config.get("start", 0)
+        callback = config.get("callback", None)
+        backward_rounds = config.get("backward_rounds", 1)
+
+        loader = self.loader
+        model = self.model
+
         if self._distrubution_train:
             import ray.train as train
-            epoch=config.get("epoch",10)
-            start=config.get("start",0)
-            backward_rounds=config.get("backward_rounds",1)
             loader = train.torch.prepare_data_loader(self.loader)
             model = train.torch.prepare_model(self.model)
             model.fit_step=self.model.fit_step
             model.state_dict=self.model.state_dict
-            model.log=self.model.log
-        else:
-            loader = self.loader
-            model = self.model
         
         # init progress bar
         p = Progress(loader)
@@ -86,7 +88,9 @@ class Trainer:
             # setup a new history for model in each epoch
             history = History()
             self.history.append(history)
-            self.model._history = history
+            
+            # start of history
+            history.start()
 
             loss = 0.
             backward_loss = 0.
@@ -107,22 +111,27 @@ class Trainer:
                 loss += (l.item() - loss) / i
                 
                 p.suffix = 'loss:{:.4f}'.format(loss)
+            
             # setup callback params
             callback_params = {
-               "model": model,
-               "history": history,
-               "epoch": ep,
-               "trainer": self,
+                "model": model,
+                "history": history,
+                "epoch": ep,
+                "trainer": self,
             }
+
+            # END of history
+            history.end()
+
             with torch.no_grad():
-               if self.early_stop and self.early_stop(**callback_params):
-                   # set best state to model
-                   best_state = self.early_stop.get_best_state()
-                   model.load_state_dict(best_state)
-                   break
+                if self.early_stop and self.early_stop(**callback_params):
+                    # set best state to model
+                    best_state = self.early_stop.get_best_state()
+                    model.load_state_dict(best_state)
+                    break
                 
-            #    if callable(callback):
-            #        callback(**callback_params)
+                if callable(callback):
+                    callback(**callback_params)
         
 
 
@@ -146,20 +155,26 @@ class Trainer:
         if callback and not isinstance(callback, Callback):
             callback = Callback(callback)
 
+        config = {
+            "epoch": epoch,
+            "callback": callback,
+            **kwargs,
+        }
+
         # distrubution trainning
         if self._distrubution_train:
             from ray.train.trainer import Trainer
             distribute_trainer = Trainer(backend="torch", num_workers=self.num_works, use_gpu=self.use_gpu)
             distribute_trainer.start()
             result = distribute_trainer.run(
-                train_func=self._train,
-                config={"epoch": epoch,"start": 0,"backward_rounds": 1}  
+                train_func = self._train,
+                config = config  
             )
             print(result)
             distribute_trainer.shutdown()
         else:
-            config={"epoch":epoch,"start": 0, "backward_rounds": 1}
-            self._train(config=config) 
+            self._train(config = config) 
+        
         return self.model
     
 

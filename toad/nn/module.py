@@ -3,6 +3,7 @@ import numpy as np
 from torch import nn, optim
 from torch.nn.parallel import DistributedDataParallel
 
+from .trainer.history import get_current_history
 from ..utils.progress import Progress
 
 
@@ -92,10 +93,11 @@ class Module(nn.Module):
             key (str): name of message
             value (Tensor): tensor of values
         """
-        if self._history is None:
+        history = get_current_history()
+        if history is None:
             return
         
-        return self._history.log(key, value)
+        return history.log(key, value)
         
         
     def distributed(self, backend = None, **kwargs):
