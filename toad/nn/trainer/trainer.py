@@ -55,7 +55,6 @@ class Trainer:
         self.num_works=num_works
         self.use_gpu=use_gpu
         if not ray.is_initialized():
-            # ray.init('ray://172.20.144.131:10001')  
             ray.init(address)
     def _train(self,config:dict):
         """distribut training details about prepare model and datasets
@@ -86,7 +85,6 @@ class Trainer:
             # setup a new history for model in each epoch
             history = History()
             self.history.append(history)
-            model._history = history
 
             loss = 0.
             backward_loss = 0.
@@ -95,8 +93,8 @@ class Trainer:
                 l = model.fit_step(batch)
 
                 # log loss
-                #model.log('loss', l)
-                
+                model.log('loss', l)
+                model._history = history
                 backward_loss = l + backward_loss
                 if i % backward_rounds == 0 or i == len(p):
                     self.optimizer.zero_grad()
@@ -159,7 +157,7 @@ class Trainer:
             distribute_trainer.shutdown()
         else:
             config={"epoch":epoch,"start": 0, "backward_rounds": 1}
-            self._train(self, config=config) 
+            self._train(config=config) 
         return self.model
     
 
