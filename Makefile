@@ -37,7 +37,7 @@ test: test_deps
 	@if [ -z $(TARGET) ]; then \
 		$(PYTHON) -m pytest -x toad; \
 	else \
-		$(PYTHON) -m pytest -s toad/$(TARGET)_test.py; \
+		$(PYTHON) -m pytest -s $(TARGET); \
 	fi
 
 build_deps:
