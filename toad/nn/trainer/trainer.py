@@ -70,6 +70,7 @@ class Trainer:
             model = train.torch.prepare_model(self.model)
             model.fit_step=self.model.fit_step
             model.state_dict=self.model.state_dict
+            model.log=self.model.log
         else:
             loader = self.loader
             model = self.model
@@ -85,6 +86,7 @@ class Trainer:
             # setup a new history for model in each epoch
             history = History()
             self.history.append(history)
+            self.model._history = history
 
             loss = 0.
             backward_loss = 0.
@@ -94,7 +96,6 @@ class Trainer:
 
                 # log loss
                 model.log('loss', l)
-                model._history = history
                 backward_loss = l + backward_loss
                 if i % backward_rounds == 0 or i == len(p):
                     self.optimizer.zero_grad()
@@ -104,6 +105,7 @@ class Trainer:
                     # reset backward loss
                     backward_loss = 0.
                 loss += (l.item() - loss) / i
+                
                 p.suffix = 'loss:{:.4f}'.format(loss)
             # setup callback params
             callback_params = {
