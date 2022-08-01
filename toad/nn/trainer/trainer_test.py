@@ -59,66 +59,6 @@ def test_trainer_early_stopping():
 
 
 
-
-
-### distribut model test
-from toad.nn.trainer.trainer import Trainer
-from torchvision.transforms import ToTensor
-import torch
-from torch import nn
-from torchvision import datasets
-from toad.nn import Module
-from torch.utils.data import DataLoader
-import ray
-class NeuralNetwork(Module):
-    def __init__(self):
-        super(NeuralNetwork, self).__init__()
-        self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28 * 28, 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 10),
-            nn.ReLU(),
-        )
-    def forward(self, x):
-        x = self.flatten(x)
-        logits = self.linear_relu_stack(x)
-        return logits
-    def fit_step(self, batch):
-        X, y = batch
-        pred = model(X)
-        return nn.CrossEntropyLoss(pred, y)
-def distribute_example():
-    training_data = datasets.FashionMNIST(
-        root="/data",
-        train=True,
-        download=True,
-        transform=ToTensor(),
-    )
-    # Download test data from open datasets.
-    test_data = datasets.FashionMNIST(
-        root="/data",
-        train=False,
-        download=True,
-        transform=ToTensor(),
-    )
-    worker_batch_size = 64 // 4
-    # Create data loaders.
-    train_dataloader = DataLoader(training_data, batch_size=16)
-    test_dataloader = DataLoader(test_data, batch_size=16)
-    model=NeuralNetwork()
-    optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
-    trainer=Trainer(model,train_dataloader,optimizer)
-    trainer.distributed(address="ray://172.20.159.144:10001",num_works=4,use_gpu=False)
-    trainer.train(epoch=1)
-    trainer.evaluate(test_dataloader)
-
-
-
-
-
     ### distribut model test
 from toad.nn.trainer.trainer import Trainer
 from torchvision.transforms import ToTensor
@@ -146,7 +86,7 @@ class NeuralNetwork(Module):
         return logits
     def fit_step(self, batch):
         X, y = batch
-        pred = model(X)
+        pred =self(X)
         return nn.CrossEntropyLoss(pred, y)
 def distribute_example():
     training_data = datasets.FashionMNIST(
