@@ -159,7 +159,7 @@ class Trainer:
             distribute_trainer.shutdown()
         else:
             config={"epoch":epoch,"start": 0, "backward_rounds": 1}
-            self._train(self, epoch, start=0, backward_rounds = 1) 
+            self._train(self, config=config) 
         return self.model
     
 
