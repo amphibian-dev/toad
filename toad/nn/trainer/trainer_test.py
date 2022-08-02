@@ -87,9 +87,12 @@ class NeuralNetwork(Module):
     def fit_step(self, batch):
         X, y = batch
         pred =self(X)
+        print("this is pred")
         print(pred)
         print(pred.shape)
-        return nn.CrossEntropyLoss(pred, y)
+        print("this is ")
+        loss_fn=nn.CrossEntropyLoss()
+        return loss_fn(pred, y)
 def test_distribute_example():
     training_data = datasets.FashionMNIST(
         root="~/data",
