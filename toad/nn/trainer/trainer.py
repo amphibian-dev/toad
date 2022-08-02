@@ -76,7 +76,7 @@ class Trainer:
             model = train.torch.prepare_model(self.model)
             model.fit_step=self.model.fit_step
             model.state_dict=self.model.state_dict
-        
+            model.log=self.model.log
         # init progress bar
         p = Progress(loader)
         for ep in range(start, epoch):

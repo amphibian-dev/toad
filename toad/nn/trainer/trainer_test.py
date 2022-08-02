@@ -87,8 +87,10 @@ class NeuralNetwork(Module):
     def fit_step(self, batch):
         X, y = batch
         pred =self(X)
+        print(pred)
+        print(pred.shape)
         return nn.CrossEntropyLoss(pred, y)
-def distribute_example():
+def test_distribute_example():
     training_data = datasets.FashionMNIST(
         root="~/data",
         train=True,
@@ -109,6 +111,6 @@ def distribute_example():
     model=NeuralNetwork()
     optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
     trainer=Trainer(model,train_dataloader,optimizer)
-    trainer.distributed(address="ray://172.20.159.144:10001",num_works=4,use_gpu=False)
+    trainer.distributed(address="ray://172.20.144.21:10001",num_works=4,use_gpu=False)
     trainer.train(epoch=1)
     trainer.evaluate(test_dataloader)
