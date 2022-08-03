@@ -41,26 +41,26 @@ class Trainer:
         self.history = deque(maxlen = keep_history)
     
     # initialize enviroment setting
-    def distributed(self, address, num_works = 4, use_gpu = False):
+    def distributed(self, address, works = 4, usegpu = False):
         '''setting distribution enviroment and initial a ray cluster connection
 
         Args: 
-            address: the head of ray cluster address
-            num_works: compute task's resource
-            use_gpu: whether use GPU, "True" or "False"
+            address (string): the head of ray cluster address
+            works (int): compute task's resource
+            gpu (Booleans): whether use GPU, "True" or "False"
         '''
         import ray
         from ray.train.trainer import Trainer
         self._distrubution_train=True
-        self.num_works=num_works
-        self.use_gpu=use_gpu
+        self.num_works=works
+        self.use_gpu=usegpu
         if not ray.is_initialized():
             ray.init(address)
     
     def _train(self,config:dict):
         """distribut training details about prepare model and datasets
         Args:
-            config: use dict,the parameter about lr, epoch , ...
+            config (dict): the parameter about lr, epoch , callback , backward_rounds
         """
         epoch = config.get("epoch", 10)
         start = config.get("start", 0)
@@ -76,7 +76,7 @@ class Trainer:
             model = train.torch.prepare_model(self.model)
             model.fit_step=self.model.fit_step
             model.state_dict=self.model.state_dict
-        
+            model.log=self.model.log
         # init progress bar
         p = Progress(loader)
         for ep in range(start, epoch):
