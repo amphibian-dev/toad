@@ -61,6 +61,7 @@ upload:
 
 clean:
 	@rm -rf build/ dist/ *.egg-info/
+	@rm -rf toad/*.c toad/*.so
 
 docs: build
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
