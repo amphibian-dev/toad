@@ -4,7 +4,6 @@ from scipy.stats import ks_2samp
 
 from sklearn.metrics import f1_score, roc_auc_score, roc_curve
 
-from .merge import merge
 
 from .utils import (
     feature_splits,
@@ -65,6 +64,7 @@ def KS_bucket(score, target, bucket = 10, method = 'quantile', return_splits = F
         
         df['bucket'] = bucket
     elif isinstance(bucket, int):
+        from .merge import merge
         df['bucket'], splits = merge(score, n_bins = bucket, method = method, return_splits = True, **kwargs)
 
     grouped = df.groupby('bucket', as_index = False)

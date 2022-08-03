@@ -9,7 +9,6 @@ from sklearn.ensemble import GradientBoostingClassifier
 
 
 from .stats import WOE, probability
-from .merge import merge
 from .utils.func import to_ndarray, np_count, bin_by_splits, split_target
 from .utils.decorator import frame_exclude, select_dtypes
 from .utils.mixin import RulesMixin, BinsMixin
@@ -190,6 +189,8 @@ class Combiner(Transformer, BinsMixin):
             n_bins (int): counts of bins will be combined
             empty_separate (bool): if need to combine empty values into a separate group
         """
+        from .merge import merge
+        
         X = to_ndarray(X)
 
         if y is not None:
