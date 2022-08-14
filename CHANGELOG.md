@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2022-08-14
+
+### Add
+- Added `Progress` for `pandas.apply` by using `pandas_enable` and `pandas_disable`
+- Added `feature_bin_stats` for feature bins, [#91](https://github.com/amphibian-dev/toad/issues/91) thanks @kevin-meng
+
+### Changed
+- `countBlank` can use customize missing value, [#101](https://github.com/amphibian-dev/toad/issues/101) thanks @kevin-meng
+- remove ref of `merge` in `__init__` file
+
+
 
 ## [0.1.0] - 2021-10-08
 
