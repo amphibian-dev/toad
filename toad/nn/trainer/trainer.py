@@ -4,13 +4,18 @@ from torch import optim
 
 from .history import History
 from .callback import callback as Callback
+from .event import Event
 
 from ...utils.progress import Progress
 
 DISTRIBUTED_MODE = "distributed"
 STANDALONE_MODE = "standalone"
 
-class Trainer:
+TRAINER_INIT = "init"
+TRAINER_RUNNING = "running"
+TRAINER_TERMINATED = "terminated"
+
+class Trainer(Event):
     """trainer for training models
     """
     def __init__(self, model, loader = None, optimizer = None, loss = None, keep_history = None,
@@ -26,10 +31,13 @@ class Trainer:
                 you can set it to `False` to disable early stopping
             keep_history (int): keep the last n-th epoch logs, `None` will keep all
         """
+        super().__init__()
+
         self.model = model
         self.loader = loader
 
         self._mode = STANDALONE_MODE
+        self._state = TRAINER_INIT
         
         if optimizer is None:
             optimizer = optim.Adam(model.parameters(), lr = 1e-3)
@@ -43,11 +51,26 @@ class Trainer:
             from .earlystop import loss_stopping
             early_stopping = loss_stopping()
         
-        self.early_stop = early_stopping
+        # self.early_stop = early_stopping
+        self.register("epoch:end", early_stopping)
 
         from collections import deque
         self.history = deque(maxlen = keep_history)
     
+
+    @property
+    def state(self):
+        return self._state
+    
+
+    def terminate(self):
+        self._state = TRAINER_TERMINATED
+    
+
+    def run(self):
+        self._state = TRAINER_RUNNING
+
+
     # initialize enviroment setting
     def distributed(self, address, workers = 4, gpu = False):
         '''setting distribution enviroment and initial a ray cluster connection
@@ -71,6 +94,8 @@ class Trainer:
         Args:
             config (dict): the parameter about lr, epoch , callback , backward_rounds
         """
+        self.run()
+
         epoch = config.get("epoch", 10)
         start = config.get("start", 0)
         callback = config.get("callback", [])
@@ -108,6 +133,17 @@ class Trainer:
             # setup a new history for model in each epoch
             history = History()
             self.history.append(history)
+
+            # setup callback params
+            callback_params = {
+                "model": model,
+                "history": history,
+                "epoch": ep,
+                "trainer": self,
+                "progress": p,
+            }
+
+            self.emit("epoch:start", **callback_params)
             
             # start of history
             history.start()
@@ -133,15 +169,7 @@ class Trainer:
                     backward_loss = 0.
                 
                 loss += (l.item() - loss) / i
-                p.suffix = 'loss:{:.4f}'.format(loss)
-            
-            # setup callback params
-            callback_params = {
-                "model": model,
-                "history": history,
-                "epoch": ep,
-                "trainer": self,
-            }
+                p.suffix = 'loss:{:.4f}'.format(loss)   
 
             # END of history
             history.end()
@@ -151,11 +179,11 @@ class Trainer:
                     for hook in callback:
                         hook(**callback_params)
                 
-                if self.early_stop and self.early_stop(**callback_params):
-                    # set best state to model
-                    best_state = self.early_stop.get_best_state()
-                    model.load_state_dict(best_state)
-                    break
+                self.emit("epoch:end", **callback_params)
+            
+            # check if trainer need terminate
+            if self.state == TRAINER_TERMINATED:
+                break
         
 
     def train(self, loader = None, epoch = 10, **kwargs):

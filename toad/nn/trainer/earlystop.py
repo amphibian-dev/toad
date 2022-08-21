@@ -42,7 +42,7 @@ class earlystopping(callback):
         self._times = 0
     
 
-    def wrapper(self, model, epoch = 0, **kwargs):
+    def wrapper(self, model, trainer = None, epoch = 0, **kwargs):
         # set skip round
         if epoch < self.skip:
             return False
@@ -58,7 +58,11 @@ class earlystopping(callback):
         
         self._times += 1
         if self._times >= self.patience:
-            # model.load_state_dict(self.best_state)
+            model.load_state_dict(self.best_state)
+            
+            if trainer:
+                trainer.terminate()
+
             return True
         
 
