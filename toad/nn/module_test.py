@@ -47,3 +47,15 @@ def test_fit_callback():
     model = TestModel(NUM_FEATS, NUM_CLASSES)
     model.fit(loader, epoch = 2, callback = func)
     assert len(h_list) == 2
+
+
+class TestModel2(TestModel):
+    def fit_step(self, batch, loss=None):
+        x, y = batch
+        y_hat = self(x)
+        return loss(y_hat, y)
+
+
+def test_model_loss():
+    model = TestModel2(NUM_FEATS, NUM_CLASSES)
+    model.fit(loader, epoch=1, loss=F.cross_entropy)

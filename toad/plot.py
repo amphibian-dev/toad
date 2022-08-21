@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from .stats import IV
+from .stats import IV, feature_bin_stats
 from .metrics import AUC
 from .tadpole import tadpole
 from .tadpole.utils import HEATMAP_CMAP, MAX_STYLE, add_annotate, add_text, reset_ylim
@@ -208,7 +208,7 @@ def roc_plot(score, target, compare = None):
     return ax
 
 
-def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f"):
+def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f", return_frame = False):
     """plot for bins
 
     Args:
@@ -217,9 +217,10 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         target (str): target column in frame
         iv (bool): if need to show iv in plot
         annotate_format (str): format str for axis annotation of chart
+        return_frame (bool): if need return bin frame
 
     Returns:
-        Axes: bins' proportion and badrate plot
+        Dataframe: contains good, bad, badrate, prop, y_prop, n_prop, woe, iv
     """
     frame = frame.copy()
 
@@ -228,13 +229,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         frame[temp_name] = target
         target = temp_name
     
-    
-    group = frame.groupby(x)
-
-    table = group[target].agg(['sum', 'count']).reset_index()
-    table['badrate'] = table['sum'] / table['count']
-    table['prop'] = table['count'] / table['count'].sum()
-
+    table = feature_bin_stats(frame, x, target)
     prop_ax = tadpole.barplot(
         x = x,
         y = 'prop',
@@ -260,6 +255,11 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
 
     if iv:
         prop_ax = reset_ylim(prop_ax)
-        prop_ax = add_text(prop_ax, 'IV: {:.5f}'.format(IV(frame[x],frame[target])))
+        prop_ax = add_text(prop_ax, 'IV: {:.5f}'.format(table['iv'].sum()))
 
-    return prop_ax
+    res = (prop_ax,)
+    
+    if return_frame:
+        res += (table,)
+
+    return unpack_tuple(res)

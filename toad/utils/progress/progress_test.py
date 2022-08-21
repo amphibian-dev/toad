@@ -12,9 +12,10 @@ class TestIterator:
 
 
 def test_progress():
-    for i in Progress(range(100)):
+    p =  Progress(range(100))
+    for i in p:
         sleep(0.01)
-        pass
+    assert p.idx == 100
 
 def test_progress_size():
     p = Progress(range(9527))
@@ -22,12 +23,24 @@ def test_progress_size():
 
 def test_iterator():
     ti = TestIterator(100)
-    for i in Progress(ti):
+    p = Progress(ti)
+    for i in p:
         sleep(0.01)
-        pass
+    assert p.idx == 100
+
+
+def test_multi_loop():
+    p = Progress(range(100))
+    for i in p:
+        sleep(0.01)
+    assert p.idx == 100
+    
+    for i in p:
+        sleep(0.01)
+    assert p.idx == 100
 
 def test_speed():
     p = Progress(range(1000))
     for i in p:
         sleep(0.001)
-        pass
+    assert p.idx == 1000

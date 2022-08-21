@@ -1,11 +1,14 @@
-from toad.nn.trainer.history import History
+import pytest
+
 import torch
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader
 
+from .history import History
 from ..module import Module
 from .trainer import Trainer
+from .callback import callback
 from .earlystop import earlystopping
 
 
@@ -57,9 +60,40 @@ def test_trainer_early_stopping():
     assert len(trainer.history) == 4
 
 
+def test_multi_callbacks():
+    log = {}
+    
+    @callback
+    def log_epoch(epoch):
+        log['epoch'] = epoch
+    
+    @callback
+    def log_loss(history):
+        log['loss'] = history['loss']
+
+    model = TestModel(NUM_FEATS, NUM_CLASSES)
+    trainer = Trainer(model)
+    trainer.train(loader, epoch = 2, callback = [log_epoch, log_loss])
+    
+    assert log['epoch'] == 1
+    assert len(log['loss']) == 157
 
 
-    ### distribut model test
+class TestModel2(TestModel):
+    def fit_step(self, batch, loss=None):
+        x, y = batch
+        y_hat = self(x)
+        return loss(y_hat, y)
+
+
+def test_trainer_loss():
+    model = TestModel2(NUM_FEATS, NUM_CLASSES)
+    trainer = Trainer(model, loader, loss = F.cross_entropy)
+    trainer.train(epoch = 2)
+    assert len(trainer.history) == 2
+
+
+### distribut model test
 from toad.nn.trainer.trainer import Trainer
 from torchvision.transforms import ToTensor
 import torch
@@ -68,6 +102,7 @@ from torchvision import datasets
 from toad.nn import Module
 from torch.utils.data import DataLoader
 import ray
+
 class NeuralNetwork(Module):
     def __init__(self):
         super(NeuralNetwork, self).__init__()
@@ -89,6 +124,9 @@ class NeuralNetwork(Module):
         pred =self(X)
         loss_fn=nn.CrossEntropyLoss()
         return loss_fn(pred, y)
+
+
+@pytest.mark.skip("distributed trainer skip")
 def test_distribute_example():
     training_data = datasets.FashionMNIST(
         root="~/data",

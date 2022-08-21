@@ -43,3 +43,8 @@ A [basic tutorial](tutorial) is provided.
 * :ref:`modindex`
 * :ref:`search`
 ```
+
+
+## Links
+
+[FiboRule](http://open.fibo.cn/)

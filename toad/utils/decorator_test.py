@@ -26,3 +26,19 @@ def test_decorator_init_func():
     f = a(func)
 
     assert f([10, 20]) == 30
+
+def test_decorator_inherit():
+    class a(Decorator):
+        bias = 0
+        def wrapper(self, *args, a = 0, **kwargs):
+            return self.call(a + self.bias)
+    
+    class b(a):
+        def wrapper(self, *args, b = 0, **kwargs):
+            a = super().wrapper(*args, **kwargs)
+            b = self.call(b)
+            return a + b
+    
+    f = b(bias = 2)(lambda x: x+1)
+    assert f(a = 1, b = 2) == 7
+

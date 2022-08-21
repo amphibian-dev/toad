@@ -1,2 +1,2 @@
 from .module import Module
-import torch.nn.functional as F
+from .trainer import *
