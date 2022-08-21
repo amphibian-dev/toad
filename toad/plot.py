@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve
 
 from .stats import IV, feature_bin_stats
 from .metrics import AUC
