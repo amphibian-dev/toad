@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 from .stats import IV, feature_bin_stats
 from .metrics import AUC
@@ -178,7 +179,7 @@ def proportion_plot(x = None, keys = None):
     return prop_plot
 
 
-def roc_plot(score, target, compare = None):
+def roc_plot(score, target, compare = None, figsize = (14, 10)):
     """plot for roc
 
     Args:
@@ -191,22 +192,47 @@ def roc_plot(score, target, compare = None):
     """
     auc, fpr, tpr, thresholds = AUC(score, target, return_curve = True)
 
-    ax = tadpole.lineplot(
-        x = fpr,
-        y = tpr,
-    )
+    fig, ax = plt.subplots(1, 1, figsize = figsize)
+    ax.plot(fpr, tpr, label = 'ROC curve (area = %0.5f)' % auc)
     ax.fill_between(fpr, tpr, alpha = 0.3)
-    ax = add_text(ax, 'AUC: {:.5f}'.format(auc))
-
     if compare is not None:
         c_aux, c_fpr, c_tpr, _ = AUC(compare, target, return_curve = True)
-        ax.plot(c_fpr, c_tpr)
+        ax.plot(c_fpr, c_tpr,label = 'ROC compare (area = %0.5f)' % c_aux)
         ax.fill_between(c_fpr, c_tpr, alpha = 0.3)
 
     ax.plot([0, 1], [0, 1], color = 'red', linestyle = '--')
+    plt.legend(loc = "lower right")
 
     return ax
 
+def ks_plot(score, target, figsize = (14, 10)):
+    """plot for ks
+
+    Args:
+        score (array-like): predicted score
+        target (array-like): true target
+        compare (array-like): another score for comparing with score
+
+    Returns:
+        Axes
+    """
+    fpr, tpr, thresholds = roc_curve(target, score)
+    
+    fig, ax = plt.subplots(1, 1, figsize = figsize)
+    ax.plot(thresholds[1 : ], tpr[1 : ], label = 'tpr')
+    ax.plot(thresholds[1 : ], fpr[1 : ], label = 'fpr')
+    ax.plot(thresholds[1 : ], (tpr - fpr)[1 : ], label = 'ks')
+
+    ax.invert_xaxis()
+    ax.legend()
+
+    ks_value = max(tpr - fpr)
+    x = np.argwhere(abs(fpr - tpr) == ks_value)[0, 0]
+    thred_value = thresholds[x]
+    ax.axvline(thred_value, color = 'r', linestyle = '--')
+    plt.title(f'ks:{ks_value:.5f}    threshold:{thred_value:.5f}')
+
+    return ax
 
 def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f", return_frame = False):
     """plot for bins
