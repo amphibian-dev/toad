@@ -33,7 +33,8 @@ class Trainer(Event):
         """
         super().__init__()
 
-        self.model = model
+        self.set_model(model)
+
         self.loader = loader
 
         self._mode = STANDALONE_MODE
@@ -69,6 +70,23 @@ class Trainer(Event):
 
     def run(self):
         self._state = TRAINER_RUNNING
+    
+
+    def set_model(self, model):
+        """setup model
+        """
+        from ..module import Module
+        
+        if isinstance(model, Module):
+            self.fit_step(model.__class__.fit_step)
+        
+        self.model = model
+    
+
+    def fit_step(self, func):
+        self._step = func
+        
+        return func
 
 
     # initialize enviroment setting
@@ -94,6 +112,7 @@ class Trainer(Event):
         Args:
             config (dict): the parameter about lr, epoch , callback , backward_rounds
         """
+        # setup running state
         self.run()
 
         epoch = config.get("epoch", 10)
@@ -115,8 +134,9 @@ class Trainer(Event):
         if self._mode == DISTRIBUTED_MODE:
             import ray.train as train
             # TODO prepare loader and model
-            loader = train.torch.prepare_data_loader(self.loader)
-            model = train.torch.prepare_model(self.model)
+            loader = train.torch.prepare_data_loader(loader)
+            model = train.torch.prepare_model(model)
+            # TODO: remove this patch for dist
             model.fit_step = self.model.fit_step
             model.state_dict = self.model.state_dict
             model.log = self.model.log
@@ -151,14 +171,16 @@ class Trainer(Event):
             loss = 0.
             backward_loss = 0.
             for i, batch in enumerate(p, start = 1):
+                self.emit("batch:start", batch = batch, **callback_params)
+
                 # step fit
                 if self.loss is None:
-                    l = model.fit_step(batch)
+                    l = self._step(model, batch)
                 else:
-                    l = model.fit_step(batch, loss=self.loss)
+                    l = self._step(model, batch, loss=self.loss)
 
                 # log loss
-                model.log('loss', l)
+                history.log('loss', l)
                 backward_loss = l + backward_loss
                 if i % backward_rounds == 0 or i == len(p):
                     self.optimizer.zero_grad()
@@ -169,7 +191,9 @@ class Trainer(Event):
                     backward_loss = 0.
                 
                 loss += (l.item() - loss) / i
-                p.suffix = 'loss:{:.4f}'.format(loss)   
+                p.suffix = 'loss:{:.4f}'.format(loss)
+
+                self.emit("batch:end", batch = batch, **callback_params)
 
             # END of history
             history.end()

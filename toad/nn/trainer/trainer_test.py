@@ -60,6 +60,23 @@ def test_trainer_early_stopping():
     assert len(trainer.history) == 4
 
 
+def test_trainer_fit_step():
+    model = TestModel(NUM_FEATS, NUM_CLASSES)
+    trainer = Trainer(model, loader)
+    step_count = 0
+
+    @trainer.fit_step
+    def step(model, batch):
+        x, y = batch
+        y_hat = model(x)
+        nonlocal step_count
+        step_count += 1
+        return F.cross_entropy(y_hat, y)
+    
+    trainer.train(epoch = 2)
+    assert step_count > 1
+
+
 def test_multi_callbacks():
     log = {}
     
