@@ -96,6 +96,22 @@ def test_multi_callbacks():
     assert len(log['loss']) == 157
 
 
+def test_trainer_evaluate():
+    model = TestModel(NUM_FEATS, NUM_CLASSES)
+    trainer = Trainer(model, loader)
+
+    @trainer.fit_step
+    def step(model, batch):
+        x, y = batch
+        y_hat = model(x)
+        return F.cross_entropy(y_hat, y)
+    
+    history = trainer.evaluate(loader)
+
+    assert len(history["loss"]) == 157
+    
+
+
 class TestModel2(TestModel):
     def fit_step(self, batch, loss=None):
         x, y = batch

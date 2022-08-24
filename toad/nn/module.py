@@ -46,8 +46,6 @@ class Module(nn.Module):
         """define model struct
         """
         super().__init__()
-
-        self._history = None
     
 
     @property

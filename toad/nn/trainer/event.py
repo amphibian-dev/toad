@@ -34,3 +34,10 @@ class Event:
         # trigger handler
         for handler in self._events[event]:
             handler(*args, **kwargs)
+    
+
+    def mute(self, event):
+        """remove events handlers
+        """
+        if event in self._events:
+            handlers = self._events.pop(event)

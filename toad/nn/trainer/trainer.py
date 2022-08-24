@@ -155,7 +155,7 @@ class Trainer(Event):
             self.history.append(history)
 
             # setup callback params
-            callback_params = {
+            params = {
                 "model": model,
                 "history": history,
                 "epoch": ep,
@@ -163,7 +163,7 @@ class Trainer(Event):
                 "progress": p,
             }
 
-            self.emit("epoch:start", **callback_params)
+            self.emit("epoch:start", **params)
             
             # start of history
             history.start()
@@ -171,7 +171,7 @@ class Trainer(Event):
             loss = 0.
             backward_loss = 0.
             for i, batch in enumerate(p, start = 1):
-                self.emit("batch:start", batch = batch, **callback_params)
+                self.emit("batch:start", batch = batch, **params)
 
                 # step fit
                 if self.loss is None:
@@ -193,7 +193,7 @@ class Trainer(Event):
                 loss += (l.item() - loss) / i
                 p.suffix = 'loss:{:.4f}'.format(loss)
 
-                self.emit("batch:end", batch = batch, **callback_params)
+                self.emit("batch:end", batch = batch, **params)
 
             # END of history
             history.end()
@@ -201,9 +201,9 @@ class Trainer(Event):
             with torch.no_grad():
                 if isinstance(callback, list):
                     for hook in callback:
-                        hook(**callback_params)
+                        hook(**params)
                 
-                self.emit("epoch:end", **callback_params)
+                self.emit("epoch:end", **params)
             
             # check if trainer need terminate
             if self.state == TRAINER_TERMINATED:
@@ -275,23 +275,26 @@ class Trainer(Event):
         p.prefix = f"Evaluate"
 
         history = History()
-        self.model._history = history
 
         self.model.eval()
+
+        history.start()
         
         loss = 0.
         for i, batch in enumerate(p, start = 1):
             # step fit
             if self.loss is None:
-                l = self.model.fit_step(batch)
+                l = self._step(self.model, batch)
             else:
-                l = self.model.fit_step(batch, loss=self.loss)
+                l = self._step(self.model, batch, loss=self.loss)
 
             # log loss
             self.model.log('loss', l)
 
             loss += (l.item() - loss) / i
             p.suffix = 'loss:{:.4f}'.format(loss)
+        
+        history.end()
         
         if callable(callback):
             callback(
