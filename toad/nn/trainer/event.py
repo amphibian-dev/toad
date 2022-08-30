@@ -5,21 +5,24 @@ class Event:
     def __init__(self):
         self._events = {}
 
-    def register(self, event, handler):
-        """register event into trainer
+    def register(self, event, handler, every = 1):
+        """register events handler
         """
         if not isinstance(handler, Callback):
             handler = Callback(handler)
         
         if event not in self._events:
             self._events[event] = []
+
+        handler._event_count = 0
+        handler._event_every = every
         
         self._events[event].append(handler)
 
 
-    def on(self, event):
+    def on(self, event, **kwargs):
         def wrapper(handler):
-            self.register(event, handler)
+            self.register(event, handler, **kwargs)
             return handler
 
         return wrapper
@@ -33,7 +36,12 @@ class Event:
         
         # trigger handler
         for handler in self._events[event]:
-            handler(*args, **kwargs)
+            # increase count
+            handler._event_count += 1
+
+            # trigger event
+            if handler._event_count % handler._event_every == 0:
+                handler(*args, **kwargs)
     
 
     def mute(self, event):
