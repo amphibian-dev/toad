@@ -105,7 +105,7 @@ def KMeansMerge(feature, target = None, nan = -1, n_bins = None, random_state = 
 
 
 
-def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
+def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1, **kwargs):
     """Merge by Decision Tree
 
     Args:
@@ -126,6 +126,7 @@ def DTMerge(feature, target, nan = -1, n_bins = None, min_samples = 1):
     tree = DecisionTreeClassifier(
         min_samples_leaf = min_samples,
         max_leaf_nodes = n_bins,
+        **kwargs,
     )
     tree.fit(feature.reshape((-1, 1)), target)
 
