@@ -1,4 +1,8 @@
 import numpy as np
+from sklearn.base import (
+    BaseEstimator, 
+    TransformerMixin
+)
 
 from .base import Transformer
 from ..utils.func import to_ndarray
@@ -71,3 +75,33 @@ class WOETransformer(Transformer):
             'value': np.array(list(rule.keys())),
             'woe': np.array(list(rule.values())),
         }
+
+
+class WOETransformer4pipe(BaseEstimator, WOETransformer):
+    def __init__(self, skip=False, exclude=None, **kwargs):
+        super().__init__()
+        self.skip = skip
+        self.model_params = {
+            'exclude' : exclude
+        }
+        self.model_params.update(kwargs)
+        for k, v in self.model_params.items():
+            setattr(self, k, v)
+
+        if not skip:
+            self.woe = WOETransformer()
+    
+    def fit(self, X, y):
+        if self.skip:
+            return X
+
+        for key in self.model_params.keys():
+            self.model_params[key] = getattr(self, key)
+
+        self.woe.fit(X, y, **self.model_params)
+        return self
+    
+    def transform(self, X, y=None):
+        if self.skip:
+            return X
+        return self.woe.transform(X)

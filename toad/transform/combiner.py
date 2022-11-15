@@ -1,6 +1,10 @@
 import math
 import numpy as np
 import pandas as pd
+from sklearn.base import (
+    BaseEstimator, 
+    TransformerMixin
+)
 
 from .base import Transformer
 from ..utils.mixin import BinsMixin
@@ -180,3 +184,52 @@ class Combiner(Transformer, BinsMixin):
             rule = self.format_bins(rule)
 
         return rule.tolist()
+
+class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
+    """ A Transformer spcifically for combiner, which make it more flexible
+    """
+
+    def __init__(
+        self,
+        method='chi', 
+        empty_separate=False, 
+        min_samples=0.05,
+        n_bins=None,
+        update_rules={},
+        exclude=None,
+        **kwargs
+    ):
+        super().__init__()
+        # 
+        self.combiner = Combiner()
+        self.model_params = {
+            'method' : method,
+            'empty_separate' : empty_separate,
+            'min_samples' : min_samples,
+            'n_bins' : n_bins,
+            'exclude' : exclude
+        }
+        self.model_params.update(kwargs)
+        for k, v in self.model_params.items():
+            setattr(self, k, v)
+        self.update_rules = update_rules
+
+    def fit(self, X, y):
+        for key in self.model_params.keys():
+            self.model_params[key] = getattr(self, key) 
+
+        if len(self.update_rules) > 0:
+            if self.model_params['exclude'] is None:
+                self.model_params['exclude'] = list(self.update_rules.keys())
+            else:
+                self.model_params['exclude'] += list(self.update_rules.keys())
+
+        self.combiner = self.combiner.fit(X, y, **self.model_params)
+
+        if len(self.update_rules) > 0:
+            self.combiner.update(self.update_rules)
+
+        return self
+
+    def transform(self, X, y=None):
+        return self.combiner.transform(X)
