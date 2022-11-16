@@ -228,7 +228,7 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
         
         self.update_rules = update_rules
 
-    def fit(self, X, y):
+    def fit(self, X, y = None):
         """fit combiner
 
         Args:
