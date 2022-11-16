@@ -16,6 +16,14 @@ class SelectTransformer4pipe(BaseEstimator, TransformerMixin):
         corr=0.99,
         exclude=None
     ):
+        """_summary_
+
+        Args:
+            empty (number):drop the features which empty num is greater than threshold. if threshold is less than `1`, it will be use as percentage. 
+            iv (float): drop the features whose IV is less than threshold. 
+            corr (float): drop features that has the smallest IV in each groups which correlation is greater than threshold
+            exclude (array-like): list of feature name that will not be dropped
+        """
         super().__init__()
         self.model_params = {
             'empty' : empty,
@@ -29,7 +37,16 @@ class SelectTransformer4pipe(BaseEstimator, TransformerMixin):
             setattr(self, k, v)
         
     def fit(self, X, y):
-        # First could to reload all attributes
+        """Starting Fitting 
+
+        Args:
+            X (DataFrame): features to be selected, and note X only contains features, no labels
+            y (array-like): Label of the sample
+
+        Returns:
+            self
+        """
+        # Reset All self properties because there might be a set_params() before fit
         for key in self.model_params.keys():
             self.model_params[key] = getattr(self, key)
 
@@ -49,4 +66,12 @@ class SelectTransformer4pipe(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X, y=None):
+        """transform X by select
+
+        Args:
+            X (DataFrame): features to be transformed
+
+        Returns:
+            DataFrame
+        """
         return X.loc[:, list(self.col2select_[self.col2select_].index)] 

@@ -79,7 +79,15 @@ class WOETransformer(Transformer):
 
 class WOETransformer4pipe(BaseEstimator, WOETransformer):
     def __init__(self, skip=False, exclude=None, **kwargs):
+        """A Transformer spcifically for WOETransformer, which make it more flexible
+
+        Args:
+            skip (bool): whether to skip this part in pipeline
+            exclude (array-like): list of feature name that will not be dropped
+        """
         super().__init__()
+        # There might be a need to not calculate the WOE but the raw intergers right after the combiner.rules
+        # In future version, migth add a datatype: ['woe', 'one-hot', 'intergets'], and rename this Class name
         self.skip = skip
         self.model_params = {
             'exclude' : exclude
@@ -92,6 +100,17 @@ class WOETransformer4pipe(BaseEstimator, WOETransformer):
             self.woe = WOETransformer()
     
     def fit(self, X, y):
+        """fit woe
+
+        Args:
+            X (DataFrame): features to be selected, and note X only contains features, no labels
+            y (array-like): Label of the sample
+
+        Returns:
+            self
+        """  
+
+        # If the parameter skip is True, then just do nothing but return X
         if self.skip:
             return X
 
@@ -102,6 +121,14 @@ class WOETransformer4pipe(BaseEstimator, WOETransformer):
         return self
     
     def transform(self, X, y=None):
+        """transform X by woe
+
+        Args:
+            X (DataFrame): features to be transformed
+
+        Returns:
+            DataFrame
+        """        
         if self.skip:
             return X
         return self.woe.transform(X)

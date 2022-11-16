@@ -185,6 +185,7 @@ class Combiner(Transformer, BinsMixin):
 
         return rule.tolist()
 
+# make a transformer for combiner, therefore the combiner could participate in pipeline as well as GridSearchCV for combiner's parameters tuning
 class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
     """ A Transformer spcifically for combiner, which make it more flexible
     """
@@ -199,9 +200,19 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
         exclude=None,
         **kwargs
     ):
+        """_summary_
+
+        Args:
+            method (str): the strategy to be used to merge `X`, same as `.merge`, default is `chi`
+            empty_separate (bool): if need to combine empty values into a separate group
+            min_samples (float): threshold of percentage of each bins
+            n_bins (int): counts of bins will be combined
+            update_rules (dict): fixed bin rules from prior experience
+            exclude (array-like): list of feature name that will not be dropped
+        """
         super().__init__()
-        # 
         self.combiner = Combiner()
+        # setting up all necessary parameters for the combiner
         self.model_params = {
             'method' : method,
             'empty_separate' : empty_separate,
@@ -210,14 +221,30 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
             'exclude' : exclude
         }
         self.model_params.update(kwargs)
+
+        # set all incoming parameters as properties of self class
         for k, v in self.model_params.items():
             setattr(self, k, v)
+        
         self.update_rules = update_rules
 
     def fit(self, X, y):
+        """fit combiner
+
+        Args:
+            X (DataFrame): features to be selected, and note X only contains features, no labels
+            y (array-like): Label of the sample
+
+        Returns:
+            self
+        """        
+        # reset self properties because there might be combiner.set_params() before fit
         for key in self.model_params.keys():
             self.model_params[key] = getattr(self, key) 
 
+        # if the input rules are not {}, this implies that the features and its bins in the dict are already set and should be fixed.
+        # Therefore the combiner should not re-calculated the bins for these features, which could much more efficient. 
+        # The achieve this fucntion, one simple method is to first append these features into the exclude parameter, and update the dict after the fit progress
         if len(self.update_rules) > 0:
             if self.model_params['exclude'] is None:
                 self.model_params['exclude'] = list(self.update_rules.keys())
@@ -232,4 +259,12 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None):
+        """transform X by combiner
+
+        Args:
+            X (DataFrame): features to be transformed
+
+        Returns:
+            DataFrame
+        """
         return self.combiner.transform(X)

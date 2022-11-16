@@ -8,7 +8,21 @@ from .transform import (
 )
 
 class Toad_Pipeline(Pipeline):
+    """Pipeline of transforms with a final Toad estimator. """
     def __init__(self, steps=None, memory=None, verbose=False):
+        """_summary_
+
+        Args:
+            steps : list of tuple
+                List of (name, transform) tuples (implementing `fit`/`transform`) that
+                are chained in sequential order. In default, the list here are the standard score card steps in sequential order.
+
+            memory : str or object with the joblib.
+
+            verbose : bool, default=False
+                If True, the time elapsed while fitting each step will be printed as it
+                is completed.
+        """
         if steps is None:
             steps = [
                 ('select', SelectTransformer4pipe()),
