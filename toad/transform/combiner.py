@@ -194,10 +194,12 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
         self,
         method='chi', 
         empty_separate=False, 
-        min_samples=0.05,
+        min_samples=None,
         n_bins=None,
         update_rules={},
         exclude=None,
+        labels=False,
+        ellipsis = 16,
         **kwargs
     ):
         """_summary_
@@ -213,12 +215,18 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
         super().__init__()
         self.combiner = Combiner()
         # setting up all necessary parameters for the combiner
+        # Need to be careful here that fit, and transform
+        # Thus might be very necessary to setup seperate args,kwargs for different part
+        
+        
         self.model_params = {
             'method' : method,
             'empty_separate' : empty_separate,
             'min_samples' : min_samples,
             'n_bins' : n_bins,
-            'exclude' : exclude
+            'exclude' : exclude,
+            'labels' : labels,
+            'ellipsis' : ellipsis
         }
         self.model_params.update(kwargs)
 
@@ -228,7 +236,10 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
         
         self.update_rules = update_rules
 
-    def fit(self, X, y = None):
+    def export(self):
+        return self.combiner.export()
+
+    def fit(self, X, y):
         """fit combiner
 
         Args:
@@ -251,7 +262,13 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
             else:
                 self.model_params['exclude'] += list(self.update_rules.keys())
 
-        self.combiner = self.combiner.fit(X, y, **self.model_params)
+        self.labels = self.model_params.pop('labels')
+        self.ellipsis = self.model_params.pop('ellipsis')
+        if self.model_params['method'] == 'step':
+            self.model_params.pop('min_samples')
+            self.combiner = self.combiner.fit(X, None, **self.model_params)
+        else:
+            self.combiner = self.combiner.fit(X, y, **self.model_params)
 
         if len(self.update_rules) > 0:
             self.combiner.update(self.update_rules)
@@ -267,4 +284,7 @@ class CombinerTransformer4pipe(BaseEstimator, TransformerMixin):
         Returns:
             DataFrame
         """
-        return self.combiner.transform(X)
+
+        labels = self.labels
+        ellipsis = self.ellipsis
+        return self.combiner.transform(X, labels=labels, ellipsis=ellipsis)

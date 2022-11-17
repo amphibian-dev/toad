@@ -78,7 +78,7 @@ class WOETransformer(Transformer):
 
 
 class WOETransformer4pipe(BaseEstimator, WOETransformer):
-    def __init__(self, skip=False, exclude=None, **kwargs):
+    def __init__(self, skip=False, exclude=None, default=False, **kwargs):
         """A Transformer spcifically for WOETransformer, which make it more flexible
 
         Args:
@@ -90,7 +90,8 @@ class WOETransformer4pipe(BaseEstimator, WOETransformer):
         # In future version, migth add a datatype: ['woe', 'one-hot', 'intergets'], and rename this Class name
         self.skip = skip
         self.model_params = {
-            'exclude' : exclude
+            'exclude' : exclude,
+            'default' : default
         }
         self.model_params.update(kwargs)
         for k, v in self.model_params.items():
@@ -98,7 +99,10 @@ class WOETransformer4pipe(BaseEstimator, WOETransformer):
 
         if not skip:
             self.woe = WOETransformer()
-    
+
+    def export(self):
+        return self.woe.export()
+
     def fit(self, X, y):
         """fit woe
 
@@ -116,7 +120,7 @@ class WOETransformer4pipe(BaseEstimator, WOETransformer):
 
         for key in self.model_params.keys():
             self.model_params[key] = getattr(self, key)
-
+        self.default = self.model_params.pop('default')
         self.woe.fit(X, y, **self.model_params)
         return self
     
@@ -131,4 +135,5 @@ class WOETransformer4pipe(BaseEstimator, WOETransformer):
         """        
         if self.skip:
             return X
-        return self.woe.transform(X)
+        default = self.default
+        return self.woe.transform(X, default=default)

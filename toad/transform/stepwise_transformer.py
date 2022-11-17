@@ -21,7 +21,7 @@ class StepwiseTransformer4pipe(BaseEstimator, TransformerMixin):
         max_iter = 10000,
         return_drop = False, 
         exclude = None,
-        corr = 0.9       
+        corr = 0.99       
     ):
         """Specific transformer for toad stepwise function
 
@@ -100,6 +100,7 @@ class StepwiseTransformer4pipe(BaseEstimator, TransformerMixin):
             exclude=self.exclude
         )
 
+        self.model_params['return_drop'] = False
         selected = stepwise(
             X, target=y, **self.model_params
         )
