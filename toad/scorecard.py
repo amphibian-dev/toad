@@ -113,10 +113,12 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         return self
 
-    def predict(self, X, return_sub=False):
+    def predict(self, X, **kwargs):
         """predict score
         Args:
             X (2D-DataFrame|dict): X to predict
+            return_sub (Bool): if need to return sub score of each feature
+            default (str|number): default sub score for unknown feature, `min`(default), `max`
 
         Returns:
             array-like: predicted score
@@ -126,7 +128,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             X = X[self.features_]
         
         bins = self.combiner.transform(X)
-        res = self.bin_to_score(bins, return_sub = return_sub)
+        res = self.bin_to_score(bins, **kwargs)
         return res
 
     def get_reason(self, X, base_effect = None, threshold_score = None, keep = 3):
@@ -185,7 +187,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         return reason
 
 
-    def bin_to_score(self, bins, return_sub=False):
+    def bin_to_score(self, bins, return_sub = False, default = 'min'):
         """predict score from bins
         """
         score = 0
@@ -194,11 +196,23 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             s_map = rule['scores']
             b = bins[col]
 
-            # set default group to min score
-            if np.isscalar(b):
-                b = np.argmin(s_map) if b == self.EMPTY_BIN else b
-            else:
-                b[b == self.EMPTY_BIN] = np.argmin(s_map)
+            # set default value for empty group
+            default_value = default
+            if default == 'min':
+                default_value = np.min(s_map)
+            elif default == 'max':
+                default_value = np.max(s_map)
+            elif isinstance(default, str):
+                raise ValueError(f'default `{default}` is not valid, only support `min`, `max` or number')
+            
+            # append default value to the end of score map
+            s_map = np.append(s_map, default_value)
+
+            # # set default group to min score
+            # if np.isscalar(b):
+            #     b = np.argmin(s_map) if b == self.EMPTY_BIN else b
+            # else:
+            #     b[b == self.EMPTY_BIN] = np.argmin(s_map)
 
             # replace score
             res[col] = s_map[b]

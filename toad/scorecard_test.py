@@ -207,7 +207,34 @@ def test_card_with_less_X():
     )
 
     card.fit(x, target)
-    assert card.predict(x)[200] == pytest.approx(411.968588097131, FUZZ_THRESHOLD)
+    assert card.predict(df)[200] == pytest.approx(457.57516057401006, FUZZ_THRESHOLD)
+
+
+def test_card_predict_with_unknown_feature():
+    np.random.seed(9)
+    unknown_df = df.copy()
+    unknown_df.loc[200, 'C'] = 'U'
+    assert card.predict(unknown_df)[200] == pytest.approx(456.38815204610216, FUZZ_THRESHOLD)
+
+
+def test_card_predict_with_unknown_feature_default_max():
+    np.random.seed(9)
+    unknown_df = df.copy()
+    unknown_df.loc[200, 'C'] = 'U'
+    score, sub = card.predict(unknown_df, default = 'max', return_sub = True)
+
+    assert sub.loc[200, 'C'] == card['C']['scores'].max()
+    assert score[200] == pytest.approx(462.26441488588785, FUZZ_THRESHOLD)
+
+
+def test_card_predict_with_unknown_feature_default_with_value():
+    np.random.seed(9)
+    unknown_df = df.copy()
+    unknown_df.loc[200, 'C'] = 'U'
+    score, sub = card.predict(unknown_df, default = 42, return_sub = True)
+    
+    assert sub.loc[200, 'C'] == 42
+    assert score[200] == pytest.approx(355.4364016252907, FUZZ_THRESHOLD)
 
 
 def test_get_reason_vector():
