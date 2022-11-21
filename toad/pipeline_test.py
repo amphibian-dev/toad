@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import pytest
 import pandas as pd
 from os.path import join
@@ -54,15 +55,15 @@ def test_pipeline_grid_search():
         cv=KFold(5, random_state=42, shuffle=True), 
     )
     gs = gs.fit(Xtrain, Ytrain)
-    assert gs.best_score_ == pytest.approx(0.8857142857142858)
+    assert np.around(gs.best_score_, 4) == pytest.approx(0.8857)
     assert gs.best_params_ == {
         'combiner__method': 'chi', 
         'combiner__min_samples': 0.05, 
         'select__corr': 0.5, 
         'select__iv': 0.02
     }
-    assert gs.score(Xtest, Ytest) == pytest.approx(0.9777777777777777)
-    assert list(gs.best_estimator_[-1].coef_.ravel()) == [-2.2499017912050854, 2.3171634795681637, -0.06726168836306577]
+    assert np.around(gs.score(Xtest, Ytest), 4) == pytest.approx(0.9778)
+    assert list(np.around(gs.best_estimator_[-1].coef_.ravel(), 4)) == [-2.2499, 2.3172, -0.0673]
     assert gs.best_estimator_.combiner.export() == {'sepal width (cm)': [2.5, 2.8, 2.9, 3.0, 3.1, 3.4], 'petal length (cm)': [3.0, 4.5, 4.8, 5.2]}
 
 

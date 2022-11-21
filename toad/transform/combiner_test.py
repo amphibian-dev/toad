@@ -99,8 +99,8 @@ def test_combiner_labels_with_empty():
     res = combiner.transform(df, labels = True)
     assert res.loc[2, 'D'] == '04.nan'
 
-Y = df.pop('target')
-X = df.copy()
+Y = df['target']
+X = df.iloc[:, :-1]
 
 def test_combiner_transformer():
     combiner_T = CombinerTransformer4pipe(method = 'chi')

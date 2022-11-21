@@ -32,8 +32,8 @@ frame = pd.DataFrame({
 })
 
 frame['target'] = target
-Y = frame.pop('target')
-X = frame.copy()
+Y = frame['target']
+X = frame.iloc[:, :-1]
 
 def test_select():
     select_T = SelectTransformer4pipe(empty = 0.8, iv = 0.2, corr = 0.7)

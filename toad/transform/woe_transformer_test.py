@@ -87,8 +87,8 @@ def test_woe_transformer_load():
     assert transer._rules['A']['woe'][1] == 0.2
 
 
-Y = df.pop('target')
-X = df.copy()
+Y = df['target']
+X = df.iloc[:, :-1]
 
 
 def test_duplicated_keys_transformer():
