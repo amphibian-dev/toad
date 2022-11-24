@@ -1,4 +1,8 @@
 import numpy as np
+from sklearn.base import (
+    BaseEstimator, 
+    TransformerMixin
+)
 
 from .base import Transformer
 from ..utils.func import to_ndarray
@@ -71,3 +75,65 @@ class WOETransformer(Transformer):
             'value': np.array(list(rule.keys())),
             'woe': np.array(list(rule.values())),
         }
+
+
+class WOETransformer4pipe(BaseEstimator, WOETransformer):
+    def __init__(self, skip=False, exclude=None, default=False, **kwargs):
+        """A Transformer spcifically for WOETransformer, which make it more flexible
+
+        Args:
+            skip (bool): whether to skip this part in pipeline
+            exclude (array-like): list of feature name that will not be dropped
+        """
+        super().__init__()
+        # There might be a need to not calculate the WOE but the raw intergers right after the combiner.rules
+        # In future version, migth add a datatype: ['woe', 'one-hot', 'intergets'], and rename this Class name
+        self.skip = skip
+        self.model_params = {
+            'exclude' : exclude,
+            'default' : default
+        }
+        self.model_params.update(kwargs)
+        for k, v in self.model_params.items():
+            setattr(self, k, v)
+
+        if not skip:
+            self.woe = WOETransformer()
+
+    def export(self):
+        return self.woe.export()
+
+    def fit(self, X, y):
+        """fit woe
+
+        Args:
+            X (DataFrame): features to be selected, and note X only contains features, no labels
+            y (array-like): Label of the sample
+
+        Returns:
+            self
+        """  
+
+        # If the parameter skip is True, then just do nothing but return X
+        if self.skip:
+            return X
+
+        for key in self.model_params.keys():
+            self.model_params[key] = getattr(self, key)
+        self.default = self.model_params.pop('default')
+        self.woe.fit(X, y, **self.model_params)
+        return self
+    
+    def transform(self, X, y=None):
+        """transform X by woe
+
+        Args:
+            X (DataFrame): features to be transformed
+
+        Returns:
+            DataFrame
+        """        
+        if self.skip:
+            return X
+        default = self.default
+        return self.woe.transform(X, default=default)
