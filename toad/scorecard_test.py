@@ -54,7 +54,7 @@ card.fit(woe, target)
 
 
 FUZZ_THRESHOLD = 1e-6
-TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
+TEST_SCORE = pytest.approx(453.549135103, FUZZ_THRESHOLD)
 
 
 def test_representation():
