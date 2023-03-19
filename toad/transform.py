@@ -338,6 +338,9 @@ class Combiner(Transformer, BinsMixin):
 
 
     def _parse_rule(self, rule):
+        if len(rule) == 0:
+            return np.array([])
+        
         if isinstance(rule[0], (int, float)):
             return np.array(rule)
         else:
