@@ -117,7 +117,7 @@ def corr_plot(frame, figure_size = (20, 15)):
     """
     corr = frame.corr()
 
-    mask = np.zeros_like(corr, dtype = np.bool)
+    mask = np.zeros_like(corr, dtype = bool)
     mask[np.triu_indices_from(mask)] = True
 
     map_plot = tadpole.heatmap(

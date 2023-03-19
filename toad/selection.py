@@ -158,7 +158,7 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
 
         l = len(remaining)
         test_score = np.zeros(l)
-        test_res = np.empty(l, dtype = np.object)
+        test_res = np.empty(l, dtype = object)
 
         if direction == 'backward':
             for i in range(l):
