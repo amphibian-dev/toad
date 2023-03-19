@@ -170,7 +170,7 @@ cpdef ChiMerge(feature, target, n_bins = None, min_samples = None,
     len_f = len(feature_unique)
     len_t = len(target_unique)
 
-    cdef double [:,:] grouped = np.zeros((len_f, len_t), dtype=np.float)
+    cdef double [:,:] grouped = np.zeros((len_f, len_t), dtype=float)
 
     for r in range(len_f):
         tmp = target[feature == feature_unique[r]]
@@ -195,7 +195,7 @@ cpdef ChiMerge(feature, target, n_bins = None, min_samples = None,
 
         # Calc chi square for each group
         l = len(grouped) - 1
-        chi_list = np.zeros(l, dtype=np.float)
+        chi_list = np.zeros(l, dtype=float)
         chi_min = np.inf
 
         for i in range(l):

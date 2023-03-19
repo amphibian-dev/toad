@@ -27,7 +27,7 @@ cdef number c_sum(number[:,:] arr):
 
 
 cdef number[:] c_sum_axis_0(number[:,:] arr):
-    cdef number[:] res = np.zeros(arr.shape[1], dtype=np.float)
+    cdef number[:] res = np.zeros(arr.shape[1], dtype=float)
 
     for i in range(arr.shape[0]):
         for j in range(arr.shape[1]):
@@ -37,7 +37,7 @@ cdef number[:] c_sum_axis_0(number[:,:] arr):
 
 
 cdef number[:] c_sum_axis_1(number[:,:] arr):
-    cdef number[:] res = np.zeros(arr.shape[0], dtype=np.float)
+    cdef number[:] res = np.zeros(arr.shape[0], dtype=float)
 
     for i in range(arr.shape[0]):
         for j in range(arr.shape[1]):
