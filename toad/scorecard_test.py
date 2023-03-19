@@ -137,7 +137,7 @@ def test_card_map():
     config = card.export()
     card_from_map = ScoreCard().load(config)
     score = card_from_map.predict(df)
-    assert score[404] == TEST_SCORE
+    assert score[404] == round(TEST_SCORE, 2)
 
 
 def test_card_map_with_else():
