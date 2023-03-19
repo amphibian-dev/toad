@@ -110,6 +110,10 @@ We welcome public feedback and new PRs. We hold a WeChat group for questions and
 
 欢迎各位提PR，同时我们有toad使用交流的微信群，欢迎询问加群。
 
+## Contributors
+
+[![Contributors][contributor-image]][contributor-url]
+
 ------------
 
 ## Dedicated by **The ESC Team** 
@@ -121,3 +125,5 @@ We welcome public feedback and new PRs. We hold a WeChat group for questions and
 [actions-url]: https://github.com/amphibian-dev/toad/actions
 [downloads-image]: https://img.shields.io/pypi/dm/toad?style=flat-square
 [docs-url]: https://toad.readthedocs.io/
+[contributor-image]: https://contrib.rocks/image?repo=amphibian-dev/toad
+[contributor-url]: https://github.com/amphibian-dev/toad/graphs/contributors

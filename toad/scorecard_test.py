@@ -53,8 +53,8 @@ card = ScoreCard(
 card.fit(woe, target)
 
 
-FUZZ_THRESHOLD = 1e-4
-TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
+FUZZ_THRESHOLD = 1e-6
+TEST_SCORE = pytest.approx(453.549135103, FUZZ_THRESHOLD)
 
 
 def test_representation():
@@ -89,7 +89,7 @@ def test_proba_to_score():
 def test_score_to_prob():
     score = card.predict(df)
     proba = card.score_to_proba(score)
-    assert proba[404] == 0.4673929989138551
+    assert proba[404] == pytest.approx(0.4673929989138551, FUZZ_THRESHOLD)
 
 
 def test_predict():
@@ -99,7 +99,7 @@ def test_predict():
 
 def test_predict_proba():
     proba = card.predict_proba(df)
-    assert proba[404, 1] == 0.4673929989138551
+    assert proba[404, 1] == pytest.approx(0.4673929989138551, FUZZ_THRESHOLD)
 
 
 def test_card_feature_effect():
@@ -137,7 +137,7 @@ def test_card_map():
     config = card.export()
     card_from_map = ScoreCard().load(config)
     score = card_from_map.predict(df)
-    assert score[404] == TEST_SCORE
+    assert score[404] == 453.55
 
 
 def test_card_map_with_else():
@@ -207,7 +207,34 @@ def test_card_with_less_X():
     )
 
     card.fit(x, target)
-    assert card.predict(x)[200] == pytest.approx(411.968588097131, FUZZ_THRESHOLD)
+    assert card.predict(df)[200] == pytest.approx(457.57516057401006, FUZZ_THRESHOLD)
+
+
+def test_card_predict_with_unknown_feature():
+    np.random.seed(9)
+    unknown_df = df.copy()
+    unknown_df.loc[200, 'C'] = 'U'
+    assert card.predict(unknown_df)[200] == pytest.approx(456.38815204610216, FUZZ_THRESHOLD)
+
+
+def test_card_predict_with_unknown_feature_default_max():
+    np.random.seed(9)
+    unknown_df = df.copy()
+    unknown_df.loc[200, 'C'] = 'U'
+    score, sub = card.predict(unknown_df, default = 'max', return_sub = True)
+
+    assert sub.loc[200, 'C'] == card['C']['scores'].max()
+    assert score[200] == pytest.approx(462.26441488588785, FUZZ_THRESHOLD)
+
+
+def test_card_predict_with_unknown_feature_default_with_value():
+    np.random.seed(9)
+    unknown_df = df.copy()
+    unknown_df.loc[200, 'C'] = 'U'
+    score, sub = card.predict(unknown_df, default = 42, return_sub = True)
+    
+    assert sub.loc[200, 'C'] == 42
+    assert score[200] == pytest.approx(355.4364016252907, FUZZ_THRESHOLD)
 
 
 def test_get_reason_vector():

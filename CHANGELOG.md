@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+- Added `ks_plot` for KS plot, [#102](https://github.com/amphibian-dev/toad/issues/102) thanks @kevin-meng
+
+### Changed
+- Now you can pass arguments to `DecisionTreeClassifier` in `merge` or `Combiner` when use `method = dt`
+
 ## [0.1.1] - 2022-08-14
 
 ### Add

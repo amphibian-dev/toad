@@ -38,7 +38,7 @@ class Processing:
         Args:
             name (str): column name in data
         """
-        self.groupby = name
+        self._groupby = name
         return self
     
     def apply(self, f):
@@ -112,7 +112,7 @@ class Processing:
 
     
     def process(self, data):
-        group = data.groupby(self.groupby)
+        group = data.groupby(self._groupby)
 
         res = []
         for col, l in self.funcs.items():
@@ -120,7 +120,7 @@ class Processing:
                 g = group
 
                 if f.need_filter:
-                    g = f.filter(data).groupby(self.groupby)
+                    g = f.filter(data).groupby(self._groupby)
                 
                 if f.is_buildin:
                     r = getattr(g[col], f.name)()
