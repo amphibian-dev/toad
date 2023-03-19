@@ -106,7 +106,7 @@ def to_ndarray(s, dtype = None):
         arr = arr.astype(dtype)
     # covert object type to str
     elif arr.dtype.type is np.object_:
-        arr = arr.astype(np.str)
+        arr = arr.astype(str)
 
     return arr
 
