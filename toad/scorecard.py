@@ -395,11 +395,13 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
         values = []
         cols = []
         for k, v in maps.items():
-            v = np.array(v)
-            if np.issubdtype(v.dtype, np.number):
+            is_number = isinstance(v[0], (int, float))
+            if is_number:
+                v = np.array(v)
                 items = np.concatenate((v, v - gap))
                 patch = number_patch
             else:
+                v = np.array(v, dtype = object)
                 # remove else group
                 mask = np.argwhere(v == self.ELSE_GROUP)
                 if mask.size > 0:

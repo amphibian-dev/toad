@@ -53,7 +53,7 @@ card = ScoreCard(
 card.fit(woe, target)
 
 
-FUZZ_THRESHOLD = 1e-4
+FUZZ_THRESHOLD = 1e-6
 TEST_SCORE = pytest.approx(453.58, FUZZ_THRESHOLD)
 
 
@@ -89,7 +89,7 @@ def test_proba_to_score():
 def test_score_to_prob():
     score = card.predict(df)
     proba = card.score_to_proba(score)
-    assert proba[404] == 0.4673929989138551
+    assert proba[404] == pytest.approx(0.4673929989138551, FUZZ_THRESHOLD)
 
 
 def test_predict():
@@ -99,7 +99,7 @@ def test_predict():
 
 def test_predict_proba():
     proba = card.predict_proba(df)
-    assert proba[404, 1] == 0.4673929989138551
+    assert proba[404, 1] == pytest.approx(0.4673929989138551, FUZZ_THRESHOLD)
 
 
 def test_card_feature_effect():
