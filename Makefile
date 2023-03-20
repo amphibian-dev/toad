@@ -60,7 +60,7 @@ upload:
 	@twine upload dist/*  -u $(TWINE_USER) -p $(TWINE_PASS)
 
 clean:
-	@rm -rf build/ dist/ *.egg-info/
+	@rm -rf build/ dist/ *.egg-info/ **/__pycache__/
 	@rm -rf toad/*.c toad/*.so
 
 docs: build
