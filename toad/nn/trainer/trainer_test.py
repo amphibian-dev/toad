@@ -126,6 +126,14 @@ def test_trainer_loss():
     assert len(trainer.history) == 2
 
 
+# def test_trainer_distributed():
+#     model = TestModel(NUM_FEATS, NUM_CLASSES)
+#     trainer = Trainer(model, loader)
+#     trainer.distributed(workers = 2)
+#     trainer.train(epoch = 5)
+
+
+
 ### distribut model test
 # from toad.nn.trainer.trainer import Trainer
 # from torchvision.transforms import ToTensor

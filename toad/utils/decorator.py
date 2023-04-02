@@ -13,6 +13,8 @@ class Decorator:
 
     def __init__(self, *args, is_class = False, **kwargs):
         self.is_class = is_class
+        self.args = []
+        self.kwargs = {}
 
         if len(args) == 1 and callable(args[0]):
             self.fn = args[0]
@@ -65,8 +67,12 @@ class Decorator:
 
 
     def setup(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+
         for key in kwargs:
             setattr(self, key, kwargs[key])
+
 
     def call(self, *args, **kwargs):
         if self._cls is not None:
@@ -156,6 +162,7 @@ class support_dataframe(Decorator):
             res[col] = r
         return pd.DataFrame(res)
 
+
 class proxy_docstring(Decorator):
     method_name = None
     
@@ -166,3 +173,52 @@ class proxy_docstring(Decorator):
             setattr(func, '__doc__', getattr(self._cls, self.method_name).__doc__)
         
         return func
+
+
+class support_numpy(Decorator):
+    """decorator for supporting numpy array to use torch function
+    """
+    def wrapper(self, *args, **kwargs):
+        import torch
+
+        has_numpy = False
+        l_args = []
+        for a in args:
+            if not isinstance(a, torch.Tensor):
+                a = torch.tensor(a)
+                has_numpy = True
+            
+            l_args.append(a)
+
+        res = self.call(*l_args, **kwargs)
+
+        # only when arguments has numpy array, convert result to numpy array
+        if has_numpy and isinstance(res, torch.Tensor):
+            res = res.numpy()
+        
+        return res
+
+
+class xgb_loss(Decorator):
+    """decorator for converting function to xgb supported loss function
+
+    Args:
+        loss_func (callable): loss function
+        **kwargs: other arguments for loss function except `pred` and `label`
+
+    Examples:
+
+    >>> xgb_func = xgb_loss(loss_func, **kwargs)
+    >>> model = xgb.XGBClassifier(objective = xgb_func)
+    """
+    def wrapper(self, pred, label):
+        from scipy.misc import derivative
+
+        def partial_func(x):
+            return self.call(x, label, **self.kwargs)
+        
+        grad = derivative(partial_func, pred, n=1, dx=1e-6)
+        hess = derivative(partial_func, pred, n=2, dx=1e-6)
+
+        return grad, hess
+

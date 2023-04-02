@@ -17,6 +17,7 @@ class Module(nn.Module):
         ... 
         ... class Net(Module):
         ...     def __init__(self, inputs, hidden, outputs):
+        ...         super().__init__()
         ...         self.model = nn.Sequential(
         ...             nn.Linear(inputs, hidden),
         ...             nn.ReLU(),

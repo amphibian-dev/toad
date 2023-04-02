@@ -53,7 +53,7 @@ class Trainer(Event):
             early_stopping = loss_stopping()
         
         # self.early_stop = early_stopping
-        self.register("epoch:end", early_stopping)
+        self.register("earlystop:check", early_stopping)
 
         from collections import deque
         self.history = deque(maxlen = keep_history)
@@ -90,7 +90,7 @@ class Trainer(Event):
 
 
     # initialize enviroment setting
-    def distributed(self, address, workers = 4, gpu = False):
+    def distributed(self, address = None, workers = 4, gpu = False):
         '''setting distribution enviroment and initial a ray cluster connection
 
         Args: 
@@ -104,7 +104,7 @@ class Trainer(Event):
         
         import ray
         if not ray.is_initialized():
-            ray.init(address)
+            ray.init(address = address)
     
 
     def _train(self, config: dict):
@@ -124,9 +124,8 @@ class Trainer(Event):
             callback = [callback]
         
         # setup callbacks
-        for idx, c in enumerate(callback):
-            if not isinstance(c, Callback):
-                callback[idx] = Callback(c)
+        for c in callback:
+            self.register("epoch:end", c)
 
         loader = self.loader
         model = self.model
@@ -137,77 +136,11 @@ class Trainer(Event):
             loader = train.torch.prepare_data_loader(loader)
             model = train.torch.prepare_model(model)
             # TODO: remove this patch for dist
-            model.fit_step = self.model.fit_step
-            model.state_dict = self.model.state_dict
-            model.log = self.model.log
+            # model.fit_step = self.model.fit_step
+            # model.state_dict = self.model.state_dict
+            # model.log = self.model.log
        
-        # init progress bar
-        p = Progress(loader)
-        
-        for ep in range(start, epoch):
-            # set model to train mode
-            model.train()
-
-            p.prefix = f"Epoch:{ep}"
-
-            # setup a new history for model in each epoch
-            history = History()
-            self.history.append(history)
-
-            # setup callback params
-            params = {
-                "model": model,
-                "history": history,
-                "epoch": ep,
-                "trainer": self,
-                "progress": p,
-            }
-
-            self.emit("epoch:start", **params)
-            
-            # start of history
-            history.start()
-
-            loss = 0.
-            backward_loss = 0.
-            for i, batch in enumerate(p, start = 1):
-                self.emit("batch:start", batch = batch, **params)
-
-                # step fit
-                if self.loss is None:
-                    l = self._step(model, batch)
-                else:
-                    l = self._step(model, batch, loss=self.loss)
-
-                # log loss
-                history.log('loss', l)
-                backward_loss = l + backward_loss
-                if i % backward_rounds == 0 or i == len(p):
-                    self.optimizer.zero_grad()
-                    backward_loss.backward()
-                    self.optimizer.step()
-                    
-                    # reset backward loss
-                    backward_loss = 0.
-                
-                loss += (l.item() - loss) / i
-                p.suffix = 'loss:{:.4f}'.format(loss)
-
-                self.emit("batch:end", batch = batch, **params)
-
-            # END of history
-            history.end()
-
-            with torch.no_grad():
-                if isinstance(callback, list):
-                    for hook in callback:
-                        hook(**params)
-                
-                self.emit("epoch:end", **params)
-            
-            # check if trainer need terminate
-            if self.state == TRAINER_TERMINATED:
-                break
+        train_loop(self, model, loader, epoch = epoch, start = start, backward_rounds = backward_rounds)
         
 
     def train(self, loader = None, epoch = 10, **kwargs):
@@ -240,19 +173,20 @@ class Trainer(Event):
 
         # distrubution trainning
         if self._mode == DISTRIBUTED_MODE:
-            from ray.train.trainer import Trainer
-            distribute_trainer = Trainer(
-                backend = "torch",
-                num_workers = self._workers,
-                use_gpu = self._gpu,
+            from ray.air import ScalingConfig
+            from ray.train.torch import TorchTrainer
+
+            distributed_trainer = TorchTrainer(
+                self._train,
+                train_loop_config = config,
+                scaling_config = ScalingConfig(
+                    use_gpu = self._gpu,
+                    num_workers = self._workers
+                ),
             )
-            distribute_trainer.start()
-            result = distribute_trainer.run(
-                train_func = self._train,
-                config = config  
-            )
+            result = distributed_trainer.fit()
             print(result)
-            distribute_trainer.shutdown()
+            # distribute_trainer.shutdown()
         else:
             self._train(config = config) 
         
@@ -305,3 +239,71 @@ class Trainer(Event):
             )
         
         return history
+
+
+
+def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 1):
+    # init progress bar
+    p = Progress(loader)
+    
+    for ep in range(start, epoch):
+        # set model to train mode
+        model.train()
+
+        p.prefix = f"Epoch:{ep}"
+
+        # setup a new history for model in each epoch
+        history = History()
+        trainer.history.append(history)
+
+        # setup callback params
+        params = {
+            "model": model,
+            "history": history,
+            "epoch": ep,
+            "trainer": trainer,
+            "progress": p,
+        }
+
+        trainer.emit("epoch:start", **params)
+        
+        # start of history
+        history.start()
+
+        loss = 0.
+        backward_loss = 0.
+        for i, batch in enumerate(p, start = 1):
+            trainer.emit("batch:start", batch = batch, **params)
+
+            # step fit
+            if trainer.loss is None:
+                l = trainer._step(model, batch)
+            else:
+                l = trainer._step(model, batch, loss=trainer.loss)
+
+            # log loss
+            history.log('loss', l)
+            backward_loss = l + backward_loss
+            if i % backward_rounds == 0 or i == len(p):
+                trainer.optimizer.zero_grad()
+                backward_loss.backward()
+                trainer.optimizer.step()
+                
+                # reset backward loss
+                backward_loss = 0.
+            
+            loss += (l.item() - loss) / i
+            p.suffix = 'loss:{:.4f}'.format(loss)
+
+            trainer.emit("batch:end", batch = batch, **params)
+
+        # END of history
+        history.end()
+
+        with torch.no_grad():
+            trainer.emit("epoch:end", **params)
+            trainer.emit("earlystop:check", **params)
+        
+        # check if trainer need terminate
+        if trainer.state == TRAINER_TERMINATED:
+            break
