@@ -48,14 +48,14 @@ def test_numpy_support_focal_loss(seed):
 
 def test_binary_focal_loss_for_xgb(seed):
     from toad.utils.decorator import xgb_loss
-    
+
     y_pred = torch.rand(DATASET_SIZE, dtype=torch.float).numpy()
     y = torch.randint(2, size=(DATASET_SIZE,), dtype=torch.long).numpy()
-    loss_func = xgb_loss(binary_focal_loss, gamma=0.0, alpha=0.5)
+    loss_func = xgb_loss(gamma=5.0, alpha=0.5)(binary_focal_loss)
     grad, hess = loss_func(y_pred, y)
 
-    assert grad == pytest.approx(0.003725290298461914)
-    assert hess == pytest.approx(-22351.741790771484)
+    assert grad == pytest.approx(-0.00023283064365386963)
+    assert hess == pytest.approx(465.66128730773926)
 
 
 # TODO

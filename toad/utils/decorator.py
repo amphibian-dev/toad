@@ -208,7 +208,15 @@ class xgb_loss(Decorator):
 
     Examples:
 
-    >>> xgb_func = xgb_loss(loss_func, **kwargs)
+    >>> @xgb_loss(**kwargs)
+    >>> def loss_func(pred, label, **kwargs):
+    >>>     ...
+    >>>     return loss
+    >>>
+    >>> # or use `xgb_loss` directly
+    >>> xgb_func = xgb_loss(**kwargs)(loss_func)
+    >>>
+    >>> # use in xgb
     >>> model = xgb.XGBClassifier(objective = xgb_func)
     """
     def wrapper(self, pred, label):
