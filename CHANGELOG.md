@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2023-04-03
+
 ### Add
 - Added `ks_plot` for KS plot, [#102](https://github.com/amphibian-dev/toad/issues/102) thanks @kevin-meng
 - Added `xgb_loss` decorator for convert a normal loss function to a xgb supported loss function
