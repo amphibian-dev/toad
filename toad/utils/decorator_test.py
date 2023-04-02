@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from .decorator import Decorator, frame_exclude
+from .decorator import Decorator, frame_exclude, xgb_loss
 
 np.random.seed(1)
 
@@ -27,6 +27,7 @@ def test_decorator_init_func():
 
     assert f([10, 20]) == 30
 
+
 def test_decorator_inherit():
     class a(Decorator):
         bias = 0
@@ -42,3 +43,13 @@ def test_decorator_inherit():
     f = b(bias = 2)(lambda x: x+1)
     assert f(a = 1, b = 2) == 7
 
+
+def test_xgb_loss():
+    def loss(x, y):
+        return np.abs(x - y).sum()
+    
+    xgb_l = xgb_loss(loss)
+    grad, hess = xgb_l(np.arange(3), np.arange(3, 6))
+
+    assert grad == pytest.approx(-3.0)
+    assert hess == pytest.approx(0.0)

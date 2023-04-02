@@ -49,7 +49,10 @@ class checkpoint(callback):
     filename = "{name}-{epoch}.pt"
     
 
-    def wrapper(self, epoch, model, **kwargs):
+    def wrapper(self, **kwargs):
+        model = kwargs.get("model")
+        epoch = kwargs.get("epoch")
+
         name = type(model).__name__
 
         from pathlib import Path
@@ -65,8 +68,6 @@ class checkpoint(callback):
 
         if epoch % self.every == 0:
             super().wrapper(
-                epoch = epoch,
-                model = model,
                 path = path,
                 **kwargs
             )

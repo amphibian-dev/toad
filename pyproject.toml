@@ -1,0 +1,45 @@
+[project]
+name = "toad"
+description = "Toad is dedicated to facilitating model development process, especially for a scorecard."
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+authors = [{name = "Secbone", email = "secbone@gmail.com"}]
+classifiers = [
+    'Operating System :: POSIX',
+    'Operating System :: Microsoft :: Windows',
+    'Operating System :: MacOS :: MacOS X',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+    'Programming Language :: Python :: 3.10',
+    'Programming Language :: Python :: 3.11',
+]
+dynamic = [
+    "version",
+    "readme",
+    "dependencies",
+    "entry-points",
+]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"]}
+dependencies = {file = ["requirements.txt"]}
+
+[build-system]
+requires = [
+    "setuptools",
+    "Cython >= 0.29.15",
+    "numpy >= 1.20",
+    "wheel",
+    "twine",
+]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+nn = ["torch >= 1.8.1", "torchvision >= 0.9.1"]
+
+[console_scripts]
+toad = "toad.cli:main"
+
+[tool.setuptools.packages.find]
+exclude = ["tests"]

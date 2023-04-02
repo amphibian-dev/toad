@@ -58,7 +58,8 @@ setup(
     include_dirs = [np.get_include()],
     ext_modules = get_ext_modules(),
     include_package_data = True,
-    python_requires = '>=3.6',
+    python_requires = '>=3.7',
+    setup_requires = ['numpy'],
     install_requires = get_requirements(),
     extras_require = {
         'nn': get_requirements('nn')
@@ -72,6 +73,8 @@ setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
     entry_points = {
         'console_scripts': [

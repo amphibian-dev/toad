@@ -3,6 +3,7 @@ import numpy as np
 from torch import nn, optim
 from torch.nn.parallel import DistributedDataParallel
 
+from .trainer.history import get_current_history
 from ..utils.progress import Progress
 
 
@@ -16,6 +17,7 @@ class Module(nn.Module):
         ... 
         ... class Net(Module):
         ...     def __init__(self, inputs, hidden, outputs):
+        ...         super().__init__()
         ...         self.model = nn.Sequential(
         ...             nn.Linear(inputs, hidden),
         ...             nn.ReLU(),
@@ -45,8 +47,6 @@ class Module(nn.Module):
         """define model struct
         """
         super().__init__()
-
-        self._history = None
     
 
     @property
@@ -128,10 +128,11 @@ class Module(nn.Module):
             key (str): name of message
             value (Tensor): tensor of values
         """
-        if self._history is None:
+        history = get_current_history()
+        if history is None:
             return
         
-        return self._history.log(key, value)
+        return history.log(key, value)
         
         
     def distributed(self, backend = None, **kwargs):

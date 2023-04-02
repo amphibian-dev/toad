@@ -9,9 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Add
 - Added `ks_plot` for KS plot, [#102](https://github.com/amphibian-dev/toad/issues/102) thanks @kevin-meng
+- Added `xgb_loss` decorator for convert a normal loss function to a xgb supported loss function
+- Added `binary_focal_loss` function in `nn.functional`
+- Added `event` module in `nn.trainer`, and changed `trainer` mode to event-based
+- Added wheel package supported for `py3.9`, `py3.10` and `py3.11`
 
 ### Changed
 - Now you can pass arguments to `DecisionTreeClassifier` in `merge` or `Combiner` when use `method = dt`
+
+### Fixed
+- Fixed `groupby` rewrited in `preprocessing`
+- Fixed the expired deprecations of numpy types in `1.24.0`
 
 ## [0.1.1] - 2022-08-14
 
