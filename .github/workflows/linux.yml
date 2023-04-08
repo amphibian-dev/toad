@@ -40,7 +40,7 @@ jobs:
         with:
           build-requirements: 'cython numpy'
       - run: rm dist/*-linux_x86_64.whl
-      - uses: pypa/gh-action-pypi-publish@master
+      - uses: pypa/gh-action-pypi-publish@release/v1
         name: publish pypi
         with:
           user: __token__

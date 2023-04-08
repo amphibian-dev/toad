@@ -38,7 +38,7 @@ jobs:
         with:
           name: wheel
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@master
+      - uses: pypa/gh-action-pypi-publish@release/v1
         name: publish pypi
         with:
           user: __token__
