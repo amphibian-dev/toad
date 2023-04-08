@@ -386,7 +386,7 @@ def quality(dataframe, target = 'target', cpu_cores = 0, iv_only = False, indica
     pool = Parallel(n_jobs = cpu_cores)
 
     jobs = []
-    for name, series in frame.iteritems():
+    for name, series in frame.items():
         jobs.append(delayed(column_quality)(
             series,
             target,
