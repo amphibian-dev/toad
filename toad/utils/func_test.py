@@ -1,3 +1,4 @@
+import sys
 import pytest
 import numpy as np
 import pandas as pd
@@ -41,6 +42,7 @@ def test_feature_splits():
     assert len(value) == 243
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 or higher")
 def test_diff_time_frame():
     time_data = [
         {
@@ -63,6 +65,7 @@ def test_diff_time_frame():
     frame = pd.DataFrame(time_data)
     res = diff_time_frame(frame['base'], frame[['time1', 'time2']])
     assert res.iloc[0, 1] == 91
+
 
 def test_bin_to_number():
     s = pd.Series([
