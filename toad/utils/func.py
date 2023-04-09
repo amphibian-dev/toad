@@ -289,7 +289,7 @@ def _get_clip_value(params):
         return params, params
 
 
-def diff_time(base, target, format = None, time = 'day'):
+def diff_time(base, target, format = 'mixed', time = 'day'):
     # if base is not a datetime list
     if not np.issubdtype(base.dtype, np.datetime64):
         base = pd.to_datetime(base, format = format, cache = True)
@@ -304,7 +304,7 @@ def diff_time(base, target, format = None, time = 'day'):
     return delta
 
 
-def diff_time_frame(base, frame, format = None):
+def diff_time_frame(base, frame, format = 'mixed'):
     res = pd.DataFrame()
 
     base = pd.to_datetime(base, format = format, cache = True)

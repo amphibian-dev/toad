@@ -61,7 +61,7 @@ def test_diff_time_frame():
     ]
 
     frame = pd.DataFrame(time_data)
-    res = diff_time_frame(frame['base'], frame[['time1', 'time2']], format='%Y-%m-%d')
+    res = diff_time_frame(frame['base'], frame[['time1', 'time2']])
     assert res.iloc[0, 1] == 91
 
 def test_bin_to_number():
