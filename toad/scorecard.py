@@ -400,9 +400,9 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
                 for bins, score  in zip(rule['bins'], rule['scores'].tolist()):
                     for _bin in bins:
                         if _bin == 'nan':
-                            default_value = score
+                            default_value = float(score)
 
-                        mapping[_bin] = score
+                        mapping[_bin] = float(score)
 
                 mapper.append((
                     [var],
@@ -417,22 +417,20 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
                     total_bins -= 1
                     iter = enumerate(zip(rule['bins'][:-1], rule['scores'][:-1]), start=1)
                 else:
-                    score_empty = 0
                     iter = enumerate(zip(rule['bins'], rule['scores']), start=1)
-                
+
+                if has_empty:
+                    expression_string += f'{score_empty} if pandas.isnull(X[0])'
+
                 for i, (bin_var, score) in iter:
-                    if i == 1:
+                    if i == 1 and not has_empty:
                         expression_string += f'{score} if X[0] < {bin_var}'
                     elif i == total_bins:
                         expression_string += f' else {score}'
                     else:
                         expression_string += f' else ({score} if X[0] < {bin_var}'
                         end_string += ')'
-                
-                if has_empty:
-                    expression_string += f' else ({score_empty} if pandas.isnull(X[0])'
-                    end_string += ')'
-                
+
                 expression_string += end_string
 
                 mapper.append((
@@ -447,7 +445,7 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             ('preprocessing', scorecard_mapper),
             ('scorecard', LinearRegression(fit_intercept=False)),
         ])
-        
+
         pipeline.named_steps['scorecard'].fit(
             pd.DataFrame(
                 np.random.randint(0, 100, (100, len(scorecard_mapper.features))),
