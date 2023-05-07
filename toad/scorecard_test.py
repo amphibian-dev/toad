@@ -122,7 +122,26 @@ def test_woe_to_score():
     score = np.sum(score, axis=1)
     assert score[404] == TEST_SCORE
 
+def test_export_pmml_from_scorecard():
+    card = ScoreCard(
+        combiner = combiner,
+        transer = woe_transer,
+    )
+    card.load(card_config)
+    with pytest.raises(Exception) as e:
+        # will raise an exception when export a card to pmml
+        card.card2pmml()
+    
+    assert e.type != RuntimeError
 
+
+def test_export_pmml_from_scorecard_load():
+    card = ScoreCard().load(card_config)
+    with pytest.raises(Exception) as e:
+        # will raise an exception when export a card to pmml
+        card.card2pmml()
+    
+    assert e.type != RuntimeError
 def test_bin_to_score():
     score = card.bin_to_score(bins)
     assert score[404] == TEST_SCORE
@@ -262,4 +281,25 @@ def test_predict_dict():
     """ a test for scalar inference time cost """
     proba = card.predict(df.iloc[404].to_dict())
     assert proba == TEST_SCORE
+    
+    
+def test_export_pmml_from_scorecard():
+    card = ScoreCard(
+        combiner = combiner,
+        transer = woe_transer,
+    )
+    card.load(card_config)
+    with pytest.raises(Exception) as e:
+        # will raise an exception when export a card to pmml
+        card.card2pmml()
 
+    assert e.type != RuntimeError
+
+
+def test_export_pmml_from_scorecard_load():
+    card = ScoreCard().load(card_config)
+    with pytest.raises(Exception) as e:
+        # will raise an exception when export a card to pmml
+        card.card2pmml()
+
+    assert e.type != RuntimeError
