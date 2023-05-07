@@ -262,8 +262,8 @@ def test_predict_dict():
     """ a test for scalar inference time cost """
     proba = card.predict(df.iloc[404].to_dict())
     assert proba == TEST_SCORE
-    
-    
+
+
 def test_export_pmml_from_scorecard():
     card = ScoreCard(
         combiner = combiner,
@@ -284,3 +284,13 @@ def test_export_pmml_from_scorecard_load():
         card.card2pmml()
 
     assert e.type != RuntimeError
+
+
+def test_predict_from_pmml():
+    with pytest.raises(Exception) as e:
+        # will raise an exception when load a pmml to card
+        from pypmml import Model
+        model = Model.fromFile("scorecard.pmml")
+
+    assert e.type != ModuleNotFoundError
+    assert model.predict(df).values[200, 0] == 600
