@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from time import time
 from .func import save_json, read_json
 from functools import wraps, WRAPPER_ASSIGNMENTS
 
@@ -230,3 +231,62 @@ class xgb_loss(Decorator):
 
         return grad, hess
 
+
+class performance(Decorator):
+    """decorator for analysis code performance
+
+    Args:
+        loop (int): loop times, default `1`
+    
+    Examples:
+    >>> @performance(loop = 100)
+    >>> def func():
+    >>>     ... # code
+    >>>     return res
+    >>>
+    >>> func()
+    >>> 
+    >>> # or use `performance` in `with` statement
+    >>> with performance():
+    >>>     ... # code
+    """
+    loop = 1
+
+    def wrapper(self, *args, **kwargs):
+        costs = []
+        for _ in range(self.loop):
+            start = time()
+            res = self.call(*args, **kwargs)
+            end = time()
+            costs.append(end - start)
+
+        self.analysis(costs)
+        return res
+    
+
+    def analysis(self, costs):
+        import numpy as np
+
+        print('total cost: {:.5f}s'.format(np.sum(costs)))
+        print("-"*40)
+        data = {
+            "Mean": np.mean(costs),
+            "Min": np.min(costs),
+            "Max": np.max(costs),
+            "90%": np.percentile(costs, 90),
+            "95%": np.percentile(costs, 95),
+            "99%": np.percentile(costs, 99),
+        }
+        HEADER = "{:>8}"*len(data)
+        BODY = "{:>7.3f}s"*len(data)
+        print(HEADER.format(*data.keys()))
+        print(BODY.format(*data.values()))
+    
+
+    def __enter__(self):
+        self.start = time()
+        return self
+    
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.end = time()
+        self.analysis([self.end - self.start])

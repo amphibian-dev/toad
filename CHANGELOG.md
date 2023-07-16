@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Add
+- Added `performance` in `toad.utils` for test code performance
+
 ## [0.1.2] - 2023-04-09
 
 ### Add
