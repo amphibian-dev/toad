@@ -18,6 +18,7 @@ dynamic = [
     "version",
     "readme",
     "dependencies",
+    "optional-dependencies",
     "entry-points",
 ]
 
