@@ -1,3 +1,4 @@
+import sys
 import pytest
 from .pickletracer import Tracer, get_current_tracer
 
