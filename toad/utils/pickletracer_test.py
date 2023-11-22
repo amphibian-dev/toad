@@ -1,4 +1,4 @@
-
+import pytest
 from .pickletracer import Tracer, get_current_tracer
 
 
@@ -10,6 +10,7 @@ def test_tracer_with_clause():
     assert get_current_tracer() is None
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="does not run on windows")
 def test_trace_pyfunc():
     import pandas as pd
     import numpy as np
