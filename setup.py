@@ -60,10 +60,6 @@ setup(
     include_package_data = True,
     python_requires = '>=3.7',
     setup_requires = ['numpy'],
-    install_requires = get_requirements(),
-    extras_require = {
-        'nn': get_requirements('nn')
-    },
     tests_require = get_requirements('test'),
     license = 'MIT',
     classifiers = [

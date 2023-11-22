@@ -21,7 +21,7 @@ jobs:
           architecture: x64
       - run: make build_deps
       - run: pip install -r requirements-nn.txt
-      - run: pip install -e .
+      - run: pip install .[all]
       - run: make test
       - run: make dist_wheel
       - uses: actions/upload-artifact@v2

@@ -24,6 +24,7 @@ dynamic = [
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
+optional-dependencies = {nn = {file = ["requirements-nn.txt"]}, tools = {file = ["requirements-tools.txt"]}, all = {file = ["requirements-nn.txt", "requirements-tools.txt"]} }
 
 [build-system]
 requires = [
@@ -35,11 +36,15 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
-[project.optional-dependencies]
-nn = ["torch >= 1.8.1", "torchvision >= 0.9.1"]
-
 [console_scripts]
 toad = "toad.cli:main"
 
 [tool.setuptools.packages.find]
 exclude = ["tests"]
+
+[project.urls]
+Homepage = "https://github.com/amphibian-dev/toad"
+Documentation = "https://toad.readthedocs.io/en/stable/"
+Repository = "https://github.com/amphibian-dev/toad.git"
+Issues = "https://github.com/amphibian-dev/toad/issues"
+Changelog = "https://github.com/amphibian-dev/toad/blob/master/CHANGELOG.md"
