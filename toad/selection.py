@@ -326,7 +326,12 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
 
     f, t = split_target(frame[cols], target)
 
-    corr = f.corr(numeric_only = True).abs()
+    import inspect
+    corr_params = {}
+    if 'numeric_only' in inspect.signature(f.corr).parameters.keys():
+        corr_params['numeric_only'] = True
+    
+    corr = f.corr(**corr_params).abs()
 
     drops = []
 
