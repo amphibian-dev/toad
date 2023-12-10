@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `performance` in `toad.utils` for test code performance
 - Added `pickletracer` in `toad.utils` for infer requirements in pickle object
 
+### Fixed
+- Fixed `Value Error` in `select` and `drop_corr` method when using `pandas >= 2.0.x`
+
 ## [0.1.2] - 2023-04-09
 
 ### Add

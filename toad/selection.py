@@ -326,7 +326,7 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
 
     f, t = split_target(frame[cols], target)
 
-    corr = f.corr().abs()
+    corr = f.corr(numeric_only = True).abs()
 
     drops = []
 
