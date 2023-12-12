@@ -46,7 +46,7 @@ The following showcases some of the most popular features of toad, for more deta
 - Simple IV calculation for all features · 一键算IV:
 
 ```python
-toad.quality(data,'target',iv_only=True)
+toad.quality(data, 'target', indicators = ['iv'])
 ```
 
 - Preliminary selection based on criteria · 根据特定条件的初步变量筛选; 
