@@ -161,6 +161,10 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
         test_res = np.empty(l, dtype = object)
 
         if direction == 'backward':
+            # break when only one single feature left
+            if l < 2:
+                break
+
             for i in range(l):
                 test_res[i] = sm.stats(
                     df[ remaining[:i] + remaining[i+1:] ],

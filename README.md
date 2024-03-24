@@ -118,9 +118,9 @@ We welcome public feedback and new PRs. We hold a WeChat group for questions and
 
 ## Dedicated by **The ESC Team** 
 
-[pypi-image]: https://img.shields.io/pypi/v/toad.svg?style=flat-square
+[pypi-image]: https://img.shields.io/pypi/v/toad?style=flat-square
 [pypi-url]: https://pypi.org/project/toad/
-[python-image]: https://img.shields.io/pypi/pyversions/toad.svg?style=flat-square
+[python-image]: https://img.shields.io/pypi/pyversions/toad?style=flat-square
 [actions-image]: https://img.shields.io/github/actions/workflow/status/amphibian-dev/toad/release.yml?style=flat-square
 [actions-url]: https://github.com/amphibian-dev/toad/actions
 [downloads-image]: https://img.shields.io/pypi/dm/toad?style=flat-square
