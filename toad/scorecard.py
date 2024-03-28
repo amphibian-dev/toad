@@ -376,7 +376,87 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         return card
 
+    def card2pmml(self, pmml: str = 'scorecard.pmml', debug: bool = False):
+        """export a scorecard to pmml
 
+        Args:
+            pmml (str): io to write pmml file.
+            debug (bool): If true, print information about the conversion process.
+        """
+        from sklearn_pandas import DataFrameMapper
+        from sklearn.linear_model import LinearRegression
+        from sklearn2pmml import sklearn2pmml, PMMLPipeline
+        from sklearn2pmml.preprocessing import LookupTransformer, ExpressionTransformer
+
+        mapper = []
+        samples = {}
+        for var, rule in self.rules.items():
+            end_string = ''
+            expression_string = ''
+            total_bins = len(rule['bins'])
+            if isinstance(rule['bins'][0], (np.ndarray, list)):
+                default_value = 0.
+                mapping = {}
+                for bins, score  in zip(rule['bins'], rule['scores'].tolist()):
+                    for _bin in bins:
+                        if _bin == 'nan':
+                            default_value = float(score)
+
+                        mapping[_bin] = float(score)
+
+                mapper.append((
+                    [var],
+                    LookupTransformer(mapping=mapping, default_value=default_value),
+                ))
+                samples[var] = [list(mapping.keys())[i] for i in np.random.randint(0, len(mapping), 20)]
+            else:
+                has_empty = len(rule['bins']) > 0 and pd.isnull(rule['bins'][-1])
+
+                if has_empty:
+                    score_empty = rule['scores'][-1]
+                    total_bins -= 1
+                    iter = enumerate(zip(rule['bins'][:-1], rule['scores'][:-1]), start=1)
+                else:
+                    iter = enumerate(zip(rule['bins'], rule['scores']), start=1)
+
+                if has_empty:
+                    expression_string += f'{score_empty} if pandas.isnull(X[0])'
+
+                for i, (bin_var, score) in iter:
+                    if i == 1 and not has_empty:
+                        expression_string += f'{score} if X[0] < {bin_var}'
+                    elif i == total_bins:
+                        expression_string += f' else {score}'
+                    else:
+                        expression_string += f' else ({score} if X[0] < {bin_var}'
+                        end_string += ')'
+
+                expression_string += end_string
+
+                mapper.append((
+                    [var],
+                    ExpressionTransformer(expression_string),
+                ))
+                samples[var] = np.random.random(20) * 100
+
+        scorecard_mapper = DataFrameMapper(mapper, df_out=True)
+
+        pipeline = PMMLPipeline([
+            ('preprocessing', scorecard_mapper),
+            ('scorecard', LinearRegression(fit_intercept=False)),
+        ])
+
+        pipeline.named_steps['scorecard'].fit(
+            pd.DataFrame(
+                np.random.randint(0, 100, (100, len(scorecard_mapper.features))),
+                columns=[m[0][0] for m in scorecard_mapper.features]
+            ),
+            pd.Series(np.random.randint(0, 2, 100), name='score')
+        )
+
+        pipeline.named_steps['scorecard'].coef_ = np.ones(len(scorecard_mapper.features))
+
+        sklearn2pmml(pipeline, pmml, with_repr=True, debug=debug)
 
     def _generate_testing_frame(self, maps, size = 'max', mishap = True, gap = 1e-2):
         """
