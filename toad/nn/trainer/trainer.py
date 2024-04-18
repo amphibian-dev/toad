@@ -52,8 +52,8 @@ class Trainer(Event):
             from .earlystop import loss_stopping
             early_stopping = loss_stopping()
         
-        # self.early_stop = early_stopping
-        self.register("earlystop:check", early_stopping)
+        if early_stopping is not False:
+            self.register("earlystop:check", early_stopping)
 
         from collections import deque
         self.history = deque(maxlen = keep_history)
@@ -283,6 +283,7 @@ def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 
 
             # log loss
             history.log('loss', l)
+
             backward_loss = l + backward_loss
             if i % backward_rounds == 0 or i == len(p):
                 trainer.optimizer.zero_grad()
