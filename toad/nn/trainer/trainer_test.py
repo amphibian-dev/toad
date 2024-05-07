@@ -45,7 +45,7 @@ def test_trainer():
     model = TestModel(NUM_FEATS, NUM_CLASSES)
     trainer = Trainer(model, loader)
     trainer.train(epoch = 2)
-    assert len(trainer.history) == 2
+    assert len(trainer.histories) == 2
 
 
 def test_trainer_early_stopping():
@@ -57,7 +57,7 @@ def test_trainer_early_stopping():
 
     trainer = Trainer(model, loader, early_stopping = scoring)
     trainer.train(epoch = 200)
-    assert len(trainer.history) == 4
+    assert len(trainer.histories) == 4
 
 
 def test_trainer_fit_step():
@@ -123,7 +123,7 @@ def test_trainer_loss():
     model = TestModel2(NUM_FEATS, NUM_CLASSES)
     trainer = Trainer(model, loader, loss = F.cross_entropy)
     trainer.train(epoch = 2)
-    assert len(trainer.history) == 2
+    assert len(trainer.histories) == 2
 
 
 # def test_trainer_distributed():

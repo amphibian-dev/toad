@@ -1,3 +1,6 @@
+from typing import Callable
+from dataclasses import dataclass
+
 import torch
 import numpy as np
 from torch import optim
@@ -5,6 +8,7 @@ from torch import optim
 from .history import History
 from .callback import callback as Callback
 from .event import Event
+from ..distributed.distributor import Distributor
 
 from ...utils.progress import Progress
 
@@ -14,6 +18,28 @@ STANDALONE_MODE = "standalone"
 TRAINER_INIT = "init"
 TRAINER_RUNNING = "running"
 TRAINER_TERMINATED = "terminated"
+
+
+@dataclass
+class TrainerStatus:
+    UNSET: str = "unset"
+    INIT: str = "init"
+    RUNNING: str = "running"
+    TERMINATED: str = "terminated"
+
+
+@dataclass
+class TrainerState:
+    module: torch.nn.Module = None
+    loader: torch.utils.data.DataLoader = None
+    optimizer: torch.optim.Optimizer = None
+    scheduler: torch.optim.lr_scheduler.LRScheduler = None
+    step: Callable = None
+    histories: [History] = None
+    status: str = TrainerStatus.UNSET
+    distributor: Distributor = None
+
+
 
 class Trainer(Event):
     """trainer for training models
@@ -33,17 +59,10 @@ class Trainer(Event):
         """
         super().__init__()
 
-        self.set_model(model)
-
-        self.loader = loader
-
-        self._mode = STANDALONE_MODE
-        self._state = TRAINER_INIT
+        step = self._get_step(model)
         
         if optimizer is None:
             optimizer = optim.Adam(model.parameters(), lr = 1e-3)
-        
-        self.optimizer = optimizer
 
         self.loss = loss
 
@@ -56,35 +75,47 @@ class Trainer(Event):
             self.register("earlystop:check", early_stopping)
 
         from collections import deque
-        self.history = deque(maxlen = keep_history)
+        histories = deque(maxlen = keep_history)
+
+        self.state = TrainerState(
+            module = model,
+            loader = loader,
+            optimizer = optimizer,
+            scheduler = None,
+            step = step,
+            histories = histories,
+            status = TrainerStatus.INIT,
+        )      
     
 
     @property
-    def state(self):
-        return self._state
+    def status(self):
+        return self.state.status
+    
+
+    @property
+    def histories(self):
+        return self.state.histories
     
 
     def terminate(self):
-        self._state = TRAINER_TERMINATED
+        self.state.status = TrainerStatus.TERMINATED
     
 
     def run(self):
-        self._state = TRAINER_RUNNING
+        self.state.status = TrainerStatus.RUNNING
     
-
-    def set_model(self, model):
-        """setup model
-        """
+    def _get_step(self, module):
         from ..module import Module
         
-        if isinstance(model, Module):
-            self.fit_step(model.__class__.fit_step)
+        if isinstance(module, Module):
+            return module.__class__.fit_step
         
-        self.model = model
+        return None
     
 
     def fit_step(self, func):
-        self._step = func
+        self.state.step = func
         
         return func
 
@@ -98,13 +129,17 @@ class Trainer(Event):
             workers (int): compute task's resource
             gpu (Booleans): whether use GPU, "True" or "False"
         '''
-        self._mode = DISTRIBUTED_MODE
-        self._workers = workers
-        self._gpu = gpu
+        # self._mode = DISTRIBUTED_MODE
+        # self._workers = workers
+        # self._gpu = gpu
         
-        import ray
-        if not ray.is_initialized():
-            ray.init(address = address)
+        # import ray
+        # if not ray.is_initialized():
+        #     ray.init(address = address)
+
+        # TODO: init distributor
+        distributor = Distributor(size = workers)
+        self.state.distributor = distributor
     
 
     def _train(self, config: dict):
@@ -127,10 +162,10 @@ class Trainer(Event):
         for c in callback:
             self.register("epoch:end", c)
 
-        loader = self.loader
-        model = self.model
+        loader = self.state.loader
+        model = self.state.module
 
-        if self._mode == DISTRIBUTED_MODE:
+        if self.state.distributor is not None:
             import ray.train as train
             # TODO prepare loader and model
             loader = train.torch.prepare_data_loader(loader)
@@ -161,9 +196,9 @@ class Trainer(Event):
             Module: the model with best performents
         """
         if loader is not None:
-            self.loader = loader
+            self.state.loader = loader
         
-        if self.loader is None:
+        if self.state.loader is None:
             raise ValueError("loader is not set, please set a loader for trainning!")
         
         config = {
@@ -172,7 +207,7 @@ class Trainer(Event):
         }
 
         # distrubution trainning
-        if self._mode == DISTRIBUTED_MODE:
+        if self.state.distributor is not None:
             from ray.air import ScalingConfig
             from ray.train.torch import TorchTrainer
 
@@ -190,7 +225,7 @@ class Trainer(Event):
         else:
             self._train(config = config) 
         
-        return self.model
+        return self.state.module
     
 
     @torch.no_grad()
@@ -210,7 +245,10 @@ class Trainer(Event):
 
         history = History()
 
-        self.model.eval()
+        model = self.state.module
+        step = self.state.step
+
+        model.eval()
 
         history.start()
         
@@ -218,12 +256,12 @@ class Trainer(Event):
         for i, batch in enumerate(p, start = 1):
             # step fit
             if self.loss is None:
-                l = self._step(self.model, batch)
+                l = step(model, batch)
             else:
-                l = self._step(self.model, batch, loss=self.loss)
+                l = step(model, batch, loss=self.loss)
 
             # log loss
-            self.model.log('loss', l)
+            history.log('loss', l)
 
             loss += (l.item() - loss) / i
             p.suffix = 'loss:{:.4f}'.format(loss)
@@ -235,7 +273,7 @@ class Trainer(Event):
                 epoch = None,
                 history = history,
                 trainer = self,
-                model = self.model,
+                model = model,
             )
         
         return history
@@ -245,6 +283,8 @@ class Trainer(Event):
 def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 1):
     # init progress bar
     p = Progress(loader)
+    step = trainer.state.step
+    optimizer = trainer.state.optimizer
     
     for ep in range(start, epoch):
         # set model to train mode
@@ -254,7 +294,7 @@ def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 
 
         # setup a new history for model in each epoch
         history = History()
-        trainer.history.append(history)
+        trainer.state.histories.append(history)
 
         # setup callback params
         params = {
@@ -277,18 +317,18 @@ def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 
 
             # step fit
             if trainer.loss is None:
-                l = trainer._step(model, batch)
+                l = step(model, batch)
             else:
-                l = trainer._step(model, batch, loss=trainer.loss)
+                l = step(model, batch, loss=trainer.loss)
 
             # log loss
             history.log('loss', l)
 
             backward_loss = l + backward_loss
             if i % backward_rounds == 0 or i == len(p):
-                trainer.optimizer.zero_grad()
+                optimizer.zero_grad()
                 backward_loss.backward()
-                trainer.optimizer.step()
+                optimizer.step()
                 
                 # reset backward loss
                 backward_loss = 0.
@@ -306,5 +346,5 @@ def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 
             trainer.emit("earlystop:check", **params)
         
         # check if trainer need terminate
-        if trainer.state == TRAINER_TERMINATED:
+        if trainer.status == TrainerStatus.TERMINATED:
             break

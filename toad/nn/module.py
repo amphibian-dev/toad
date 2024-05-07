@@ -1,14 +1,16 @@
+from abc import ABC
+
 import torch
 import numpy as np
 from torch import nn, optim
-from torch.nn.parallel import DistributedDataParallel
+
 
 from .trainer.history import get_current_history
 from ..utils.progress import Progress
 
 
 
-class Module(nn.Module):
+class ModuleMixin(ABC):
     """base module for every model
 
     Examples:
@@ -43,12 +45,6 @@ class Module(nn.Module):
         ... model.fit(train_loader)
 
     """
-    def __init__(self):
-        """define model struct
-        """
-        super().__init__()
-    
-
     @property
     def device(self):
         """device of model
@@ -133,35 +129,91 @@ class Module(nn.Module):
             return
         
         return history.log(key, value)
+    
+
+    def qunatize(self, **kwargs):
+        from .quantize import quantize, freeze
+        
+        quantize(self, **kwargs)
+        freeze(self)
+        
+        return self
+    
+
+    def lora(self, **kwargs):
+        from .lora import get_lora_model
+        return get_lora_model(self, **kwargs)
         
         
-    def distributed(self, backend = None, **kwargs):
+    def distributed(self, backend = None, rpc = None, **kwargs):
         """get distributed model
         """
         if not torch.distributed.is_initialized():
-            if backend is None:
-                # choose a backend
-                backend = 'nccl' if torch.distributed.is_nccl_available() else 'gloo'
+            if rpc is None:
+                # choose a rpc type
+                rpc = 'nccl' if torch.distributed.is_nccl_available() else 'gloo'
 
-            torch.distributed.init_process_group(backend, **kwargs)
+            torch.distributed.init_process_group(rpc, **kwargs)
         
-        return DistModule(self)
+        
+        from .distributed import get_distributed_module
+        return get_distributed_module(self, backend = backend)
+    
+
+    @classmethod
+    def mixin(cls, module):
+        import types
+
+        for name in cls.__dict__:
+            if name.startswith('__') and name.endswith('__') \
+                or not type(cls.__dict__[name])==types.FunctionType \
+                or name in module.__dict__:
+
+                continue
+            
+            module.__dict__[name] = types.MethodType(cls.__dict__[name], module)
         
 
 
-class DistModule(DistributedDataParallel):
-    """distributed module class
+class Module(ModuleMixin, nn.Module):
+    """base module for every model
+
+    Examples:
+        >>> from toad.nn import Module
+        ... from torch import nn
+        ... 
+        ... class Net(Module):
+        ...     def __init__(self, inputs, hidden, outputs):
+        ...         super().__init__()
+        ...         self.model = nn.Sequential(
+        ...             nn.Linear(inputs, hidden),
+        ...             nn.ReLU(),
+        ...             nn.Linear(hidden, outputs),
+        ...             nn.Sigmoid(),
+        ...         )
+        ...     
+        ...     def forward(self, x):
+        ...         return self.model(x)
+        ...     
+        ...     def fit_step(self, batch):
+        ...         x, y = batch
+        ...         y_hat = self(x)
+        ... 
+        ...         # log into history
+        ...         self.log('y', y)
+        ...         self.log('y_hat', y_hat)
+        ... 
+        ...         return nn.functional.mse_loss(y_hat, y)
+        ... 
+        ... model = Net(10, 4, 1)
+        ... 
+        ... model.fit(train_loader)
+
     """
-    def fit(self, *args, **kwargs):
-        return self.module.fit(*args, **kwargs)
-    
-    def save(self, *args, **kwargs):
-        return self.module.save(*args, **kwargs)
-    
-    def load(self, *args, **kwargs):
-        return self.module.load(*args, **kwargs)
-    
-    def log(self, *args, **kwargs):
-        return self.module.log(*args, **kwargs)
+    pass
+
+
+
+
     
     
