@@ -126,11 +126,11 @@ def test_trainer_loss():
     assert len(trainer.histories) == 2
 
 
-# def test_trainer_distributed():
-#     model = TestModel(NUM_FEATS, NUM_CLASSES)
-#     trainer = Trainer(model, loader)
-#     trainer.distributed(workers = 2)
-#     trainer.train(epoch = 5)
+def test_trainer_distributed():
+    model = TestModel(NUM_FEATS, NUM_CLASSES)
+    trainer = Trainer(model, loader)
+    trainer.distributed(workers = 2)
+    trainer.train(epoch = 5)
 
 
 

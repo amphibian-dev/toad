@@ -38,10 +38,11 @@ class TrainerState:
     histories: [History] = None
     status: str = TrainerStatus.UNSET
     distributor: Distributor = None
+    event: Event = None
 
 
 
-class Trainer(Event):
+class Trainer:
     """trainer for training models
     """
     def __init__(self, model, loader = None, optimizer = None, loss = None, keep_history = None,
@@ -57,7 +58,6 @@ class Trainer(Event):
                 you can set it to `False` to disable early stopping
             keep_history (int): keep the last n-th epoch logs, `None` will keep all
         """
-        super().__init__()
 
         step = self._get_step(model)
         
@@ -65,6 +65,8 @@ class Trainer(Event):
             optimizer = optim.Adam(model.parameters(), lr = 1e-3)
 
         self.loss = loss
+        
+        event = Event()
 
         # set default early stopping
         if early_stopping is None:
@@ -72,7 +74,7 @@ class Trainer(Event):
             early_stopping = loss_stopping()
         
         if early_stopping is not False:
-            self.register("earlystop:check", early_stopping)
+            event.register("earlystop:check", early_stopping)
 
         from collections import deque
         histories = deque(maxlen = keep_history)
@@ -85,9 +87,22 @@ class Trainer(Event):
             step = step,
             histories = histories,
             status = TrainerStatus.INIT,
-        )      
-    
+            event = event,
+        )
 
+
+    @property
+    def module(self):
+        return self.state.module
+
+    @property
+    def loader(self):
+        return self.state.loader
+
+    @property
+    def optimizer(self):
+        return self.state.optimizer    
+    
     @property
     def status(self):
         return self.state.status
@@ -97,6 +112,9 @@ class Trainer(Event):
     def histories(self):
         return self.state.histories
     
+    @property
+    def event(self):
+        return self.state.event
 
     def terminate(self):
         self.state.status = TrainerStatus.TERMINATED
@@ -138,6 +156,8 @@ class Trainer(Event):
         #     ray.init(address = address)
 
         # TODO: init distributor
+        from ..distributed.distributor import Distributor
+
         distributor = Distributor(size = workers)
         self.state.distributor = distributor
     
@@ -178,7 +198,7 @@ class Trainer(Event):
         train_loop(self, model, loader, epoch = epoch, start = start, backward_rounds = backward_rounds)
         
 
-    def train(self, loader = None, epoch = 10, **kwargs):
+    def train(self, loader = None, epoch = 10, start = 0, callback = [], backward_rounds = 1, **kwargs):
         """
         Args:
             loader (torch.DataLoader): training data loader
@@ -200,30 +220,20 @@ class Trainer(Event):
         
         if self.state.loader is None:
             raise ValueError("loader is not set, please set a loader for trainning!")
+
+        if not isinstance(callback, list):
+            callback = [callback]
         
-        config = {
-            "epoch": epoch,
-            **kwargs,
-        }
+        # setup callbacks
+        for c in callback:
+            self.event.register("epoch:end", c)
 
         # distrubution trainning
         if self.state.distributor is not None:
-            from ray.air import ScalingConfig
-            from ray.train.torch import TorchTrainer
-
-            distributed_trainer = TorchTrainer(
-                self._train,
-                train_loop_config = config,
-                scaling_config = ScalingConfig(
-                    use_gpu = self._gpu,
-                    num_workers = self._workers
-                ),
-            )
-            result = distributed_trainer.fit()
-            print(result)
+            self.state.distributor.spawn(train_loop, self)
             # distribute_trainer.shutdown()
         else:
-            self._train(config = config) 
+            train_loop(self, loader = self.state.loader, epoch = epoch, start = start, backward_rounds = backward_rounds)
         
         return self.state.module
     
@@ -280,11 +290,15 @@ class Trainer(Event):
 
 
 
-def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 1):
+def train_loop(trainer, loader = None, epoch = 10, start = 0, backward_rounds = 1):
     # init progress bar
     p = Progress(loader)
+
+
+    model = trainer.module
+    loader = loader or trainer.loader
     step = trainer.state.step
-    optimizer = trainer.state.optimizer
+    optimizer = trainer.optimizer
     
     for ep in range(start, epoch):
         # set model to train mode
@@ -294,7 +308,7 @@ def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 
 
         # setup a new history for model in each epoch
         history = History()
-        trainer.state.histories.append(history)
+        trainer.histories.append(history)
 
         # setup callback params
         params = {
@@ -305,7 +319,7 @@ def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 
             "progress": p,
         }
 
-        trainer.emit("epoch:start", **params)
+        trainer.event.emit("epoch:start", **params)
         
         # start of history
         history.start()
@@ -313,7 +327,7 @@ def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 
         loss = 0.
         backward_loss = 0.
         for i, batch in enumerate(p, start = 1):
-            trainer.emit("batch:start", batch = batch, **params)
+            trainer.event.emit("batch:start", batch = batch, **params)
 
             # step fit
             if trainer.loss is None:
@@ -336,14 +350,14 @@ def train_loop(trainer, model, loader, epoch = 10, start = 0, backward_rounds = 
             loss += (l.item() - loss) / i
             p.suffix = 'loss:{:.4f}'.format(loss)
 
-            trainer.emit("batch:end", batch = batch, **params)
+            trainer.event.emit("batch:end", batch = batch, **params)
 
         # END of history
         history.end()
 
         with torch.no_grad():
-            trainer.emit("epoch:end", **params)
-            trainer.emit("earlystop:check", **params)
+            trainer.event.emit("epoch:end", **params)
+            trainer.event.emit("earlystop:check", **params)
         
         # check if trainer need terminate
         if trainer.status == TrainerStatus.TERMINATED:

@@ -46,11 +46,14 @@ class Accelerator:
         if not self.initialized:
             # choose a rpc type
             rpc = 'nccl' if torch.distributed.is_nccl_available() else 'gloo'
+            
+            master_url = 'tcp://localhost:12355'
 
             torch.distributed.init_process_group(
                 rpc,
                 rank = self.rank,
                 world_size = self.size,
+                init_method = master_url,
             )
     
 
@@ -62,7 +65,7 @@ class Accelerator:
         return module, loader, optimizer
     
 
-    def prepare_model(self, module):
+    def prepare_module(self, module):
         from ...module import ModuleMixin
 
         if isinstance(self.strategy, FSDPStrategy):
