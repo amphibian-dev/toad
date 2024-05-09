@@ -23,11 +23,11 @@ class Distributor:
     def init(self):
         pass
 
-    def spawn(self, func, trainer):
+    def spawn(self, func, trainer, **kwargs):
         
         # HACK: remove trainer event
         from ..trainer.event import Event
         trainer.state.event = Event()
 
-        self.state.cluster.spawn(func, self.state.size, trainer)
+        self.state.cluster.spawn(func, self.state.size, trainer, **kwargs)
         

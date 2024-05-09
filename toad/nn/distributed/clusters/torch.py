@@ -14,13 +14,14 @@ class TorchExecutor(Executor):
 
 
 class TorchCluster(Cluster):
-    def spawn(self, func, size, trainer):
+    def spawn(self, func, size, trainer, strategy = None, **kwargs):
         import torch.multiprocessing as mp
 
         context = ExecutorContext(
             trainer = trainer,
             size = size,
             func = func,
+            strategy = strategy,
         )
 
         executor = TorchExecutor(context)

@@ -15,3 +15,4 @@ class DDPStrategy(Strategy):
 class FSDPStrategy(DDPStrategy):
     method: str = "fsdp"
     policy: str = None
+    device: str = None

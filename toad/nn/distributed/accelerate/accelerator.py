@@ -16,7 +16,7 @@ class AcceleratorState:
 
 
 class Accelerator:
-    def __init__(self, rank = None, size = None, strategy = "ddp"):
+    def __init__(self, rank = None, size = None, strategy = None):
         self.state = AcceleratorState(
             rank = rank,
             size = size,
@@ -61,6 +61,7 @@ class Accelerator:
         self.setup()
 
         module = self.prepare_module(module)
+        optimizer = self.prepare_optimizer(optimizer, module)
 
         return module, loader, optimizer
     
@@ -70,11 +71,23 @@ class Accelerator:
 
         if isinstance(self.strategy, FSDPStrategy):
             from ..fsdp import FSDP
-            module = FSDP(module, **kwargs)
+            module = FSDP(
+                module,
+                auto_wrap_policy = self.strategy.policy,
+                device_id = self.strategy.device,
+            )
 
-        if isinstance(self.strategy, DDPStrategy):
+        elif isinstance(self.strategy, DDPStrategy):
             from ..ddp import DDP
-            module = DDP(module, **kwargs)
+            module = DDP(module)
         
-        return ModuleMixin.mixin(module)
+        return module
+        # return ModuleMixin.mixin(module)
+    
+    def prepare_optimizer(self, optimizer, module):
+        opt_cls = type(optimizer)
+        params = optimizer.param_groups[0]
+        params.pop("params")
+
+        return opt_cls(module.parameters(), **params)
 

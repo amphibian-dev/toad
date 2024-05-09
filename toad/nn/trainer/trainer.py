@@ -124,10 +124,8 @@ class Trainer:
         self.state.status = TrainerStatus.RUNNING
     
     def _get_step(self, module):
-        from ..module import Module
-        
-        if isinstance(module, Module):
-            return module.__class__.fit_step
+        if hasattr(module, 'fit_step'):
+            return type(module.fit_step.__self__).fit_step
         
         return None
     
@@ -139,7 +137,7 @@ class Trainer:
 
 
     # initialize enviroment setting
-    def distributed(self, address = None, workers = 4, gpu = False):
+    def distributed(self, address = None, workers = 4, gpu = False, **kwargs):
         '''setting distribution enviroment and initial a ray cluster connection
 
         Args: 
@@ -158,7 +156,7 @@ class Trainer:
         # TODO: init distributor
         from ..distributed.distributor import Distributor
 
-        distributor = Distributor(size = workers)
+        distributor = Distributor(size = workers, **kwargs)
         self.state.distributor = distributor
     
 
@@ -230,7 +228,7 @@ class Trainer:
 
         # distrubution trainning
         if self.state.distributor is not None:
-            self.state.distributor.spawn(train_loop, self)
+            self.state.distributor.spawn(train_loop, self, **kwargs)
             # distribute_trainer.shutdown()
         else:
             train_loop(self, loader = self.state.loader, epoch = epoch, start = start, backward_rounds = backward_rounds)

@@ -140,9 +140,9 @@ class ModuleMixin(ABC):
         return self
     
 
-    def lora(self, **kwargs):
+    def lora(self, config):
         from .lora import get_lora_model
-        return get_lora_model(self, **kwargs)
+        return get_lora_model(self, config)
         
         
     def distributed(self, backend = None, rpc = None, **kwargs):
@@ -172,6 +172,8 @@ class ModuleMixin(ABC):
                 continue
             
             module.__dict__[name] = types.MethodType(cls.__dict__[name], module)
+        
+        return module
         
 
 
