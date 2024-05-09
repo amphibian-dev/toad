@@ -1,7 +1,9 @@
 from typing import Callable
 from dataclasses import dataclass
-from ...trainer.trainer import TrainerState, Trainer
+
+from ..accelerate.accelerator import Accelerator
 from ..accelerate.strategy import Strategy
+from ...trainer.trainer import TrainerState, Trainer
 
 @dataclass
 class ExecutorContext:
@@ -10,6 +12,7 @@ class ExecutorContext:
     trainer: Trainer = None
     func: Callable = None
     strategy: Strategy = None
+    accelerator: Accelerator = None
 
 
 class Executor:
@@ -19,38 +22,21 @@ class Executor:
     @property
     def rank(self):
         return self.context.rank
-
-    def accelerator_prepare(self):
-        from ..accelerate.accelerator import Accelerator
-        
-        accelerator = Accelerator(
-            rank = self.context.rank,
-            size = self.context.size,
-            strategy = self.context.strategy,
-        )
-
-        print("~~~~~rank:", accelerator.rank)
-        print("~~~~~size:", accelerator.size)
-
-        module, loader, optimizer = accelerator.prepare(
-            module = self.context.trainer.module,
-            loader = self.context.trainer.loader,
-            optimizer = self.context.trainer.optimizer,
-        )
-
-        return module, loader, optimizer, accelerator
+    
+    @property
+    def accelerator(self):
+        return self.context.accelerator
     
 
     def prepare_trainer(self, trainer):
-        from ..accelerate.accelerator import Accelerator
-        
-        accelerator = Accelerator(
-            rank = self.context.rank,
-            size = self.context.size,
-            strategy = self.context.strategy,
-        )
+        if self.accelerator is None:
+            self.context.accelerator = Accelerator(
+                rank = self.context.rank,
+                size = self.context.size,
+                strategy = self.context.strategy,
+            )
 
-        module, loader, optimizer = accelerator.prepare(
+        module, loader, optimizer = self.accelerator.prepare(
             module = self.context.trainer.module,
             loader = self.context.trainer.loader,
             optimizer = self.context.trainer.optimizer,
@@ -71,15 +57,9 @@ class Executor:
         import torch
         torch.manual_seed(self.rank)
 
-        self.context.func(self.context.trainer, loader, **kwargs)
+        self.context.func(self.context.trainer, **kwargs)
 
-        # TODO: save module
-        import torch
-        from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
-        from torch.distributed.fsdp.fully_sharded_data_parallel import StateDictType
-
-        with FSDP.state_dict_type(module, StateDictType.SHARDED_STATE_DICT):
-            torch.save(module.state_dict(), f"examples/model_{self.rank}.pt")
+        self.accelerator.save(module)
         
         return module
     

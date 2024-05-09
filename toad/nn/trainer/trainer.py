@@ -231,7 +231,7 @@ class Trainer:
             self.state.distributor.spawn(train_loop, self, **kwargs)
             # distribute_trainer.shutdown()
         else:
-            train_loop(self, loader = self.state.loader, epoch = epoch, start = start, backward_rounds = backward_rounds)
+            train_loop(self, epoch = epoch, start = start, backward_rounds = backward_rounds)
         
         return self.state.module
     
@@ -288,15 +288,17 @@ class Trainer:
 
 
 
-def train_loop(trainer, loader = None, epoch = 10, start = 0, backward_rounds = 1):
+def train_loop(trainer, epoch = 10, start = 0, backward_rounds = 1):
+    """training loop function
+    """
+    model = trainer.module
+    loader = trainer.loader
+    step = trainer.state.step
+    optimizer = trainer.optimizer
+
     # init progress bar
     p = Progress(loader)
 
-
-    model = trainer.module
-    loader = loader or trainer.loader
-    step = trainer.state.step
-    optimizer = trainer.optimizer
     
     for ep in range(start, epoch):
         # set model to train mode

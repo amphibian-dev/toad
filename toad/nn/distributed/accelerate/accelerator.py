@@ -20,7 +20,7 @@ class Accelerator:
         self.state = AcceleratorState(
             rank = rank,
             size = size,
-            strategy = strategy,
+            strategy = strategy or DDPStrategy(),
         )
     
 
@@ -90,4 +90,11 @@ class Accelerator:
         params.pop("params")
 
         return opt_cls(module.parameters(), **params)
+    
+
+    def save(self, module):
+        if self.strategy.output_dir is None:
+            return
+        
+        self.strategy.save(module, rank = self.rank)
 
