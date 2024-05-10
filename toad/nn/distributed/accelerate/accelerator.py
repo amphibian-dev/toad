@@ -39,6 +39,11 @@ class Accelerator:
     @property
     def strategy(self):
         return self.state.strategy
+    
+    @property
+    def device(self):
+        import torch
+        return torch.device(f"cuda:{self.rank}")
 
     def setup(self):
         import torch
@@ -55,6 +60,8 @@ class Accelerator:
                 world_size = self.size,
                 init_method = master_url,
             )
+        
+        torch.cuda.set_device(self.device)
     
 
     def prepare(self, module, loader, optimizer):
@@ -71,16 +78,20 @@ class Accelerator:
 
         if isinstance(self.strategy, FSDPStrategy):
             from ..fsdp import FSDP
+
+            module.to(self.strategy.device)
             module = FSDP(
                 module,
                 auto_wrap_policy = self.strategy.policy,
-                device_id = self.strategy.device,
+                device_id = self.device,
             )
 
         elif isinstance(self.strategy, DDPStrategy):
             from ..ddp import DDP
             module = DDP(module)
         
+        module.to(self.device)
+
         return module
         # return ModuleMixin.mixin(module)
     

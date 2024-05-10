@@ -90,6 +90,11 @@ class Trainer:
             event = event,
         )
 
+    @property
+    def device(self):
+        """device of model
+        """
+        return next(self.module.parameters()).device
 
     @property
     def module(self):
@@ -125,7 +130,9 @@ class Trainer:
     
     def _get_step(self, module):
         if hasattr(module, 'fit_step'):
-            return type(module.fit_step.__self__).fit_step
+            cls = type(module.fit_step.__self__)
+            if hasattr(cls, 'fit_step'):
+                return cls.fit_step
         
         return None
     
