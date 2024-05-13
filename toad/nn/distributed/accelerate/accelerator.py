@@ -43,6 +43,9 @@ class Accelerator:
     @property
     def device(self):
         import torch
+        if self.strategy.device.type == 'cpu':
+            return torch.device('cpu')
+        
         return torch.device(f"cuda:{self.rank}")
 
     def setup(self):
@@ -61,7 +64,8 @@ class Accelerator:
                 init_method = master_url,
             )
         
-        torch.cuda.set_device(self.device)
+        if self.device.type == 'cuda':
+            torch.cuda.set_device(self.device)
     
 
     def prepare(self, module, loader, optimizer):
@@ -78,19 +82,18 @@ class Accelerator:
 
         if isinstance(self.strategy, FSDPStrategy):
             from ..fsdp import FSDP
+            from torch.distributed.fsdp import CPUOffload
 
-            module.to(self.strategy.device)
             module = FSDP(
                 module,
                 auto_wrap_policy = self.strategy.policy,
                 device_id = self.device,
+                cpu_offload = CPUOffload(offload_params = True) if self.device.type == 'cuda' else None,
             )
 
         elif isinstance(self.strategy, DDPStrategy):
             from ..ddp import DDP
             module = DDP(module)
-        
-        module.to(self.device)
 
         return module
         # return ModuleMixin.mixin(module)
