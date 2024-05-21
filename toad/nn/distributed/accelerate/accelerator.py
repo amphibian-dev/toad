@@ -86,8 +86,10 @@ class Accelerator:
 
             module = FSDP(
                 module,
+                sync_module_states = True,
                 auto_wrap_policy = self.strategy.policy,
                 device_id = self.device,
+                param_init_fn = self.strategy.init_fn(rank = self.rank, device = self.device),
                 cpu_offload = CPUOffload(offload_params = True) if self.device.type == 'cuda' else None,
             )
 

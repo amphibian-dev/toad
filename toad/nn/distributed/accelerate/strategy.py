@@ -29,3 +29,17 @@ class FSDPStrategy(DDPStrategy):
 
         with FSDP.state_dict_type(module, StateDictType.SHARDED_STATE_DICT):
             torch.save(module.state_dict(), f"{self.output_dir}/model_{rank}.pt")
+        
+
+    def init_fn(self, rank, device = None):
+        import torch
+
+        device = device or torch.device("cpu")
+        
+        def fn(module):
+            module.to_empty(device = device, recurse = False)
+        
+        if rank != 0:
+            return fn
+        
+        return None

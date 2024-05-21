@@ -59,11 +59,6 @@ class Trainer:
             keep_history (int): keep the last n-th epoch logs, `None` will keep all
         """
 
-        step = self._get_step(model)
-        
-        if optimizer is None:
-            optimizer = optim.Adam(model.parameters(), lr = 1e-3)
-
         self.loss = loss
         
         event = Event()
@@ -84,7 +79,7 @@ class Trainer:
             loader = loader,
             optimizer = optimizer,
             scheduler = None,
-            step = step,
+            step = None,
             histories = histories,
             status = TrainerStatus.INIT,
             event = event,
@@ -127,6 +122,61 @@ class Trainer:
 
     def run(self):
         self.state.status = TrainerStatus.RUNNING
+    
+
+    def prepare(self, device = None):
+        if device is None:
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        
+        with device:
+            self.state.module = self.prepare_model(self.state.module)
+        
+        self.state.loader = self.prepare_loader(self.state.loader)
+        self.state.optimizer = self.prepare_optimizer(self.state.optimizer, self.state.module)
+
+        if self.state.step is None:
+            self.state.step = self._get_step(self.state.module)
+
+    def prepare_model(self, module):
+        if isinstance(module, torch.nn.Module):
+            return module
+        
+        import inspect
+        if inspect.isfunction(module):
+            return module()
+        
+        # TODO: huggingface support
+        if isinstance(module, str):
+            pass
+
+        return module
+    
+
+    def prepare_loader(self, loader):
+        if isinstance(loader, torch.utils.data.DataLoader):
+            return loader
+        
+        import inspect
+        if inspect.isfunction(loader, types.FunctionType):
+            return loader()
+        
+        # TODO: huggingface support
+        if isinstance(module, str):
+            pass
+
+        return loader
+    
+
+    def prepare_optimizer(self, optimizer, module):
+        if optimizer is None:
+            return optim.Adam(module.parameters(), lr = 1e-3)
+        
+        opt_cls = type(optimizer)
+        params = optimizer.param_groups[0]
+        params.pop("params")
+
+        return opt_cls(module.parameters(), **params)
+
     
     def _get_step(self, module):
         if hasattr(module, 'fit_step'):
@@ -238,6 +288,7 @@ class Trainer:
             self.state.distributor.spawn(train_loop, self, **kwargs)
             # distribute_trainer.shutdown()
         else:
+            self.prepare()
             train_loop(self, epoch = epoch, start = start, backward_rounds = backward_rounds)
         
         return self.state.module

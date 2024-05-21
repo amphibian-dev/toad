@@ -36,11 +36,17 @@ class Executor:
                 strategy = self.context.strategy,
             )
 
+        import torch
+        device = torch.device("meta") if self.rank != 0 else None
+        trainer.prepare(device = device)
+
         module, loader, optimizer = self.accelerator.prepare(
-            module = self.context.trainer.module,
-            loader = self.context.trainer.loader,
-            optimizer = self.context.trainer.optimizer,
+            module = trainer.module,
+            loader = trainer.loader,
+            optimizer = trainer.optimizer,
         )
+
+        print(module)
 
         trainer.state.module = module
         trainer.state.loader = loader
@@ -57,7 +63,7 @@ class Executor:
         import torch
         torch.manual_seed(self.rank)
 
-        self.context.func(self.context.trainer, **kwargs)
+        self.context.func(trainer, **kwargs)
 
         self.accelerator.save(module)
         
