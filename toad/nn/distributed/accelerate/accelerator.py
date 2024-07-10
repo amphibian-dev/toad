@@ -91,6 +91,7 @@ class Accelerator:
                 device_id = self.device,
                 param_init_fn = self.strategy.init_fn(rank = self.rank, device = self.device),
                 cpu_offload = CPUOffload(offload_params = True) if self.device.type == 'cuda' else None,
+                limit_all_gathers = True,
             )
 
         elif isinstance(self.strategy, DDPStrategy):

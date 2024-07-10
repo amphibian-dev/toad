@@ -46,8 +46,6 @@ class Executor:
             optimizer = trainer.optimizer,
         )
 
-        print(module)
-
         trainer.state.module = module
         trainer.state.loader = loader
         trainer.state.optimizer = optimizer
