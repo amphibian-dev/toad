@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+### Add
+- Added wheel package supported for `py3.12`
 
+### Changed
 - Update `pandas` version to `>=1.5`
 - Python `3.7` is no longer supported
 
