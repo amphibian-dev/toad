@@ -1,5 +1,5 @@
 from .base import Cluster
-from .executor import Executor, ExecutorContext
+from .executor import FSDPExecutor, FSDPExecutorContext
 
 
 def _wrap(rank, size, func, *args, **kwargs):
@@ -7,7 +7,7 @@ def _wrap(rank, size, func, *args, **kwargs):
     accelerator = Accelerator(rank = rank, size = size)
 
 
-class TorchExecutor(Executor):
+class TorchExecutor(FSDPExecutor):
     def __call__(self, rank, *args, **kwargs):
         self.context.rank = rank
         self.run(*args, **kwargs)
@@ -17,7 +17,7 @@ class TorchCluster(Cluster):
     def spawn(self, func, size, trainer, strategy = None, **kwargs):
         import torch.multiprocessing as mp
 
-        context = ExecutorContext(
+        context = FSDPExecutorContext(
             trainer = trainer,
             size = size,
             func = func,

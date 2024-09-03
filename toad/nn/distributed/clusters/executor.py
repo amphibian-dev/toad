@@ -9,10 +9,8 @@ from ...trainer.trainer import TrainerState, Trainer
 class ExecutorContext:
     rank: int = -1
     size: int = 0
-    trainer: Trainer = None
     func: Callable = None
-    strategy: Strategy = None
-    accelerator: Accelerator = None
+    params: dict = None
 
 
 class Executor:
@@ -23,6 +21,30 @@ class Executor:
     def rank(self):
         return self.context.rank
     
+
+    def run(self, *args, **kwargs):
+        import torch
+        torch.manual_seed(self.rank)
+
+        res = self.context.func(self.rank, **self.context.params)
+        
+        return res
+    
+
+    def __call__(self, rank, *args, **kwargs):
+        self.context.rank = rank
+        return self.run(*args, **kwargs)
+
+
+
+@dataclass
+class FSDPExecutorContext(ExecutorContext):
+    trainer: Trainer = None
+    strategy: Strategy = None
+    accelerator: Accelerator = None
+
+
+class FSDPExecutor(Executor):
     @property
     def accelerator(self):
         return self.context.accelerator

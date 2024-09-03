@@ -10,6 +10,19 @@ class Strategy:
         pass
 
 
+    def prepare_module(self, module, rank):
+        pass
+
+
+    def prepare_optimizer(self, optimizer, module):
+        opt_cls = type(optimizer)
+        params = optimizer.param_groups[0]
+        params.pop("params")
+
+        return opt_cls(module.parameters(), **params)
+
+
+
 @dataclass
 class DDPStrategy(Strategy):
     method: str = "ddp"
@@ -43,3 +56,22 @@ class FSDPStrategy(DDPStrategy):
             return fn
         
         return None
+    
+
+    def prepare_module(self, module, rank):
+        from ..fsdp import FSDP
+        from torch.distributed.fsdp import CPUOffload
+
+        module = FSDP(
+            module,
+            sync_module_states = True if self.device.type == 'cuda' else None,
+            auto_wrap_policy = self.policy,
+            device_id = self.device,
+            param_init_fn = self.init_fn(rank = rank, device = self.device),
+            cpu_offload = CPUOffload(offload_params = True) if self.device.type == 'cuda' else None,
+            limit_all_gathers = True,
+        )
+
+        return module
+
+

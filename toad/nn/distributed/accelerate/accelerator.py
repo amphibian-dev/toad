@@ -81,18 +81,7 @@ class Accelerator:
         from ...module import ModuleMixin
 
         if isinstance(self.strategy, FSDPStrategy):
-            from ..fsdp import FSDP
-            from torch.distributed.fsdp import CPUOffload
-
-            module = FSDP(
-                module,
-                sync_module_states = True,
-                auto_wrap_policy = self.strategy.policy,
-                device_id = self.device,
-                param_init_fn = self.strategy.init_fn(rank = self.rank, device = self.device),
-                cpu_offload = CPUOffload(offload_params = True) if self.device.type == 'cuda' else None,
-                limit_all_gathers = True,
-            )
+            module = self.strategy.prepare_module(module, self.rank)
 
         elif isinstance(self.strategy, DDPStrategy):
             from ..ddp import DDP
