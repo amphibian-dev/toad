@@ -235,7 +235,7 @@ def ks_plot(score, target, figsize = (14, 10)):
 
     return ax
 
-def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f", return_frame = False):
+def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f", return_frame = False, figsize = (12, 6)):
     """plot for bins
 
     Args:
@@ -245,6 +245,7 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         iv (bool): if need to show iv in plot
         annotate_format (str): format str for axis annotation of chart
         return_frame (bool): if need return bin frame
+        figsize (tuple): size of the figure (width, height)
 
     Returns:
         Dataframe: contains good, bad, badrate, prop, y_prop, n_prop, woe, iv
@@ -257,11 +258,13 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         target = temp_name
     
     table = feature_bin_stats(frame, x, target)
+    fig, prop_ax = plt.subplots(figsize=figsize)
     prop_ax = tadpole.barplot(
         x = x,
         y = 'prop',
         data = table,
         color = '#82C6E2',
+        ax = prop_ax,
     )
 
     prop_ax = add_annotate(prop_ax, format = annotate_format)
