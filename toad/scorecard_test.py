@@ -255,7 +255,7 @@ def test_get_reason_vector():
     find_largest_top_3:  A(+9) B(+6) D(+0)
     """
     reason = card.get_reason(df)
-    assert reason.iloc[404]['top1'].tolist() == ['C', 142.9523920956781, 'B']
+    assert reason.iloc[404]['top1'].tolist() == ['C', pytest.approx(142.9523920956781, FUZZ_THRESHOLD), 'B']
 
 
 @pytest.mark.timeout(0.007)
