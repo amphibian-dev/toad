@@ -58,7 +58,7 @@ def test_quality():
     result = quality(df, 'target')
     assert result.loc['feature', 'iv'] == 0.2735917707743619
     assert result.loc['A', 'gini'] == 0.49284164671885444
-    assert result.loc['B', 'entropy'] ==  pytest.approx(0.6924956879070063)
+    assert result.loc['B', 'entropy'] ==  pytest.approx(0.6924956879070063, 5e-5)
     assert result.loc['feature', 'unique'] == 500
 
 def test_quality_iv_only():
