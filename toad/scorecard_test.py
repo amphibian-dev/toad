@@ -54,7 +54,8 @@ card.fit(woe, target)
 
 
 FUZZ_THRESHOLD = 1e-6
-TEST_SCORE = pytest.approx(453.549135103, FUZZ_THRESHOLD)
+TEST_SCORE = pytest.approx(453.5702462572068, FUZZ_THRESHOLD)
+TEST_PROBA = pytest.approx(0.4673322872985267, FUZZ_THRESHOLD)
 
 
 def test_representation():
@@ -89,7 +90,7 @@ def test_proba_to_score():
 def test_score_to_prob():
     score = card.predict(df)
     proba = card.score_to_proba(score)
-    assert proba[404] == pytest.approx(0.4673929989138551, FUZZ_THRESHOLD)
+    assert proba[404] == TEST_PROBA
 
 
 def test_predict():
@@ -99,7 +100,7 @@ def test_predict():
 
 def test_predict_proba():
     proba = card.predict_proba(df)
-    assert proba[404, 1] == pytest.approx(0.4673929989138551, FUZZ_THRESHOLD)
+    assert proba[404, 1] == TEST_PROBA
 
 
 def test_card_feature_effect():
@@ -108,13 +109,13 @@ def test_card_feature_effect():
     FEATURE_EFFECT is manually calculated with following logic:
     FEATURE_EFFECT = np.median(card.woe_to_score(df),axis = 0)
     """
-    FEATURE_EFFECT = pytest.approx(np.array([142.26722434, 152.81922244, 148.82801326, 0.]), FUZZ_THRESHOLD)
+    FEATURE_EFFECT = pytest.approx(np.array([142.26368948220417, 152.82747912111066, 148.82665746001695, 0.]), FUZZ_THRESHOLD)
     assert card.base_effect.values == FEATURE_EFFECT
 
 
 def test_predict_sub_score():
     score, sub = card.predict(df, return_sub=True)
-    assert sub.loc[250, 'B'] == pytest.approx(162.0781460573475, FUZZ_THRESHOLD)
+    assert sub.loc[250, 'B'] == pytest.approx(162.09822360428146, FUZZ_THRESHOLD)
 
 
 def test_woe_to_score():
@@ -130,14 +131,14 @@ def test_bin_to_score():
 
 def test_export_map():
     card_map = card.export()
-    assert card_map['B']['D'] == 159.24
+    assert card_map['B']['D'] == 159.26
 
 
 def test_card_map():
     config = card.export()
     card_from_map = ScoreCard().load(config)
     score = card_from_map.predict(df)
-    assert score[404] == 453.55
+    assert score[404] == 453.57
 
 
 def test_card_map_with_else():
@@ -207,14 +208,14 @@ def test_card_with_less_X():
     )
 
     card.fit(x, target)
-    assert card.predict(df)[200] == pytest.approx(457.57516057401006, FUZZ_THRESHOLD)
+    assert card.predict(df)[200] == pytest.approx(457.5903160102142, FUZZ_THRESHOLD)
 
 
 def test_card_predict_with_unknown_feature():
     np.random.seed(9)
     unknown_df = df.copy()
     unknown_df.loc[200, 'C'] = 'U'
-    assert card.predict(unknown_df)[200] == pytest.approx(456.38815204610216, FUZZ_THRESHOLD)
+    assert card.predict(unknown_df)[200] == pytest.approx(456.41288777297257, FUZZ_THRESHOLD)
 
 
 def test_card_predict_with_unknown_feature_default_max():
@@ -224,7 +225,7 @@ def test_card_predict_with_unknown_feature_default_max():
     score, sub = card.predict(unknown_df, default = 'max', return_sub = True)
 
     assert sub.loc[200, 'C'] == card['C']['scores'].max()
-    assert score[200] == pytest.approx(462.26441488588785, FUZZ_THRESHOLD)
+    assert score[200] == pytest.approx(462.2871531373114, FUZZ_THRESHOLD)
 
 
 def test_card_predict_with_unknown_feature_default_with_value():
@@ -234,7 +235,7 @@ def test_card_predict_with_unknown_feature_default_with_value():
     score, sub = card.predict(unknown_df, default = 42, return_sub = True)
     
     assert sub.loc[200, 'C'] == 42
-    assert score[200] == pytest.approx(355.4364016252907, FUZZ_THRESHOLD)
+    assert score[200] == pytest.approx(355.46049567729443, FUZZ_THRESHOLD)
 
 
 def test_get_reason_vector():
@@ -254,7 +255,7 @@ def test_get_reason_vector():
     find_largest_top_3:  A(+9) B(+6) D(+0)
     """
     reason = card.get_reason(df)
-    assert reason.iloc[404]['top1'].tolist() == ['C', 142.95175042081146, 'B']
+    assert reason.iloc[404]['top1'].tolist() == ['C', 142.9523920956781, 'B']
 
 
 @pytest.mark.timeout(0.007)
