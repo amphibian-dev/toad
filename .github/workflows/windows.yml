@@ -26,7 +26,7 @@ jobs:
       - run: make dist_wheel
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel
+          name: wheel-${{ matrix.python-version }}
           path: dist/*.whl
   release:
     needs: [test]
@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: wheel
+          name: wheel-${{ matrix.python-version }}
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
         name: publish pypi

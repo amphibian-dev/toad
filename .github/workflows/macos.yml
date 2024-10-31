@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
-        macos-version: ['macos-13', 'macos-latest']
+        macos-version: ['macos-12', 'macos-latest']
         experimental: [false]
       fail-fast: false
     runs-on: ${{ matrix.macos-version }}
@@ -27,7 +27,7 @@ jobs:
       - run: make dist_wheel
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel
+          name: wheel-${{ matrix.python-version }}
           path: dist/*.whl
   release:
     needs: [test]
@@ -37,7 +37,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: wheel
+          name: wheel-${{ matrix.python-version }}
           path: dist/
       - uses: pypa/gh-action-pypi-publish@release/v1
         name: publish pypi
