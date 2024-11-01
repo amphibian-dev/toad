@@ -8,12 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Add
-- Added wheel package supported for `py3.12`
+- Added wheel package supported for `py3.12` and `py3.13`
 - Added `figsize` param in `toad.plot.bin_plot` function
 
 ### Changed
 - Update `pandas` version to `>=1.5`
-- Python `3.7` is no longer supported
+- Python `3.7` `3.8` is no longer supported
 
 ## [0.1.3] - 2023-12-10
 
