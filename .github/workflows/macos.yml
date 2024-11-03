@@ -8,8 +8,8 @@ jobs:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         macos-version: ['macos-12', 'macos-latest']
-        # experimental: [false]
         include:
+          - experimental: false
           - macos-version: 'macos-latest'
             experimental: true
           - python-version: '3.13'
