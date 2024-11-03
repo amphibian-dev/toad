@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2024-11-03
+
 ### Add
-- Added wheel package supported for `py3.12` and `py3.13`
+- Added wheel package supported for `py3.12`
 - Added `figsize` param in `toad.plot.bin_plot` function
 
 ### Changed
