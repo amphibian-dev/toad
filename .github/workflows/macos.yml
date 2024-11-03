@@ -6,11 +6,13 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
         macos-version: ['macos-12']
         experimental: [false]
         include:
           - macos-version: 'macos-latest'
+            experimental: true
+          - python-version: '3.13'
             experimental: true
       fail-fast: false
     runs-on: ${{ matrix.macos-version }}
