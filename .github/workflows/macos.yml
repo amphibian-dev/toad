@@ -6,8 +6,8 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']
-        macos-version: ['macos-12']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        macos-version: ['macos-12', 'macos-latest']
         experimental: [false]
         include:
           - macos-version: 'macos-latest'

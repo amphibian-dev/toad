@@ -1,0 +1,6 @@
+name: Pypi test
+
+on:
+  push:
+    branches:
+      - 'pypi/**'
