@@ -39,8 +39,9 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: wheel-${{ matrix.python-version }}
+          pattern: wheel-*
           path: dist/
+          merge-multiple: true
       - uses: pypa/gh-action-pypi-publish@release/v1
         name: publish pypi
         with:
