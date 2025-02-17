@@ -221,7 +221,7 @@ class xgb_loss(Decorator):
     >>> model = xgb.XGBClassifier(objective = xgb_func)
     """
     def wrapper(self, pred, label):
-        from scipy.misc import derivative
+        from .func import derivative
 
         def partial_func(x):
             return self.call(x, label, **self.kwargs)

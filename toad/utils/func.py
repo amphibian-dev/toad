@@ -408,3 +408,26 @@ def get_dummies(dataframe, exclude = None, binary_drop = False, **kwargs):
 
     data = pd.get_dummies(dataframe, columns = columns, **kwargs)
     return data
+
+
+
+def derivative(func, x0, dx=1.0, n=1, args=()):
+    """calculate derivative of function at x0 for order 3
+    """
+    from numpy import array, prod
+
+    order = 3
+    
+    if n == 1:
+        weights = array([-1, 0, 1]) / 2.0
+    elif n == 2:
+        weights = array([1, -2.0, 1])
+    else:
+        raise ValueError('n must be 1 or 2')
+    
+    val = 0.0
+    ho = order >> 1
+    for k in range(order):
+        val += weights[k] * func(x0 + (k - ho) * dx, *args)
+    return val / prod((dx,) * n, axis=0)
+
