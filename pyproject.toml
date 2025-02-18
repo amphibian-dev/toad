@@ -1,14 +1,13 @@
 [project]
 name = "toad"
 description = "Toad is dedicated to facilitating model development process, especially for a scorecard."
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
 authors = [{name = "Secbone", email = "secbone@gmail.com"}]
 classifiers = [
     'Operating System :: POSIX',
     'Operating System :: Microsoft :: Windows',
     'Operating System :: MacOS :: MacOS X',
-    'Programming Language :: Python :: 3.8',
     'Programming Language :: Python :: 3.9',
     'Programming Language :: Python :: 3.10',
     'Programming Language :: Python :: 3.11',
