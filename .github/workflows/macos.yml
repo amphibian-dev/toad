@@ -31,7 +31,7 @@ jobs:
       - run: make dist_wheel
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ matrix.python-version }}
+          name: wheel-${{ matrix.python-version }}-${{ matrix.macos-version }}
           path: dist/*.whl
   release:
     needs: [test]
