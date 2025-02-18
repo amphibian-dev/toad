@@ -7,24 +7,25 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        macos-version: ['macos-12', 'macos-latest']
+        macos-version: ['macos-13', 'macos-latest']
         include:
           - experimental: false
           - macos-version: 'macos-latest'
+            experimental: true
+          - python-version: '3.9'
             experimental: true
           - python-version: '3.13'
             experimental: true
       fail-fast: false
     runs-on: ${{ matrix.macos-version }}
     continue-on-error: ${{ matrix.experimental }}
-    name: Test py ${{ matrix.python-version }}
+    name: Test py ${{ matrix.python-version }} ${{ matrix.macos-version }}
     steps:
       - uses: actions/checkout@master
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: x64
       - run: make build_deps
       - run: pip install -r requirements-nn.txt
       - run: pip install .[all]
@@ -32,7 +33,7 @@ jobs:
       - run: make dist_wheel
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ matrix.python-version }}
+          name: wheel-${{ matrix.python-version }}-${{ matrix.macos-version }}
           path: dist/*.whl
   release:
     needs: [test]
