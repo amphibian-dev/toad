@@ -107,7 +107,7 @@ def badrate_plot(frame, x = None, target = 'target', by = None,
     return unpack_tuple(res)
 
 
-def corr_plot(frame, figure_size = (20, 15)):
+def corr_plot(frame, figure_size = (20, 15), ax = None):
     """plot for correlation
 
     Args:
@@ -133,12 +133,13 @@ def corr_plot(frame, figure_size = (20, 15)):
         annot = True,
         fmt = '.2f',
         figure_size = figure_size,
+        ax = ax,
     )
 
     return map_plot
 
 
-def proportion_plot(x = None, keys = None):
+def proportion_plot(x = None, keys = None, ax = None):
     """plot for comparing proportion in different dataset
 
     Args:
@@ -175,12 +176,13 @@ def proportion_plot(x = None, keys = None):
         y = 'proportion',
         hue = 'keys',
         data = prop_data,
+        ax = ax,
     )
 
     return prop_plot
 
 
-def roc_plot(score, target, compare = None, figsize = (14, 10)):
+def roc_plot(score, target, compare = None, figsize = (14, 10), ax = None):
     """plot for roc
 
     Args:
@@ -193,7 +195,9 @@ def roc_plot(score, target, compare = None, figsize = (14, 10)):
     """
     auc, fpr, tpr, thresholds = AUC(score, target, return_curve = True)
 
-    fig, ax = plt.subplots(1, 1, figsize = figsize)
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize = figsize)
+    
     ax.plot(fpr, tpr, label = 'ROC curve (area = %0.5f)' % auc)
     ax.fill_between(fpr, tpr, alpha = 0.3)
     if compare is not None:
@@ -206,7 +210,7 @@ def roc_plot(score, target, compare = None, figsize = (14, 10)):
 
     return ax
 
-def ks_plot(score, target, figsize = (14, 10)):
+def ks_plot(score, target, figsize = (14, 10), ax = None):
     """plot for ks
 
     Args:
@@ -219,7 +223,9 @@ def ks_plot(score, target, figsize = (14, 10)):
     """
     fpr, tpr, thresholds = roc_curve(target, score)
     
-    fig, ax = plt.subplots(1, 1, figsize = figsize)
+    if ax is None:
+        fig, ax = plt.subplots(1, 1, figsize = figsize)
+    
     ax.plot(thresholds[1 : ], tpr[1 : ], label = 'tpr')
     ax.plot(thresholds[1 : ], fpr[1 : ], label = 'fpr')
     ax.plot(thresholds[1 : ], (tpr - fpr)[1 : ], label = 'ks')
@@ -235,7 +241,8 @@ def ks_plot(score, target, figsize = (14, 10)):
 
     return ax
 
-def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f", return_frame = False, figsize = (12, 6)):
+def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".2f", 
+            return_frame = False, figsize = (12, 6), ax = None):
     """plot for bins
 
     Args:
@@ -258,18 +265,21 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
         target = temp_name
     
     table = feature_bin_stats(frame, x, target)
-    fig, prop_ax = plt.subplots(figsize=figsize)
-    prop_ax = tadpole.barplot(
+
+    if ax is None:
+        fig, ax = plt.subplots(figsize=figsize)
+    
+    ax = tadpole.barplot(
         x = x,
         y = 'prop',
         data = table,
         color = '#82C6E2',
-        ax = prop_ax,
+        ax = ax,
     )
 
-    prop_ax = add_annotate(prop_ax, format = annotate_format)
+    ax = add_annotate(ax, format = annotate_format)
 
-    badrate_ax = prop_ax.twinx()
+    badrate_ax = ax.twinx()
     badrate_ax.grid(False)
 
     badrate_ax = tadpole.lineplot(
@@ -284,10 +294,10 @@ def bin_plot(frame, x = None, target = 'target', iv = True, annotate_format = ".
     badrate_ax = add_annotate(badrate_ax, format = annotate_format)
 
     if iv:
-        prop_ax = reset_ylim(prop_ax)
-        prop_ax = add_text(prop_ax, 'IV: {:.5f}'.format(table['iv'].sum()))
+        ax = reset_ylim(ax)
+        ax = add_text(ax, 'IV: {:.5f}'.format(table['iv'].sum()))
 
-    res = (prop_ax,)
+    res = (ax,)
     
     if return_frame:
         res += (table,)
