@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-02-18
+
 ### Add
 - Added `ax` support for `plot`
 - Added `Apple M1` support
