@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        macos-version: ['macos-latest']
+        macos-version: ['macos-13', 'macos-latest']
         include:
           - experimental: false
           - macos-version: 'macos-latest'
@@ -17,7 +17,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.macos-version }}
     continue-on-error: ${{ matrix.experimental }}
-    name: Test py ${{ matrix.python-version }} {{ matrix.macos-version }}
+    name: Test py ${{ matrix.python-version }} ${{ matrix.macos-version }}
     steps:
       - uses: actions/checkout@master
       - name: Setup Python
