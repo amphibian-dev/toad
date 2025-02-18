@@ -12,6 +12,8 @@ jobs:
           - experimental: false
           - macos-version: 'macos-latest'
             experimental: true
+          - python-version: '3.9'
+            experimental: true
           - python-version: '3.13'
             experimental: true
       fail-fast: false
