@@ -1,0 +1,26 @@
+[package]
+name = "toad"
+version = "0.1.5"
+edition = "2021"
+authors = ["ESC Team <secbone@gmail.com>"]
+description = "Toad is dedicated to facilitating model development process, especially for a scorecard."
+license = "MIT"
+repository = "https://github.com/amphibian-dev/toad"
+
+[lib]
+name = "toad"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module", "abi3-py39"] }
+numpy = "0.22"
+ndarray = "0.16"
+ndarray-stats = "0.6"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+
+[profile.dev]
+opt-level = 0

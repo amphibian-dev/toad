@@ -42,18 +42,19 @@ test: test_deps
 
 build_deps:
 	$(SUDO) $(PIP) install -r requirements.txt
+	$(SUDO) $(PIP) install maturin
 
 build: build_deps
-	$(PYTHON) setup.py build_ext --inplace
+	maturin develop --release
 
 dist_deps:
 	$(SUDO) $(PIP) install -U -r requirements-dist.txt
 
 dist: build dist_deps
-	$(SUDO) $(PYTHON) setup.py sdist
+	maturin build --release
 
 dist_wheel: build dist_deps
-	$(SUDO) $(PYTHON) setup.py bdist_wheel --universal
+	maturin build --release
 
 upload:
 	twine check dist/*
@@ -61,7 +62,8 @@ upload:
 
 clean:
 	@rm -rf build/ dist/ *.egg-info/ **/__pycache__/
-	@rm -rf toad/*.c toad/*.so
+	@rm -rf toad/*.c toad/*.so target/ Cargo.lock
+	@rm -rf toad/*.pyx toad/*.pxd
 
 docs: build
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

@@ -1,11 +1,4 @@
-try:
-    from .merge import merge, DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
-except ImportError:
-    import warnings
-    warnings.warn(
-        """`merge` module need to be builded""",
-        ImportWarning,
-    )
+from .merge import merge, DTMerge, ChiMerge, StepMerge, QuantileMerge, KMeansMerge
 
 from .detector import detect
 from .metrics import KS, KS_bucket, F1

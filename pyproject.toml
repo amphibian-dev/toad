@@ -28,13 +28,9 @@ optional-dependencies = {nn = {file = ["requirements-nn.txt"]}, tools = {file = 
 
 [build-system]
 requires = [
-    "setuptools",
-    "Cython >= 0.29.15",
-    "numpy >= 1.20",
-    "wheel",
-    "twine",
+    "maturin>=1.0,<2.0",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "maturin"
 
 [console_scripts]
 toad = "toad.cli:main"

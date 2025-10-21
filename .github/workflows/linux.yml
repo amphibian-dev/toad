@@ -21,6 +21,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
       - run: make build_deps
       - run: pip install -r requirements-nn.txt
       - run: pip install .[all]
@@ -30,20 +35,30 @@ jobs:
     # release when using `tags` or `release` branch
     if: ${{ startsWith(github.ref, 'refs/tags') || github.ref == 'refs/heads/release' }}
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [x86_64, aarch64]
     steps:
       - uses: actions/checkout@master
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          architecture: x64
-      - run: make dist
-      - uses: RalfG/python-wheels-manylinux-build@v0.7.1
+      - name: Build wheels
+        uses: PyO3/maturin-action@v1
         with:
-          build-requirements: 'cython numpy'
-      - run: rm dist/*-linux_x86_64.whl
+          target: ${{ matrix.target }}
+          args: --release --out dist --find-interpreter
+          sccache: 'true'
+          manylinux: auto
+      - name: Upload wheels
+        uses: actions/upload-artifact@v3
+        with:
+          name: wheels
+          path: dist
       - uses: pypa/gh-action-pypi-publish@release/v1
         name: publish pypi
+        if: matrix.target == 'x86_64'
         with:
           user: __token__
           password: ${{ secrets.PYPI }}
