@@ -60,11 +60,12 @@ make docs            # Build Sphinx documentation (outputs to docs/build/)
 
 - Source files: `src/lib.rs`, `src/c_utils.rs`, `src/merge.rs`
 - After modifying Rust files, run `maturin develop --release` or `make build` to recompile
-- Compiled artifact: `toad.abi3.so` in the `toad/` directory
+- Rust extension module name: `toad_rust` (defined in Cargo.toml)
 - The Rust extension provides:
-  - `chi_merge` - High-performance Chi-square based binning
-  - `c_utils` - Utility functions for array operations
+  - `toad_rust.merge.chi_merge` - High-performance Chi-square based binning
+  - `toad_rust.c_utils` - Utility functions for array operations
 - Python binning algorithms (DTMerge, StepMerge, QuantileMerge, KMeansMerge) remain in pure Python
+- Import in Python: `import toad_rust` (module is installed to site-packages by maturin)
 
 ## Architecture and Core Components
 

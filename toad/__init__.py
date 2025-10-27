@@ -9,4 +9,11 @@ from .scorecard import ScoreCard
 from .utils import Progress, performance
 from .version import __version__
 
+# Expose rust module at package level
+try:
+    import toad.rust
+    rust = toad.rust
+except ImportError:
+    rust = None
+
 VERSION = __version__

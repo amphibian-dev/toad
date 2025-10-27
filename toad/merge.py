@@ -19,41 +19,19 @@ from .utils.decorator import support_dataframe
 
 # Import Rust implementation of ChiMerge
 _chi_merge_rust = None
+_chi_merge_rust_f64 = None
+_chi_merge_rust_i32 = None
+_chi_merge_rust_i64 = None
 try:
-    # Import from the Rust extension module
-    # The Rust module is compiled as toad.abi3.so in the same directory
-    import os
-    import sys
-
-    # Save original sys.modules state
-    original_toad = sys.modules.get('toad')
-
-    # Add current directory to path temporarily
-    current_dir = os.path.dirname(__file__)
-    sys.path.insert(0, current_dir)
-
-    # Temporarily remove toad from sys.modules to avoid circular import
-    if 'toad' in sys.modules:
-        del sys.modules['toad']
-
-    # Import the Rust toad module (toad.abi3.so)
-    import toad as _toad_rust_module
-
-    # Get the chi_merge function from the merge submodule
-    if hasattr(_toad_rust_module, 'merge') and hasattr(_toad_rust_module.merge, 'chi_merge'):
-        _chi_merge_rust = _toad_rust_module.merge.chi_merge
-
-    # Restore original toad module
-    if original_toad is not None:
-        sys.modules['toad'] = original_toad
-
-    # Remove from path
-    sys.path.remove(current_dir)
-
-except Exception as e:
+    import toad.toad as rust_toad
+    _chi_merge_rust = rust_toad.merge.chi_merge
+    _chi_merge_rust_f64 = getattr(rust_toad.merge, 'chi_merge_f64', None)
+    _chi_merge_rust_i32 = getattr(rust_toad.merge, 'chi_merge_i32', None)
+    _chi_merge_rust_i64 = getattr(rust_toad.merge, 'chi_merge_i64', None)
+except (ImportError, AttributeError) as e:
     import warnings
     warnings.warn(
-        f"Rust `chi_merge` not available: {e}",
+        f"Rust chi_merge not available: {e}. Build with: maturin develop",
         ImportWarning,
     )
 
@@ -220,19 +198,53 @@ else:
         Returns:
             array: array of split points
         """
-        # Convert to numpy arrays with correct dtypes
-        feature = to_ndarray(feature).astype(np.float64)
-        target = to_ndarray(target).astype(np.int32)
+        # Convert to numpy arrays without forcing dtype conversion
+        feature_arr = to_ndarray(feature)
+        target_arr = to_ndarray(target).astype(np.int32)
 
-        # Call Rust implementation
-        return _chi_merge_rust(
-            feature, target,
-            n_bins=n_bins,
-            min_samples=min_samples,
-            min_threshold=min_threshold,
-            nan=nan,
-            balance=balance
-        )
+        # Choose the appropriate Rust function based on input dtype
+        if _chi_merge_rust_f64 is not None and np.issubdtype(feature_arr.dtype, np.floating):
+            # Use f64 version for floating point data
+            return _chi_merge_rust_f64(
+                feature_arr.astype(np.float64), target_arr,
+                n_bins=n_bins,
+                min_samples=min_samples,
+                min_threshold=min_threshold,
+                nan=float(nan),
+                balance=balance
+            )
+        elif _chi_merge_rust_i32 is not None and np.issubdtype(feature_arr.dtype, np.integer) and feature_arr.dtype in [np.int32]:
+            # Use i32 version for int32 data
+            return _chi_merge_rust_i32(
+                feature_arr.astype(np.int32), target_arr,
+                n_bins=n_bins,
+                min_samples=min_samples,
+                min_threshold=min_threshold,
+                nan=int(nan),
+                balance=balance
+            )
+        elif _chi_merge_rust_i64 is not None and np.issubdtype(feature_arr.dtype, np.integer):
+            # Use i64 version for integer data (default for integers)
+            return _chi_merge_rust_i64(
+                feature_arr.astype(np.int64), target_arr,
+                n_bins=n_bins,
+                min_samples=min_samples,
+                min_threshold=min_threshold,
+                nan=int(nan),
+                balance=balance
+            )
+        else:
+            # Fallback to original implementation for compatibility
+            feature_arr = feature_arr.astype(np.float64)
+            target_arr = target_arr.astype(np.int32)
+            return _chi_merge_rust(
+                feature_arr, target_arr,
+                n_bins=n_bins,
+                min_samples=min_samples,
+                min_threshold=min_threshold,
+                nan=nan,
+                balance=balance
+            )
 
 
 @support_dataframe(require_target=False)

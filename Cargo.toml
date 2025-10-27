@@ -16,6 +16,7 @@ pyo3 = { version = "0.22", features = ["extension-module", "abi3-py39"] }
 numpy = "0.22"
 ndarray = "0.16"
 ndarray-stats = "0.6"
+num-traits = "0.2"
 
 [profile.release]
 opt-level = 3
