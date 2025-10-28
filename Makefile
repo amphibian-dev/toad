@@ -45,7 +45,8 @@ build_deps:
 	$(SUDO) $(PIP) install maturin
 
 build: build_deps
-	maturin develop --release
+	maturin build --release
+	$(PIP) install target/wheels/toad-*.whl
 
 dist_deps:
 	$(SUDO) $(PIP) install -U -r requirements-dist.txt
