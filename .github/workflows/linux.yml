@@ -28,8 +28,11 @@ jobs:
           override: true
       - run: make build_deps
       - run: make build
+      - run: ls -la target/wheels/
       - run: pip install -r requirements-nn.txt
       - run: pip install .[all]
+      - run: python -c "import toad.toad; print('Rust module imported successfully')"
+      - run: python -c "from toad.merge import _chi_merge_rust; print('_chi_merge_rust:', _chi_merge_rust)"
       - run: make test
       - run: make dist_wheel
       - uses: actions/upload-artifact@v3
