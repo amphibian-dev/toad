@@ -65,6 +65,16 @@ for import_attempt in [
         import_warnings.append(str(e))
         continue
 
+# Debug output
+import logging
+logger = logging.getLogger(__name__)
+logger.debug(f"ChiMerge import debug:")
+logger.debug(f"  _chi_merge_rust: {_chi_merge_rust}")
+logger.debug(f"  _chi_merge_rust_f64: {_chi_merge_rust_f64}")
+logger.debug(f"  _chi_merge_rust_i32: {_chi_merge_rust_i32}")
+logger.debug(f"  _chi_merge_rust_i64: {_chi_merge_rust_i64}")
+logger.debug(f"  import_warnings: {import_warnings}")
+
 if _chi_merge_rust is None:
     import warnings
     warnings.warn(
