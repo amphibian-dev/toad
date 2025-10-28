@@ -27,9 +27,15 @@ jobs:
           toolchain: stable
           override: true
       - run: make build_deps
+      - run: make build
       - run: pip install -r requirements-nn.txt
       - run: pip install .[all]
       - run: make test
+      - run: make dist_wheel
+      - uses: actions/upload-artifact@v3
+        with:
+          name: wheel-${{ matrix.python-version }}
+          path: dist/*.whl
   release:
     needs: [test]
     # release when using `tags` or `release` branch

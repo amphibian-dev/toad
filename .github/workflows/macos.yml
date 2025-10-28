@@ -32,6 +32,7 @@ jobs:
           toolchain: stable
           override: true
       - run: make build_deps
+      - run: make build
       - run: pip install -r requirements-nn.txt
       - run: pip install .[all]
       - run: make test
