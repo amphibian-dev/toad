@@ -5,6 +5,7 @@ SHELL = /bin/bash
 # Always use uv
 PYTHON = uv run python3
 PIP = uv pip
+UV_SYSTEM_FLAG = --system
 
 # Check if uv is installed, if not install it
 ensure-uv:
@@ -19,18 +20,18 @@ BUILDDIR := $(DOCSDIR)/build
 
 install: ensure-uv build
 	@echo "Installing with uv..."
-	$(PIP) install -e .
+	$(PIP) install $(UV_SYSTEM_FLAG) -e .
 
 install-nn: ensure-uv build
 	@echo "Installing with neural network support..."
-	$(PIP) install -e .[nn]
+	$(PIP) install $(UV_SYSTEM_FLAG) -e .[nn]
 
 uninstall:
 	cat files.txt | xargs rm -rf
 
 test_deps: ensure-uv
 	@echo "Installing test dependencies with uv..."
-	$(PIP) install -r requirements-test.txt
+	$(PIP) install $(UV_SYSTEM_FLAG) -r requirements-test.txt
 
 test: test_deps
 	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))
@@ -46,8 +47,8 @@ test-nn: test_deps install-nn
 
 build_deps: ensure-uv
 	@echo "Installing build dependencies with uv..."
-	$(PIP) install -r requirements.txt
-	$(PIP) install maturin
+	$(PIP) install $(UV_SYSTEM_FLAG) -r requirements.txt
+	$(PIP) install $(UV_SYSTEM_FLAG) maturin
 
 build: build_deps
 	@echo "Building with uv and maturin..."
@@ -61,7 +62,7 @@ build: build_deps
 
 dist_deps: ensure-uv
 	@echo "Installing distribution dependencies with uv..."
-	$(PIP) install -U -r requirements-dist.txt
+	$(PIP) install $(UV_SYSTEM_FLAG) -U -r requirements-dist.txt
 
 dist: build dist_deps
 	$(PYTHON) -m maturin build --release
