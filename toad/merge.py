@@ -23,62 +23,17 @@ _chi_merge_rust_f64 = None
 _chi_merge_rust_i32 = None
 _chi_merge_rust_i64 = None
 
-# Try multiple import approaches for robustness
-import_warnings = []
-for import_attempt in [
-    lambda: __import__('toad.toad', fromlist=['toad']),
-    lambda: __import__('toad'),
-]:
-    try:
-        rust_toad = import_attempt()
-        # Try to access the merge module and chi_merge function
-        if hasattr(rust_toad, 'merge'):
-            merge_module = rust_toad.merge
-            # Handle both direct module and decorated module cases
-            if hasattr(merge_module, '__wrapped__'):
-                # It's a decorated module, access the wrapped module
-                raw_merge_module = merge_module.__wrapped__
-                if hasattr(raw_merge_module, 'chi_merge'):
-                    _chi_merge_rust = raw_merge_module.chi_merge
-                    _chi_merge_rust_f64 = getattr(raw_merge_module, 'chi_merge_f64', None)
-                    _chi_merge_rust_i32 = getattr(raw_merge_module, 'chi_merge_i32', None)
-                    _chi_merge_rust_i64 = getattr(raw_merge_module, 'chi_merge_i64', None)
-                    break
-            else:
-                # It's a direct module
-                if hasattr(merge_module, 'chi_merge'):
-                    _chi_merge_rust = merge_module.chi_merge
-                    _chi_merge_rust_f64 = getattr(merge_module, 'chi_merge_f64', None)
-                    _chi_merge_rust_i32 = getattr(merge_module, 'chi_merge_i32', None)
-                    _chi_merge_rust_i64 = getattr(merge_module, 'chi_merge_i64', None)
-                    break
-        elif hasattr(rust_toad, 'toad') and hasattr(rust_toad.toad, 'merge'):
-            # Handle nested module structure
-            merge_module = rust_toad.toad.merge
-            if hasattr(merge_module, 'chi_merge'):
-                _chi_merge_rust = merge_module.chi_merge
-                _chi_merge_rust_f64 = getattr(merge_module, 'chi_merge_f64', None)
-                _chi_merge_rust_i32 = getattr(merge_module, 'chi_merge_i32', None)
-                _chi_merge_rust_i64 = getattr(merge_module, 'chi_merge_i64', None)
-                break
-    except (ImportError, AttributeError) as e:
-        import_warnings.append(str(e))
-        continue
-
-# Debug output
-import logging
-logger = logging.getLogger(__name__)
-logger.debug(f"ChiMerge import debug:")
-logger.debug(f"  _chi_merge_rust: {_chi_merge_rust}")
-logger.debug(f"  _chi_merge_rust_f64: {_chi_merge_rust_f64}")
-logger.debug(f"  _chi_merge_rust_i32: {_chi_merge_rust_i32}")
-logger.debug(f"  _chi_merge_rust_i64: {_chi_merge_rust_i64}")
-logger.debug(f"  import_warnings: {import_warnings}")
-
-if _chi_merge_rust is None:
+try:
+    import toad_core
+    # Access functions from toad_core.merge submodule
+    _chi_merge_rust = toad_core.merge.chi_merge
+    _chi_merge_rust_f64 = toad_core.merge.chi_merge_f64
+    _chi_merge_rust_i32 = toad_core.merge.chi_merge_i32
+    _chi_merge_rust_i64 = toad_core.merge.chi_merge_i64
+except ImportError as e:
     import warnings
     warnings.warn(
-        f"Rust chi_merge not available. Import errors: {', '.join(import_warnings)}. "
+        f"Rust chi_merge not available: {e}. "
         "Build with: maturin develop",
         ImportWarning,
     )

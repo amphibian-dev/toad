@@ -6,7 +6,7 @@ mod merge_generic;
 
 /// Toad Rust extensions
 #[pymodule]
-fn toad(m: &Bound<'_, PyModule>) -> PyResult<()> {
+fn toad_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Add c_utils submodule directly
     let c_utils_module = PyModule::new_bound(m.py(), "c_utils")?;
     c_utils::register_module(&c_utils_module)?;
