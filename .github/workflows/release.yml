@@ -1,18 +1,25 @@
-name: Release
+name: Create GitHub Release
 
 on:
   push:
-    tags:
-      - "*"
+    tags: ['*']
+
+permissions:
+  contents: write
 
 jobs:
-  build:
+  create-release:
+    name: Create GitHub Release
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for changelog generation
 
-      - name: Release
-        uses: docker://antonyurchenko/git-release:latest
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: true
+          draft: false
+          prerelease: false

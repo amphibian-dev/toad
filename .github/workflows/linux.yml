@@ -2,6 +2,11 @@ name: Test on Linux
 
 on: [push, pull_request]
 
+# Cancel previous runs on the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
@@ -15,65 +20,52 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: ${{ matrix.experimental }}
     name: Test py ${{ matrix.python-version }}
+    env:
+      CI: true
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            requirements-test.txt
+            requirements-nn.txt
+
       - name: Setup Rust
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
         with:
-          toolchain: stable
-          override: true
-      - run: make build_deps
-      - run: make build
-      - run: ls -la target/wheels/
-      - run: python -c "import os; print('Contents of target/wheels:'); [print(f) for f in os.listdir('target/wheels') if f.endswith('.whl')]"
-      - run: pip install -r requirements-nn.txt
-      - run: pip install .[all]
-      - run: python -c "import sys; print('Python version:', sys.version)"
-      - run: python -c "import sys; print('Python path:'); [print(p) for p in sys.path]"
-      - run: python -c "import toad; print('Main toad module imported successfully')"
-      - run: python -c "from toad.merge import _chi_merge_rust; print('_chi_merge_rust:', _chi_merge_rust)"
-      - run: python -c "import toad; print('toad module file:', toad.__file__)"
-      - run: make test
-      - run: make dist_wheel
-      - uses: actions/upload-artifact@v4
-        with:
-          name: wheel-${{ matrix.python-version }}
-          path: dist/*.whl
-  release:
-    needs: [test]
-    # release when using `tags` or `release` branch
-    if: ${{ startsWith(github.ref, 'refs/tags') || github.ref == 'refs/heads/release' }}
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        target: [x86_64, aarch64]
-    steps:
-      - uses: actions/checkout@master
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-      - name: Build wheels
-        uses: PyO3/maturin-action@v1
-        with:
-          target: ${{ matrix.target }}
-          args: --release --out dist --find-interpreter
-          sccache: 'true'
-          manylinux: auto
-      - name: Upload wheels
+          cache-on-failure: true
+
+      - name: Build dependencies
+        run: make build_deps
+
+      - name: Build Rust extension
+        run: make build
+
+      - name: Install Python package
+        run: |
+          pip install -r requirements-nn.txt
+          pip install .[all]
+
+      - name: Verify Rust extension loaded
+        run: python -c "import toad; from toad.merge import _chi_merge_rust; assert _chi_merge_rust is not None"
+
+      - name: Run tests
+        run: make test
+
+      - name: Build distribution wheel
+        run: make dist_wheel
+
+      - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
-          path: dist
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        name: publish pypi
-        if: matrix.target == 'x86_64'
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI }}
-          skip-existing: true
-          verbose: true
+          name: wheel-linux-py${{ matrix.python-version }}
+          path: target/wheels/*.whl
+          if-no-files-found: error
