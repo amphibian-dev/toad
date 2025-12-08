@@ -21,9 +21,22 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
       - run: make build_deps
+      - run: make build
+      - run: dir target\wheels\*.whl
+      - run: python -c "import os; print('Contents of target/wheels:'); [print(f) for f in os.listdir('target/wheels') if f.endswith('.whl')]"
       - run: pip install -r requirements-nn.txt
       - run: pip install .[all]
+      - run: python -c "import sys; print('Python version:', sys.version)"
+      - run: python -c "import sys; print('Python path:'); [print(p) for p in sys.path]"
+      - run: python -c "import toad; print('Main toad module imported successfully')"
+      - run: python -c "from toad.merge import _chi_merge_rust; print('_chi_merge_rust:', _chi_merge_rust)"
+      - run: python -c "import toad; print('toad module file:', toad.__file__)"
       - run: make test
       - run: make dist_wheel
       - uses: actions/upload-artifact@v4
