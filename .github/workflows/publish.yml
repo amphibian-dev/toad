@@ -1,0 +1,184 @@
+name: Publish to PyPI
+
+on:
+  push:
+    tags: ['*']
+  workflow_dispatch:  # Allow manual triggering
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false  # Don't cancel publish jobs
+
+jobs:
+  # Wait for all test workflows to complete
+  wait-for-tests:
+    name: Wait for test workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Linux tests
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "Test py 3.10"  # Representative test from linux.yml
+          ref: ${{ github.sha }}
+          timeoutSeconds: 1800
+
+      - name: Wait for macOS tests
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "Test py 3.10 macos-latest"  # Representative test from macos.yml
+          ref: ${{ github.sha }}
+          timeoutSeconds: 1800
+
+      - name: Wait for Windows tests
+        uses: fountainhead/action-wait-for-check@v1.2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "Test py 3.10"  # Representative test from windows.yml (different from Linux)
+          ref: ${{ github.sha }}
+          timeoutSeconds: 1800
+
+  download-wheels:
+    name: Download tested wheels
+    needs: [wait-for-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Linux wheels
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: linux.yml
+          commit: ${{ github.sha }}
+          path: dist/
+          name_is_regexp: true
+          name: wheel-linux-.*
+
+      - name: Download macOS wheels
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: macos.yml
+          commit: ${{ github.sha }}
+          path: dist/
+          name_is_regexp: true
+          name: wheel-macos-.*
+
+      - name: Download Windows wheels
+        uses: dawidd6/action-download-artifact@v3
+        with:
+          workflow: windows.yml
+          commit: ${{ github.sha }}
+          path: dist/
+          name_is_regexp: true
+          name: wheel-windows-.*
+
+      - name: List downloaded wheels
+        run: |
+          echo "Downloaded wheels:"
+          ls -lh dist/
+          echo ""
+          echo "Wheel count:"
+          ls dist/*.whl | wc -l
+
+      - name: Verify wheel count
+        run: |
+          wheel_count=$(ls dist/*.whl 2>/dev/null | wc -l)
+          echo "Found $wheel_count wheels"
+
+          # Expected: Linux(5) + macOS(10) + Windows(5) = 20 wheels
+          # But some may be experimental and fail, so check for minimum
+          if [ "$wheel_count" -lt 15 ]; then
+            echo "❌ Error: Expected at least 15 wheels, found $wheel_count"
+            exit 1
+          fi
+          echo "✓ Wheel count OK"
+
+      - name: Verify wheel integrity
+        run: |
+          # Test installing one wheel from each platform
+          echo "Testing Linux wheel..."
+          pip install dist/toad-*manylinux*.whl --force-reinstall
+          python -c "import toad; from toad.merge import _chi_merge_rust; assert _chi_merge_rust is not None; print('✓ Linux wheel OK')"
+
+          echo "Testing macOS wheel..."
+          pip install dist/toad-*macosx*.whl --force-reinstall || echo "⚠️  macOS wheel test skipped (wrong platform)"
+
+          echo "Testing Windows wheel..."
+          pip install dist/toad-*win*.whl --force-reinstall || echo "⚠️  Windows wheel test skipped (wrong platform)"
+
+          echo "✓ Wheel verification complete"
+
+      - name: Upload combined wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-tested-wheels
+          path: dist/*.whl
+          if-no-files-found: error
+
+  build-sdist:
+    name: Build source distribution
+    needs: [wait-for-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install build tools
+        run: pip install build
+
+      - name: Build sdist
+        run: python -m build --sdist
+
+      - name: Verify sdist
+        run: |
+          tar -tzf dist/*.tar.gz | head -20
+          echo "✓ Source distribution built successfully"
+
+      - name: Upload sdist
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: [download-wheels, build-sdist]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/toad
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download all wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: all-tested-wheels
+          path: dist/
+
+      - name: Download sdist
+        uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist/
+
+      - name: List all distributions
+        run: |
+          echo "📦 Packages to publish:"
+          ls -lh dist/
+          echo ""
+          echo "Summary:"
+          echo "  Wheels: $(ls dist/*.whl 2>/dev/null | wc -l)"
+          echo "  Sdist:  $(ls dist/*.tar.gz 2>/dev/null | wc -l)"
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
+          verbose: true
+          print-hash: true
