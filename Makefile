@@ -2,14 +2,23 @@
 
 SHELL = /bin/bash
 
-# Always use uv
-PYTHON = uv run python3
-PIP = uv pip
-UV_SYSTEM_FLAG = --system
-
-# Check if uv is installed, if not install it
-ensure-uv:
-	@command -v uv >/dev/null 2>&1 || (echo "Installing uv..." && curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH="$$HOME/.local/bin:$$PATH")
+# Detect CI environment
+ifdef CI
+    # In CI: use system Python and pip
+    PYTHON = python3
+    PIP = pip3
+    PIP_FLAGS =
+else
+    # Locally: use uv if available, otherwise fall back to system
+    PYTHON = python3
+    PIP = pip3
+    PIP_FLAGS =
+    # Check if uv is available
+    ifneq ($(shell command -v uv 2> /dev/null),)
+        PIP = uv pip
+        PIP_FLAGS = --system
+    endif
+endif
 
 SPHINXOPTS =
 SPHINXBUILD = sphinx-build
@@ -18,20 +27,24 @@ DOCSDIR = docs
 SOURCEDIR := $(DOCSDIR)/source
 BUILDDIR := $(DOCSDIR)/build
 
+# Check if uv is installed, if not install it
+ensure-uv:
+	@command -v uv >/dev/null 2>&1 || (echo "Installing uv..." && curl -LsSf https://astral.sh/uv/install.sh | sh && export PATH="$$HOME/.local/bin:$$PATH")
+
 install: ensure-uv build
-	@echo "Installing with uv..."
-	$(PIP) install $(UV_SYSTEM_FLAG) -e .
+	@echo "Installing with $(PIP)..."
+	$(PIP) install $(PIP_FLAGS) -e .
 
 install-nn: ensure-uv build
 	@echo "Installing with neural network support..."
-	$(PIP) install $(UV_SYSTEM_FLAG) -e .[nn]
+	$(PIP) install $(PIP_FLAGS) -e .[nn]
 
 uninstall:
 	cat files.txt | xargs rm -rf
 
 test_deps: ensure-uv
-	@echo "Installing test dependencies with uv..."
-	$(PIP) install $(UV_SYSTEM_FLAG) -r requirements-test.txt
+	@echo "Installing test dependencies..."
+	$(PIP) install $(PIP_FLAGS) -r requirements-test.txt
 
 test: test_deps
 	$(eval TARGET := $(filter-out $@, $(MAKECMDGOALS)))
@@ -46,23 +59,34 @@ test-nn: test_deps install-nn
 	$(PYTHON) -m pytest -x toad
 
 build_deps: ensure-uv
-	@echo "Installing build dependencies with uv..."
-	$(PIP) install $(UV_SYSTEM_FLAG) -r requirements.txt
-	$(PIP) install $(UV_SYSTEM_FLAG) maturin
+	@echo "Installing build dependencies..."
+	$(PIP) install $(PIP_FLAGS) -r requirements.txt
+	$(PIP) install $(PIP_FLAGS) maturin
 
 build: build_deps
-	@echo "Building with uv and maturin..."
+	@echo "Building Rust extension with maturin..."
 	$(PYTHON) -m maturin build --release
-	@echo "Extracting and installing toad_core module..."
+	@echo "Installing toad_core from wheel..."
+ifdef CI
+	# In CI: directly install wheel
+	$(PIP) install --force-reinstall --no-deps target/wheels/toad-*.whl
+else
+	# Locally: extract and copy toad_core to preserve editable install
 	@rm -rf /tmp/toad_wheel_extract && mkdir -p /tmp/toad_wheel_extract
-	@cd /tmp/toad_wheel_extract && unzip -q $(CURDIR)/target/wheels/toad-*.whl "toad_core/*"
-	@rm -rf .venv/lib/python*/site-packages/toad_core
-	@cp -r /tmp/toad_wheel_extract/toad_core .venv/lib/python*/site-packages/
-	@echo "toad_core module installed successfully"
+	@cd /tmp/toad_wheel_extract && unzip -q $(CURDIR)/target/wheels/toad-*.whl "toad_core/*" 2>/dev/null || true
+	@if [ -d "/tmp/toad_wheel_extract/toad_core" ]; then \
+		rm -rf .venv/lib/python*/site-packages/toad_core 2>/dev/null || true; \
+		mkdir -p .venv/lib/python*/site-packages/ 2>/dev/null || true; \
+		cp -r /tmp/toad_wheel_extract/toad_core .venv/lib/python*/site-packages/ 2>/dev/null || true; \
+		echo "toad_core module installed to .venv"; \
+	else \
+		echo "Warning: Could not extract toad_core, may need manual installation"; \
+	fi
+endif
 
 dist_deps: ensure-uv
-	@echo "Installing distribution dependencies with uv..."
-	$(PIP) install $(UV_SYSTEM_FLAG) -U -r requirements-dist.txt
+	@echo "Installing distribution dependencies..."
+	$(PIP) install $(PIP_FLAGS) -U -r requirements-dist.txt
 
 dist: build dist_deps
 	$(PYTHON) -m maturin build --release
