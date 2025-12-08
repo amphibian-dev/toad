@@ -2,6 +2,10 @@ import pytest
 import numpy as np
 import pandas as pd
 
+# Use non-GUI backend for matplotlib to avoid tkinter issues on Windows CI
+import matplotlib
+matplotlib.use('Agg')
+
 from .plot import (
     badrate_plot,
     corr_plot,
