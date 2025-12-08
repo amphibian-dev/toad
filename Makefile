@@ -91,7 +91,8 @@ dist_deps: ensure-uv
 dist: build dist_deps
 	$(PYTHON) -m maturin build --release
 
-dist_wheel: build dist_deps
+dist_wheel: build_deps dist_deps
+	@rm -rf target/wheels/*
 	$(PYTHON) -m maturin build --release
 
 upload:
