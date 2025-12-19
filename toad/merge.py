@@ -17,28 +17,6 @@ from sklearn.cluster import KMeans
 from .utils import fillna, bin_by_splits, to_ndarray, clip
 from .utils.decorator import support_dataframe
 
-# Import Rust implementation of ChiMerge
-_chi_merge_rust = None
-_chi_merge_rust_f64 = None
-_chi_merge_rust_i32 = None
-_chi_merge_rust_i64 = None
-
-try:
-    import toad_core
-    # Access functions from toad_core.merge submodule
-    _chi_merge_rust = toad_core.merge.chi_merge
-    _chi_merge_rust_f64 = toad_core.merge.chi_merge_f64
-    _chi_merge_rust_i32 = toad_core.merge.chi_merge_i32
-    _chi_merge_rust_i64 = toad_core.merge.chi_merge_i64
-except ImportError as e:
-    import warnings
-    warnings.warn(
-        f"Rust chi_merge not available: {e}. "
-        "Build with: maturin develop",
-        ImportWarning,
-    )
-
-
 DEFAULT_BINS = 10
 
 
@@ -159,95 +137,46 @@ def DTMerge(feature, target, nan=-1, n_bins=None, min_samples=1, **kwargs):
     return np.sort(thresholds)
 
 
-# ChiMerge is imported from Rust implementation above
-# If not available, provide a fallback
-if _chi_merge_rust is None:
-    def ChiMerge(feature, target, n_bins=None, min_samples=None,
-                min_threshold=None, nan=-1, balance=True):
-        """Chi-Merge (Python fallback)
+def ChiMerge(feature, target, n_bins=None, min_samples=None,
+            min_threshold=None, nan=-1, balance=True):
+    """Chi-Merge using Rust implementation
 
-        Note: This is a fallback implementation. For better performance,
-        ensure the Rust extension is properly built.
+    Args:
+        feature (array-like): feature to be merged
+        target (array-like): a array of target classes
+        n_bins (int): n bins will be merged into
+        min_samples (number): min sample in each group, if float, it will be the percentage of samples
+        min_threshold (number): min threshold of chi-square
+        nan (number): value to replace NaN
+        balance (bool): whether to balance chi-square by group size
 
-        Args:
-            feature (array-like): feature to be merged
-            target (array-like): a array of target classes
-            n_bins (int): n bins will be merged into
-            min_samples (number): min sample in each group, if float, it will be the percentage of samples
-            min_threshold (number): min threshold of chi-square
-
-        Returns:
-            array: array of split points
-        """
+    Returns:
+        array: array of split points
+    """
+    # Lazy import of Rust implementation
+    try:
+        import toad_core
+        chi_merge_rust = toad_core.merge.chi_merge
+    except ImportError as e:
         raise NotImplementedError(
-            "ChiMerge Rust implementation not available. "
+            f"ChiMerge Rust implementation not available: {e}. "
             "Please build the Rust extension with: maturin develop"
         )
-else:
-    # Wrap Rust implementation with type conversion
-    def ChiMerge(feature, target, n_bins=None, min_samples=None,
-                min_threshold=None, nan=-1, balance=True):
-        """Chi-Merge using Rust implementation
 
-        Args:
-            feature (array-like): feature to be merged
-            target (array-like): a array of target classes
-            n_bins (int): n bins will be merged into
-            min_samples (number): min sample in each group, if float, it will be the percentage of samples
-            min_threshold (number): min threshold of chi-square
-            nan (number): value to replace NaN
-            balance (bool): whether to balance chi-square by group size
+    # Convert to numpy arrays
+    feature_arr = to_ndarray(feature)
+    target_arr = to_ndarray(target).astype(np.int32)
 
-        Returns:
-            array: array of split points
-        """
-        # Convert to numpy arrays without forcing dtype conversion
-        feature_arr = to_ndarray(feature)
-        target_arr = to_ndarray(target).astype(np.int32)
-
-        # Choose the appropriate Rust function based on input dtype
-        if _chi_merge_rust_f64 is not None and np.issubdtype(feature_arr.dtype, np.floating):
-            # Use f64 version for floating point data
-            return _chi_merge_rust_f64(
-                feature_arr.astype(np.float64), target_arr,
-                n_bins=n_bins,
-                min_samples=min_samples,
-                min_threshold=min_threshold,
-                nan=float(nan),
-                balance=balance
-            )
-        elif _chi_merge_rust_i32 is not None and np.issubdtype(feature_arr.dtype, np.integer) and feature_arr.dtype in [np.int32]:
-            # Use i32 version for int32 data
-            return _chi_merge_rust_i32(
-                feature_arr.astype(np.int32), target_arr,
-                n_bins=n_bins,
-                min_samples=min_samples,
-                min_threshold=min_threshold,
-                nan=int(nan),
-                balance=balance
-            )
-        elif _chi_merge_rust_i64 is not None and np.issubdtype(feature_arr.dtype, np.integer):
-            # Use i64 version for integer data (default for integers)
-            return _chi_merge_rust_i64(
-                feature_arr.astype(np.int64), target_arr,
-                n_bins=n_bins,
-                min_samples=min_samples,
-                min_threshold=min_threshold,
-                nan=int(nan),
-                balance=balance
-            )
-        else:
-            # Fallback to original implementation for compatibility
-            feature_arr = feature_arr.astype(np.float64)
-            target_arr = target_arr.astype(np.int32)
-            return _chi_merge_rust(
-                feature_arr, target_arr,
-                n_bins=n_bins,
-                min_samples=min_samples,
-                min_threshold=min_threshold,
-                nan=nan,
-                balance=balance
-            )
+    # Call unified Rust chi_merge - it handles type dispatching automatically
+    # Supports f64, i32, i64 with automatic dtype detection
+    return chi_merge_rust(
+        feature_arr, target_arr,
+        n_bins=n_bins,
+        min_samples=min_samples,
+        min_threshold=min_threshold,
+        nan=nan,
+        balance=balance
+    )
 
 
 @support_dataframe(require_target=False)

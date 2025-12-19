@@ -1,36 +1,60 @@
-use pyo3::prelude::*;
-use numpy::{PyArray1, PyReadonlyArray1};
 use ndarray::{Array1, Array2, Axis, s};
 use std::collections::HashSet;
+use num_traits::{Num, NumCast};
 
-const DEFAULT_BINS: usize = 10;
+pub const DEFAULT_BINS: usize = 10;
 
-/// Helper function to fill NaN values
-fn fill_nan(arr: &Array1<f64>, fill_value: f64) -> Array1<f64> {
+/// Helper function to fill NaN values for floating point types
+fn fill_nan_f64(arr: &Array1<f64>, fill_value: f64) -> Array1<f64> {
     arr.mapv(|x| if x.is_nan() { fill_value } else { x })
 }
 
-/// Helper function to get unique sorted values for f64
-fn unique_sorted_f64(arr: &Array1<f64>) -> Vec<f64> {
-    let mut values: Vec<f64> = arr.iter().copied().collect();
+/// Helper function to fill NaN values for integer types (no-op)
+fn fill_nan_int<T: Num + Copy>(arr: &Array1<T>, _fill_value: T) -> Array1<T> {
+    arr.clone() // Integers don't have NaN, so just return a copy
+}
+
+/// Helper function to get unique sorted values for generic types
+fn unique_sorted<T>(arr: &Array1<T>) -> Vec<T>
+where
+    T: Num + Copy + PartialOrd,
+{
+    let mut values: Vec<T> = arr.iter().copied().collect();
     values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     values.dedup();
     values
 }
 
-/// ChiMerge - Chi-square based merging (core algorithm in Rust)
-#[pyfunction]
-#[pyo3(signature = (feature, target, n_bins=None, min_samples=None, min_threshold=None, nan=-1.0, balance=true))]
-fn chi_merge<'py>(
-    py: Python<'py>,
-    feature: PyReadonlyArray1<f64>,
-    target: PyReadonlyArray1<i32>,
+/// Generic ChiMerge implementation - pure algorithm layer
+///
+/// This function implements the Chi-square based binning algorithm.
+/// It takes ndarray types and returns a Vec of split points.
+///
+/// # Arguments
+///
+/// * `feature` - Feature values as Array1<T>
+/// * `target` - Target labels as Array1<i32>
+/// * `n_bins` - Maximum number of bins (default: 10)
+/// * `min_samples` - Minimum samples per bin (can be absolute or relative)
+/// * `min_threshold` - Minimum chi-square threshold
+/// * `nan` - Value to use for NaN replacement (only for f64)
+/// * `balance` - Whether to balance chi-square by sample count
+///
+/// # Returns
+///
+/// * `Result<Vec<T>, String>` - Split points or error message
+pub fn chi_merge_impl<T>(
+    feature: Array1<T>,
+    target: Array1<i32>,
     n_bins: Option<usize>,
     min_samples: Option<f64>,
     min_threshold: Option<f64>,
-    nan: f64,
+    nan: T,
     balance: bool,
-) -> PyResult<Bound<'py, PyArray1<f64>>> {
+) -> Result<Vec<T>, String>
+where
+    T: Num + NumCast + Copy + PartialOrd + 'static,
+{
     // Set default break condition
     let n_bins = if n_bins.is_none() && min_samples.is_none() && min_threshold.is_none() {
         Some(DEFAULT_BINS)
@@ -38,23 +62,24 @@ fn chi_merge<'py>(
         n_bins
     };
 
-    // Fill NaN values
-    let feature = fill_nan(&feature.as_array().to_owned(), nan);
-    let target_array = target.as_array();
-    let target: Array1<i32> = target_array.to_owned();
-
-    // Calculate min_samples threshold
-    let min_samples_val = min_samples.map(|ms| {
-        if ms < 1.0 {
-            (feature.len() as f64) * ms
-        } else {
-            ms
+    // Fill NaN values (for floating point types)
+    let feature_filled = if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
+        // For f64, we need to handle NaN
+        // This is a bit of a workaround, but it works
+        unsafe {
+            let arr_ptr = &feature as *const Array1<T> as *const Array1<f64>;
+            let f64_arr = &*arr_ptr;
+            let filled = fill_nan_f64(f64_arr, NumCast::from(nan).unwrap());
+            let result_ptr = &filled as *const Array1<f64> as *const Array1<T>;
+            (*result_ptr).clone()
         }
-    });
+    } else {
+        // For integer types, just clone
+        fill_nan_int(&feature, nan)
+    };
 
     // Get unique values
-    let mut feature_unique = unique_sorted_f64(&feature);
-
+    let mut feature_unique = unique_sorted(&feature_filled);
     let mut target_unique: Vec<i32> = target.iter()
         .copied()
         .collect::<HashSet<_>>()
@@ -68,7 +93,7 @@ fn chi_merge<'py>(
     // Build grouped counts matrix
     let mut grouped = Array2::<f64>::zeros((len_f, len_t));
     for (r, &fval) in feature_unique.iter().enumerate() {
-        let mask: Vec<bool> = feature.iter().map(|&x| x == fval).collect();
+        let mask: Vec<bool> = feature_filled.iter().map(|&x| x == fval).collect();
         let tmp: Vec<i32> = target.iter()
             .zip(mask.iter())
             .filter_map(|(&t, &m)| if m { Some(t) } else { None })
@@ -89,7 +114,13 @@ fn chi_merge<'py>(
         }
 
         // Break if min_samples reached
-        if let Some(ms_val) = min_samples_val {
+        if let Some(ms_val) = min_samples.map(|ms| {
+            if ms < 1.0 {
+                (feature_filled.len() as f64) * ms
+            } else {
+                ms
+            }
+        }) {
             let row_sums = grouped.sum_axis(Axis(1));
             let min_count = row_sums.iter().fold(f64::INFINITY, |a, &b| a.min(b));
             if min_count > ms_val {
@@ -174,12 +205,34 @@ fn chi_merge<'py>(
         vec![]
     };
 
-    Ok(PyArray1::from_vec_bound(py, splits))
+    Ok(splits)
 }
 
-/// Register merge functions to the module
-pub fn register_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(chi_merge, m)?)?;
-    m.add("DEFAULT_BINS", DEFAULT_BINS)?;
-    Ok(())
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_chi_merge_f64() {
+        let feature = Array1::from(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]);
+        let target = Array1::from(vec![0, 0, 0, 0, 0, 1, 1, 1, 1, 1]);
+        let splits = chi_merge_impl(feature, target, Some(3), None, None, -1.0, true).unwrap();
+        assert!(splits.len() <= 2); // 3 bins → at most 2 split points
+    }
+
+    #[test]
+    fn test_chi_merge_i32() {
+        let feature = Array1::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let target = Array1::from(vec![0, 0, 0, 0, 0, 1, 1, 1, 1, 1]);
+        let splits = chi_merge_impl(feature, target, Some(3), None, None, 0, true).unwrap();
+        assert!(splits.len() <= 2); // 3 bins → at most 2 split points
+    }
+
+    #[test]
+    fn test_chi_merge_i64() {
+        let feature = Array1::from(vec![1i64, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+        let target = Array1::from(vec![0, 0, 0, 0, 0, 1, 1, 1, 1, 1]);
+        let splits = chi_merge_impl(feature, target, Some(3), None, None, 0, true).unwrap();
+        assert!(splits.len() <= 2); // 3 bins → at most 2 split points
+    }
 }
