@@ -100,9 +100,13 @@ upload:
 	@$(PYTHON) -m twine upload dist/*  -u $(TWINE_USER) -p $(TWINE_PASS)
 
 clean:
-	@rm -rf build/ dist/ *.egg-info/ **/__pycache__/
-	@rm -rf toad/*.c toad/*.so target/ Cargo.lock
-	@rm -rf toad/*.pyx toad/*.pxd
+	@rm -rf build/ dist/ *.egg-info/
+	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	@find . -type f -name "*.pyo" -delete 2>/dev/null || true
+	@rm -rf toad/*.c toad/*.so toad/*.pyx toad/*.pxd
+	@rm -rf target/
+	@rm -rf .venv/lib/python*/site-packages/toad_core 2>/dev/null || true
 
 docs: build
 	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
