@@ -2,9 +2,13 @@ import pytest
 import numpy as np
 import pandas as pd
 
-import pyximport
+try:
+    import pyximport
+except ModuleNotFoundError:
+    pyximport = None
 
-pyximport.install(setup_args={"include_dirs": np.get_include()})
+if pyximport is not None:
+    pyximport.install(setup_args={"include_dirs": np.get_include()})
 
 from .transform import WOETransformer, Combiner, GBDTTransformer
 
@@ -25,6 +29,30 @@ df = pd.DataFrame({
     'D': empty_feat,
     'target': target,
 })
+
+
+def _make_constraint_case_a_with_missing():
+    counts = np.array([41, 34, 22, 24, 10, 11, 8, 17, 50, 41, 55])
+    probs = np.array([
+        0.19128, 0.24629567, 0.21073853, 0.2514205, 0.37637079,
+        0.50289282, 0.41724785, 0.64468458, 0.65278623, 0.76874129,
+        0.86190187,
+    ])
+    rng = np.random.default_rng(0)
+
+    feature = np.concatenate([
+        np.full(count, i, dtype = float)
+        for i, count in enumerate(counts)
+    ])
+    target = np.concatenate([
+        rng.binomial(1, prob, size = count)
+        for count, prob in zip(counts, probs)
+    ])
+
+    feature = np.concatenate([feature, np.full(5, np.nan)])
+    target = np.concatenate([target, np.array([0, 1, 0, 1, 0])])
+
+    return pd.Series(feature, name = 'E'), target
 
 
 
@@ -161,6 +189,29 @@ def test_combiner_labels_with_empty():
     combiner = Combiner().fit(df, 'target', n_bins = 4, empty_separate = True)
     res = combiner.transform(df, labels = True)
     assert res.loc[2, 'D'] == '04.nan'
+
+def test_combiner_empty_separate_with_constraint_mode_all():
+    series, series_target = _make_constraint_case_a_with_missing()
+    combiner = Combiner().fit(
+        series,
+        series_target,
+        n_bins = 3,
+        min_samples = 0.05,
+        constraint_mode = 'all',
+        empty_separate = True,
+    )
+
+    rule = combiner.rules['E']
+    transformed = combiner.transform(series)
+    mask = pd.isna(series)
+    non_missing_counts = np.bincount(transformed[~mask].astype(int))
+    threshold = (~mask).sum() * 0.05
+
+    assert np.isnan(rule[-1])
+    assert len(rule[:-1]) + 1 <= 3
+    assert non_missing_counts.min() >= threshold
+    assert mask.sum() < threshold
+    assert (transformed[mask] == len(rule)).all()
 
 def test_gbdt_transformer():
     np.random.seed(1)
