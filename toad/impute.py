@@ -1,10 +1,8 @@
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_numeric_dtype
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import LabelEncoder
 
 
 
@@ -62,12 +60,18 @@ class Imputer(IterativeImputer):
             X (DataFrame)
             mask (Mask): empty mask for X
         """
+        X = X.copy()
         category_data = X.select_dtypes(exclude = np.number).columns
         
         for col in category_data:
-            unique, X[col].loc[~mask[col]] = np.unique(X[col][~mask[col]], return_inverse = True)
+            valid_mask = ~mask[col]
+            values = X.loc[valid_mask, col].to_numpy(dtype = object)
+            unique, encoded = np.unique(values, return_inverse = True)
 
             self.encoder_dict[col] = unique
+            encoded_col = pd.Series(np.nan, index = X.index, dtype = float)
+            encoded_col.loc[valid_mask] = encoded.astype(float)
+            X[col] = encoded_col
         
         return X
 
@@ -78,9 +82,14 @@ class Imputer(IterativeImputer):
             X (DataFrame)
             mask (Mask): empty mask for X
         """
+        X = X.copy()
         for col, unique in self.encoder_dict.items():
+            valid_mask = ~mask[col]
             table = dict(zip(unique, np.arange(len(unique))))
-            X[col].loc[~mask[col]] = np.array([table[v] for v in X[col][~mask[col]]])
+            encoded_col = pd.Series(np.nan, index = X.index, dtype = float)
+            values = X.loc[valid_mask, col].to_numpy(dtype = object)
+            encoded_col.loc[valid_mask] = np.array([table[v] for v in values], dtype = float)
+            X[col] = encoded_col
         
         return X
     
