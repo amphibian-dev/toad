@@ -41,7 +41,7 @@ def test_mask_isna():
     assert m.replay(df).sum() == df['A'].isna().sum()
 
 def test_f():
-    assert F(len)(A)[0] == 500
+    assert F(len)(A).iloc[0] == 500
 
 def test_processing():
     res = (

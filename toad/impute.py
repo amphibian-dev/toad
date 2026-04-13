@@ -49,6 +49,10 @@ class Imputer(IterativeImputer):
     
 
     def _replace_empty(self, X):
+        X = X.copy()
+        # Convert string columns to object dtype to avoid StringDtype issues in newer pandas
+        for col in X.select_dtypes(include=['string']).columns:
+            X[col] = X[col].astype(object)
         mask = X.isin(self.missing_values_list)
         X = X.where(~mask, np.nan)
         return X, mask
@@ -62,17 +66,14 @@ class Imputer(IterativeImputer):
         """
         X = X.copy()
         category_data = X.select_dtypes(exclude = np.number).columns
-        
+
         for col in category_data:
-            valid_mask = ~mask[col]
-            values = X.loc[valid_mask, col].to_numpy(dtype = object)
-            unique, encoded = np.unique(values, return_inverse = True)
+            valid = ~mask[col]
+            unique, inverse = np.unique(X.loc[valid, col], return_inverse = True)
+            X.loc[valid, col] = inverse.astype(float)
 
             self.encoder_dict[col] = unique
-            encoded_col = pd.Series(np.nan, index = X.index, dtype = float)
-            encoded_col.loc[valid_mask] = encoded.astype(float)
-            X[col] = encoded_col
-        
+
         return X
 
     def _encode(self, X, mask):
@@ -84,13 +85,10 @@ class Imputer(IterativeImputer):
         """
         X = X.copy()
         for col, unique in self.encoder_dict.items():
-            valid_mask = ~mask[col]
+            valid = ~mask[col]
             table = dict(zip(unique, np.arange(len(unique))))
-            encoded_col = pd.Series(np.nan, index = X.index, dtype = float)
-            values = X.loc[valid_mask, col].to_numpy(dtype = object)
-            encoded_col.loc[valid_mask] = np.array([table[v] for v in values], dtype = float)
-            X[col] = encoded_col
-        
+            X.loc[valid, col] = np.array([table[v] for v in X.loc[valid, col]]).astype(float)
+
         return X
     
     def _decode(self, X):
