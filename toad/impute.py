@@ -51,6 +51,10 @@ class Imputer(IterativeImputer):
     
 
     def _replace_empty(self, X):
+        X = X.copy()
+        # Convert string columns to object dtype to avoid StringDtype issues in newer pandas
+        for col in X.select_dtypes(include=['string']).columns:
+            X[col] = X[col].astype(object)
         mask = X.isin(self.missing_values_list)
         X = X.where(~mask, np.nan)
         return X, mask
@@ -63,12 +67,14 @@ class Imputer(IterativeImputer):
             mask (Mask): empty mask for X
         """
         category_data = X.select_dtypes(exclude = np.number).columns
-        
+
         for col in category_data:
-            unique, X[col].loc[~mask[col]] = np.unique(X[col][~mask[col]], return_inverse = True)
+            valid = ~mask[col]
+            unique, inverse = np.unique(X.loc[valid, col], return_inverse = True)
+            X.loc[valid, col] = inverse.astype(float)
 
             self.encoder_dict[col] = unique
-        
+
         return X
 
     def _encode(self, X, mask):
@@ -79,9 +85,10 @@ class Imputer(IterativeImputer):
             mask (Mask): empty mask for X
         """
         for col, unique in self.encoder_dict.items():
+            valid = ~mask[col]
             table = dict(zip(unique, np.arange(len(unique))))
-            X[col].loc[~mask[col]] = np.array([table[v] for v in X[col][~mask[col]]])
-        
+            X.loc[valid, col] = np.array([table[v] for v in X.loc[valid, col]]).astype(float)
+
         return X
     
     def _decode(self, X):

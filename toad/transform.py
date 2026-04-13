@@ -100,7 +100,7 @@ class Transformer(TransformerMixin, RulesMixin):
 
     def _check_duplicated_keys(self, X):
         if isinstance(X, pd.DataFrame) and X.columns.has_duplicates:
-            keys = X.columns[X.columns.duplicated()].values
+            keys = X.columns[X.columns.duplicated()].tolist()
             raise Exception("X has duplicate keys `{keys}`".format(keys = str(keys)))
         
         return True

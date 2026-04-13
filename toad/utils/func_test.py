@@ -103,7 +103,7 @@ def test_bin_to_number_for_frame():
         },
     ])
 
-    res = df.applymap(bin_to_number())
+    res = df.map(bin_to_number())
     assert res.loc[1, 'area_2'] == 225
 
 def test_generate_target():
