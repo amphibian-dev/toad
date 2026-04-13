@@ -1,10 +1,8 @@
 import numpy as np
 import pandas as pd
-from pandas.api.types import is_numeric_dtype
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.preprocessing import LabelEncoder
 
 
 
@@ -66,6 +64,7 @@ class Imputer(IterativeImputer):
             X (DataFrame)
             mask (Mask): empty mask for X
         """
+        X = X.copy()
         category_data = X.select_dtypes(exclude = np.number).columns
 
         for col in category_data:
@@ -84,6 +83,7 @@ class Imputer(IterativeImputer):
             X (DataFrame)
             mask (Mask): empty mask for X
         """
+        X = X.copy()
         for col, unique in self.encoder_dict.items():
             valid = ~mask[col]
             table = dict(zip(unique, np.arange(len(unique))))

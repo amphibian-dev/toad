@@ -188,6 +188,8 @@ class Combiner(Transformer, BinsMixin):
             method (str): the strategy to be used to merge `X`, same as `.merge`, default is `chi`
             n_bins (int): counts of bins will be combined
             empty_separate (bool): if need to combine empty values into a separate group
+            **kwargs: forwarded to the underlying merge method, such as
+                `constraint_mode` for `method='chi'`
         """
         from .merge import merge
         

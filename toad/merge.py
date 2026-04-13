@@ -42,6 +42,19 @@ except ImportError as e:
 DEFAULT_BINS = 10
 
 
+def _validate_constraint_mode(constraint_mode, n_bins=None, min_samples=None):
+    if constraint_mode not in ('any', 'all'):
+        raise ValueError("`constraint_mode` must be either 'any' or 'all'")
+
+    if constraint_mode == 'all' and n_bins is None and min_samples is None:
+        raise ValueError(
+            "`constraint_mode='all'` requires `n_bins` and/or `min_samples`; "
+            "`min_threshold` is ignored in this mode"
+        )
+
+    return constraint_mode
+
+
 def StepMerge(feature, nan=None, n_bins=None, clip_v=None, clip_std=None, clip_q=None):
     """Merge by step
 
@@ -163,7 +176,8 @@ def DTMerge(feature, target, nan=-1, n_bins=None, min_samples=1, **kwargs):
 # If not available, provide a fallback
 if _chi_merge_rust is None:
     def ChiMerge(feature, target, n_bins=None, min_samples=None,
-                min_threshold=None, nan=-1, balance=True):
+                min_threshold=None, nan=-1, balance=True,
+                constraint_mode='any'):
         """Chi-Merge (Python fallback)
 
         Note: This is a fallback implementation. For better performance,
@@ -175,10 +189,17 @@ if _chi_merge_rust is None:
             n_bins (int): n bins will be merged into
             min_samples (number): min sample in each group, if float, it will be the percentage of samples
             min_threshold (number): min threshold of chi-square
+            constraint_mode (str): 'any' keeps legacy stop behavior, 'all'
+                requires all provided hard constraints to be satisfied
 
         Returns:
             array: array of split points
         """
+        _validate_constraint_mode(
+            constraint_mode,
+            n_bins=n_bins,
+            min_samples=min_samples,
+        )
         raise NotImplementedError(
             "ChiMerge Rust implementation not available. "
             "Please build the Rust extension with: maturin develop"
@@ -186,7 +207,8 @@ if _chi_merge_rust is None:
 else:
     # Wrap Rust implementation with type conversion
     def ChiMerge(feature, target, n_bins=None, min_samples=None,
-                min_threshold=None, nan=-1, balance=True):
+                min_threshold=None, nan=-1, balance=True,
+                constraint_mode='any'):
         """Chi-Merge using Rust implementation
 
         Args:
@@ -197,10 +219,18 @@ else:
             min_threshold (number): min threshold of chi-square
             nan (number): value to replace NaN
             balance (bool): whether to balance chi-square by group size
+            constraint_mode (str): 'any' keeps legacy stop behavior, 'all'
+                requires all provided hard constraints to be satisfied
 
         Returns:
             array: array of split points
         """
+        _validate_constraint_mode(
+            constraint_mode,
+            n_bins=n_bins,
+            min_samples=min_samples,
+        )
+
         # Convert to numpy arrays without forcing dtype conversion
         feature_arr = to_ndarray(feature)
         target_arr = to_ndarray(target).astype(np.int32)
@@ -214,7 +244,8 @@ else:
                 min_samples=min_samples,
                 min_threshold=min_threshold,
                 nan=float(nan),
-                balance=balance
+                balance=balance,
+                constraint_mode=constraint_mode
             )
         elif _chi_merge_rust_i32 is not None and np.issubdtype(feature_arr.dtype, np.integer) and feature_arr.dtype in [np.int32]:
             # Use i32 version for int32 data
@@ -224,7 +255,8 @@ else:
                 min_samples=min_samples,
                 min_threshold=min_threshold,
                 nan=int(nan),
-                balance=balance
+                balance=balance,
+                constraint_mode=constraint_mode
             )
         elif _chi_merge_rust_i64 is not None and np.issubdtype(feature_arr.dtype, np.integer):
             # Use i64 version for integer data (default for integers)
@@ -234,7 +266,8 @@ else:
                 min_samples=min_samples,
                 min_threshold=min_threshold,
                 nan=int(nan),
-                balance=balance
+                balance=balance,
+                constraint_mode=constraint_mode
             )
         else:
             # Fallback to original implementation for compatibility
@@ -246,7 +279,8 @@ else:
                 min_samples=min_samples,
                 min_threshold=min_threshold,
                 nan=nan,
-                balance=balance
+                balance=balance,
+                constraint_mode=constraint_mode
             )
 
 
