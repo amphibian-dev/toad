@@ -431,6 +431,11 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
             pip install toad[pmml]  (sklearn2pmml >= 0.80, sklearn-pandas >= 2.0)
             Java 11+ runtime
         """
+        if not self.rules:
+            raise RuntimeError(
+                "No scorecard rules found. Call fit() or load() before card2pmml()."
+            )
+
         try:
             from sklearn_pandas import DataFrameMapper
             from sklearn.linear_model import LinearRegression
@@ -441,11 +446,6 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
                 "card2pmml requires 'sklearn2pmml' and 'sklearn-pandas'. "
                 "Install them with: pip install toad[pmml]"
             ) from e
-
-        if not self.rules:
-            raise RuntimeError(
-                "No scorecard rules found. Call fit() or load() before card2pmml()."
-            )
 
         mapper = []
         for var, rule in self.rules.items():
