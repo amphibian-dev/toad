@@ -60,21 +60,17 @@ setup(
     include_package_data = True,
     python_requires = '>=3.7',
     setup_requires = ['numpy'],
-    install_requires = get_requirements(),
-    extras_require = {
-        'nn': get_requirements('nn')
-    },
     tests_require = get_requirements('test'),
     license = 'MIT',
     classifiers = [
         'Operating System :: POSIX',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
     ],
     entry_points = {
         'console_scripts': [

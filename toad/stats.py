@@ -340,6 +340,7 @@ def quality(dataframe, target = 'target', cpu_cores = 0, iv_only = False, indica
         dataframe (DataFrame): dataframe that will be calculate quality
         target (str): the target's name in dataframe
         iv_only (bool): `deprecated`. if only calculate IV
+        indicators (list): indictors will be calc, it can be customized indictor functions, default is ['iv', 'gini', 'entropy', 'unique']
         cpu_cores (int): the maximun number of CPU cores will be used, `0` means all CPUs will be used, 
             `-1` means all CPUs but one will be used.
 

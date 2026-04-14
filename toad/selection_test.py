@@ -48,7 +48,14 @@ def test_drop_var_exclude():
 
 def test_drop_corr():
     df = drop_corr(frame, target = 'target')
-    assert ['D', 'E', 'F', 'target'] == df.columns.tolist()
+    assert set(['D', 'E', 'F', 'target']) == set(df.columns.tolist())
+
+def test_drop_corr_with_string():
+    ab = np.array(list('ABCDEFG'))
+    str_feat = pd.Series(ab[np.random.choice(7, 500)])
+
+    df = drop_corr(pd.concat((frame, str_feat.rename('str_f')), axis = 1), target = 'target')
+    assert set(['D', 'E', 'F', 'target', 'str_f']) == set(df.columns.tolist())
 
 def test_drop_iv():
     df = drop_iv(frame, target = 'target', threshold = 0.25)

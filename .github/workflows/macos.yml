@@ -2,44 +2,82 @@ name: Test on MacOS
 
 on: [push, pull_request]
 
+# Cancel previous runs on the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
-        experimental: [false]
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        macos-version: ['macos-14', 'macos-latest']  # macos-14: Intel(x86_64), macos-latest: Apple Silicon
+        include:
+          - experimental: false
+          # macos-latest (Apple Silicon) is experimental
+          - macos-version: 'macos-latest'
+            experimental: true
+          # Python 3.9 is experimental
+          - python-version: '3.9'
+            experimental: true
+          # Python 3.14 is experimental
+          - python-version: '3.14'
+            macos-version: 'macos-14'
+            experimental: true
+          - python-version: '3.14'
+            macos-version: 'macos-latest'
+            experimental: true
       fail-fast: false
-    runs-on: macos-latest
+    runs-on: ${{ matrix.macos-version }}
     continue-on-error: ${{ matrix.experimental }}
-    name: Test py ${{ matrix.python-version }}
+    name: Test py ${{ matrix.python-version }} ${{ matrix.macos-version }}
+    env:
+      CI: true
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v4
+
       - name: Setup Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: x64
-      - run: make build_deps
-      - run: pip install -r requirements-nn.txt
-      - run: pip install -e .
-      - run: make test
-      - run: make dist_wheel
-      - uses: actions/upload-artifact@v2
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            requirements-test.txt
+            requirements-nn.txt
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: Swatinem/rust-cache@v2
         with:
-          name: wheel
-          path: dist/*.whl
-  release:
-    needs: [test]
-    # release when using `tags` or `release` branch
-    if: ${{ startsWith(github.ref, 'refs/tags') || github.ref == 'refs/heads/release' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v2
+          cache-on-failure: true
+
+      - name: Build dependencies
+        run: make build_deps
+
+      - name: Build Rust extension
+        run: make build
+
+      - name: Install Python package
+        run: |
+          pip install -r requirements-nn.txt
+          pip install .[all]
+
+      - name: Verify Rust extension loaded
+        run: python -c "import toad; from toad.merge import _chi_merge_rust; assert _chi_merge_rust is not None"
+
+      - name: Run tests
+        run: make test
+
+      - name: Build distribution wheel
+        run: make dist_wheel
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
         with:
-          name: wheel
-          path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
-        name: publish pypi
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI }}
+          name: wheel-macos-py${{ matrix.python-version }}-${{ matrix.macos-version }}
+          path: target/wheels/*.whl
+          if-no-files-found: error

@@ -2,7 +2,12 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from .decorator import Decorator, frame_exclude, xgb_loss
+from .decorator import (
+    Decorator,
+    frame_exclude,
+    xgb_loss,
+    performance,
+)
 
 np.random.seed(1)
 
@@ -53,3 +58,25 @@ def test_xgb_loss():
 
     assert grad == pytest.approx(-3.0)
     assert hess == pytest.approx(0.0)
+
+
+def test_performance():
+    @performance(loop = 10)
+    def func(x):
+        from time import sleep
+        sleep(0.01)
+        return x**x
+    
+    assert func(2) == 4
+
+
+def test_performance_with_clause():
+    def func(x):
+        from time import sleep
+        sleep(0.01)
+        return x**x
+    
+    with performance():
+        res = func(2)
+    
+    assert res == 4

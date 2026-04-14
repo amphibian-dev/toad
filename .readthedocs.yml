@@ -1,16 +1,19 @@
 version: 2
 
+build:
+  os: ubuntu-22.04
+  tools:
+    python: "3.11"
+
 sphinx:
-    configuration: docs/source/conf.py
+  configuration: docs/source/conf.py
 
 formats: all
 
 python:
-    version: 3.8
-    install:
-        - requirements: requirements.txt
-        - requirements: requirements-nn.txt
-        - requirements: docs/requirements.txt
-        -
-            method: setuptools
-            path: .
+  install:
+    - requirements: requirements.txt
+    - requirements: requirements-nn.txt
+    - requirements: docs/requirements.txt
+    - method: setuptools
+      path: .

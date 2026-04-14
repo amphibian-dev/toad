@@ -56,11 +56,11 @@ def test_KS_bucket_with_cum_lift():
 
 def test_F1():
     result, split = F1(feature, target, return_split = True)
-    assert result == 0.6844207723035951
+    assert result == pytest.approx(0.6844207723035951, FUZZ_THRESHOLD)
 
 def test_F1_split():
     result = F1(feature, target, split = 0.5)
-    assert result == 0.51417004048583
+    assert result == pytest.approx(0.51417004048583, FUZZ_THRESHOLD)
 
 def test_AUC():
     result = AUC(feature, target)

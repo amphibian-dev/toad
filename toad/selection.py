@@ -161,6 +161,10 @@ def stepwise(frame, target = 'target', estimator = 'ols', direction = 'both', cr
         test_res = np.empty(l, dtype = object)
 
         if direction == 'backward':
+            # break when only one single feature left
+            if l < 2:
+                break
+
             for i in range(l):
                 test_res[i] = sm.stats(
                     df[ remaining[:i] + remaining[i+1:] ],
@@ -326,7 +330,12 @@ def drop_corr(frame, target = None, threshold = 0.7, by = 'IV',
 
     f, t = split_target(frame[cols], target)
 
-    corr = f.corr().abs()
+    import inspect
+    corr_params = {}
+    if 'numeric_only' in inspect.signature(f.corr).parameters.keys():
+        corr_params['numeric_only'] = True
+    
+    corr = f.corr(**corr_params).abs()
 
     drops = []
 

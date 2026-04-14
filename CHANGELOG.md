@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.5] - 2025-02-18
+
+### Add
+- Added `ax` support for `plot`
+- Added `Apple M1` support
+
+## [0.1.4] - 2024-11-03
+
+### Add
+- Added wheel package supported for `py3.12`
+- Added `figsize` param in `toad.plot.bin_plot` function
+
+### Changed
+- Update `pandas` version to `>=1.5`
+- Python `3.7` `3.8` is no longer supported
+
+## [0.1.3] - 2023-12-10
+
+### Add
+- Added `performance` in `toad.utils` for test code performance
+- Added `pickletracer` in `toad.utils` for infer requirements in pickle object
+
+### Fixed
+- Fixed `Value Error` in `select` and `drop_corr` method when using `pandas >= 2.0.x`
+
 ## [0.1.2] - 2023-04-09
 
 ### Add

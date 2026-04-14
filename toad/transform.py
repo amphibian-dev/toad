@@ -100,7 +100,7 @@ class Transformer(TransformerMixin, RulesMixin):
 
     def _check_duplicated_keys(self, X):
         if isinstance(X, pd.DataFrame) and X.columns.has_duplicates:
-            keys = X.columns[X.columns.duplicated()].values
+            keys = X.columns[X.columns.duplicated()].tolist()
             raise Exception("X has duplicate keys `{keys}`".format(keys = str(keys)))
         
         return True
@@ -188,6 +188,8 @@ class Combiner(Transformer, BinsMixin):
             method (str): the strategy to be used to merge `X`, same as `.merge`, default is `chi`
             n_bins (int): counts of bins will be combined
             empty_separate (bool): if need to combine empty values into a separate group
+            **kwargs: forwarded to the underlying merge method, such as
+                `constraint_mode` for `method='chi'`
         """
         from .merge import merge
         
