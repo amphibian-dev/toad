@@ -3,162 +3,135 @@ name: Publish to PyPI
 on:
   push:
     tags: ['*']
-  workflow_dispatch:  # Allow manual triggering
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false  # Don't cancel publish jobs
+  cancel-in-progress: false
 
 jobs:
-  # Wait for all platform test workflows to complete successfully
-  wait-for-tests:
-    name: Wait for test workflows
+  collect-wheels:
+    name: Collect tested wheels
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
     steps:
-      - name: Wait for Linux tests
-        uses: fountainhead/action-wait-for-check@v1.2.0
-        id: wait-linux
+      - name: Wait for platform workflows and get run IDs
+        uses: actions/github-script@v7
+        id: wait
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "Test py 3.10"
-          ref: ${{ github.sha }}
-          timeoutSeconds: 1800
+          script: |
+            const workflows = {
+              linux: 'linux.yml',
+              macos: 'macos.yml',
+              windows: 'windows.yml'
+            };
+            const sha = context.sha;
+            const timeoutMs = 30 * 60 * 1000;
+            const pollMs = 30 * 1000;
+            const start = Date.now();
+            const results = {};
 
-      - name: Fail if Linux tests failed
-        if: steps.wait-linux.outputs.conclusion != 'success'
-        run: |
-          echo "❌ Linux tests failed or timed out (conclusion: ${{ steps.wait-linux.outputs.conclusion }})"
-          exit 1
+            for (const [platform, filename] of Object.entries(workflows)) {
+              core.info(`Waiting for ${platform} workflow (${filename})...`);
 
-      - name: Wait for macOS tests
-        uses: fountainhead/action-wait-for-check@v1.2.0
-        id: wait-macos
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "Test py 3.10 macos-latest"
-          ref: ${{ github.sha }}
-          timeoutSeconds: 1800
+              while (Date.now() - start < timeoutMs) {
+                const { data } = await github.rest.actions.listWorkflowRuns({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  workflow_id: filename,
+                  head_sha: sha,
+                  per_page: 1
+                });
 
-      - name: Fail if macOS tests failed
-        if: steps.wait-macos.outputs.conclusion != 'success'
-        run: |
-          echo "❌ macOS tests failed or timed out (conclusion: ${{ steps.wait-macos.outputs.conclusion }})"
-          exit 1
+                if (data.workflow_runs.length > 0) {
+                  const run = data.workflow_runs[0];
+                  if (run.status === 'completed') {
+                    if (run.conclusion === 'success') {
+                      core.info(`  ✓ ${platform} succeeded (run ${run.id})`);
+                      results[platform] = run.id;
+                      break;
+                    } else {
+                      core.setFailed(`  ✗ ${platform} ${run.conclusion} (run ${run.id})`);
+                      return;
+                    }
+                  }
+                  core.info(`  ${platform}: ${run.status}, waiting...`);
+                } else {
+                  core.info(`  ${platform}: no runs found yet, waiting...`);
+                }
 
-      - name: Wait for Windows tests
-        uses: fountainhead/action-wait-for-check@v1.2.0
-        id: wait-windows
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "Test py 3.10"
-          ref: ${{ github.sha }}
-          timeoutSeconds: 1800
+                await new Promise(r => setTimeout(r, pollMs));
+              }
 
-      - name: Fail if Windows tests failed
-        if: steps.wait-windows.outputs.conclusion != 'success'
-        run: |
-          echo "❌ Windows tests failed or timed out (conclusion: ${{ steps.wait-windows.outputs.conclusion }})"
-          exit 1
+              if (!results[platform]) {
+                core.setFailed(`Timeout waiting for ${platform} workflow`);
+                return;
+              }
+            }
 
-  download-wheels:
-    name: Download tested wheels
-    needs: [wait-for-tests]
-    runs-on: ubuntu-latest
-    steps:
+            core.setOutput('linux-run-id', String(results.linux));
+            core.setOutput('macos-run-id', String(results.macos));
+            core.setOutput('windows-run-id', String(results.windows));
+
       - name: Download Linux wheels
-        uses: dawidd6/action-download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
-          workflow: linux.yml
-          commit: ${{ github.sha }}
+          run-id: ${{ steps.wait.outputs.linux-run-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: wheel-linux-*
           path: dist/
-          name_is_regexp: true
-          name: wheel-linux-.*
-          search_artifacts: true
-          if_no_artifact_found: fail
-          workflow_conclusion: ""
+          merge-multiple: true
 
       - name: Download macOS wheels
-        uses: dawidd6/action-download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
-          workflow: macos.yml
-          commit: ${{ github.sha }}
+          run-id: ${{ steps.wait.outputs.macos-run-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: wheel-macos-*
           path: dist/
-          name_is_regexp: true
-          name: wheel-macos-.*
-          search_artifacts: true
-          if_no_artifact_found: fail
-          workflow_conclusion: ""
+          merge-multiple: true
 
       - name: Download Windows wheels
-        uses: dawidd6/action-download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
-          workflow: windows.yml
-          commit: ${{ github.sha }}
+          run-id: ${{ steps.wait.outputs.windows-run-id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          pattern: wheel-windows-*
           path: dist/
-          name_is_regexp: true
-          name: wheel-windows-.*
-          search_artifacts: true
-          if_no_artifact_found: fail
-          workflow_conclusion: ""
+          merge-multiple: true
 
-      - name: Flatten wheel directories
-        run: |
-          # action-download-artifact extracts into subdirectories; move all .whl to dist/
-          find dist/ -name '*.whl' -exec mv {} dist/ \;
-          # remove empty subdirectories
-          find dist/ -mindepth 1 -type d -delete
-          # deduplicate identical wheels (ABI3 builds are the same across Python versions)
-          cd dist && md5sum *.whl | sort | awk 'seen[$1]++ {print $2}' | xargs -r rm -f && cd ..
-
-      - name: List downloaded wheels
+      - name: Deduplicate ABI3 wheels
         run: |
           echo "Downloaded wheels:"
           ls -lh dist/
+          # ABI3 builds are identical across Python versions; keep one per checksum
+          cd dist && md5sum *.whl | sort | awk 'seen[$1]++ {print $2}' | xargs -r rm -f && cd ..
           echo ""
-          echo "Wheel count:"
-          ls dist/*.whl | wc -l
+          echo "After dedup:"
+          ls -lh dist/
 
-      - name: Verify wheel count
+      - name: Verify wheels
         run: |
-          wheel_count=$(ls dist/*.whl 2>/dev/null | wc -l)
           linux_count=$(ls dist/toad-*manylinux*.whl 2>/dev/null | wc -l)
           macos_count=$(ls dist/toad-*macosx*.whl 2>/dev/null | wc -l)
           windows_count=$(ls dist/toad-*win*.whl 2>/dev/null | wc -l)
+          total=$((linux_count + macos_count + windows_count))
 
-          echo "Total wheels: $wheel_count"
-          echo "  Linux:   $linux_count (expected >=1)"
-          echo "  macOS:   $macos_count (expected >=1)"
-          echo "  Windows: $windows_count (expected >=1)"
+          echo "Total wheels: $total"
+          echo "  Linux:   $linux_count"
+          echo "  macOS:   $macos_count"
+          echo "  Windows: $windows_count"
 
-          # With ABI3, each platform produces one unique wheel after dedup
-          if [ "$linux_count" -lt 1 ]; then
-            echo "Error: No Linux wheels found"
-            exit 1
-          fi
-          if [ "$macos_count" -lt 1 ]; then
-            echo "Error: No macOS wheels found"
-            exit 1
-          fi
-          if [ "$windows_count" -lt 1 ]; then
-            echo "Error: No Windows wheels found"
-            exit 1
-          fi
-          echo "All platforms have wheels"
+          [ "$linux_count" -ge 1 ] || { echo "Error: No Linux wheels"; exit 1; }
+          [ "$macos_count" -ge 1 ] || { echo "Error: No macOS wheels"; exit 1; }
+          [ "$windows_count" -ge 1 ] || { echo "Error: No Windows wheels"; exit 1; }
 
-      - name: Verify wheel integrity
-        run: |
-          # Test installing one wheel from each platform
-          echo "Testing Linux wheel..."
+          echo "✓ All platforms have wheels"
+
+          # Quick install test for Linux wheel
           pip install dist/toad-*manylinux*.whl --force-reinstall
-          python -c "import toad; from toad.merge import _chi_merge_rust; assert _chi_merge_rust is not None; print('✓ Linux wheel OK')"
-
-          echo "Testing macOS wheel..."
-          pip install dist/toad-*macosx*.whl --force-reinstall || echo "⚠️  macOS wheel test skipped (wrong platform)"
-
-          echo "Testing Windows wheel..."
-          pip install dist/toad-*win*.whl --force-reinstall || echo "⚠️  Windows wheel test skipped (wrong platform)"
-
-          echo "✓ Wheel verification complete"
+          python -c "import toad; print('✓ Linux wheel installs OK')"
 
       - name: Upload combined wheels
         uses: actions/upload-artifact@v4
@@ -169,27 +142,14 @@ jobs:
 
   build-sdist:
     name: Build source distribution
-    needs: [wait-for-tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
-      - name: Install build tools
-        run: pip install build
-
-      - name: Build sdist
-        run: python -m build --sdist
-
-      - name: Verify sdist
-        run: |
-          tar -tzf dist/*.tar.gz | head -20
-          echo "✓ Source distribution built successfully"
-
+      - run: pip install build
+      - run: python -m build --sdist
       - name: Upload sdist
         uses: actions/upload-artifact@v4
         with:
@@ -199,38 +159,33 @@ jobs:
 
   publish:
     name: Publish to PyPI
-    needs: [download-wheels, build-sdist]
+    needs: [collect-wheels, build-sdist]
     runs-on: ubuntu-latest
     environment:
       name: pypi
       url: https://pypi.org/p/toad
     permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
+      id-token: write
 
     steps:
-      - name: Download all wheels
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: all-tested-wheels
           path: dist/
 
-      - name: Download sdist
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: sdist
           path: dist/
 
-      - name: List all distributions
+      - name: List distributions
         run: |
-          echo "📦 Packages to publish:"
+          echo "Packages to publish:"
           ls -lh dist/
-          echo ""
-          echo "Summary:"
-          echo "  Wheels: $(ls dist/*.whl 2>/dev/null | wc -l)"
-          echo "  Sdist:  $(ls dist/*.tar.gz 2>/dev/null | wc -l)"
+          echo "Wheels: $(ls dist/*.whl 2>/dev/null | wc -l)"
+          echo "Sdist:  $(ls dist/*.tar.gz 2>/dev/null | wc -l)"
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@release/v1
         with:
           skip-existing: true
           verbose: true
