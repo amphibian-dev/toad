@@ -10,34 +10,55 @@ concurrency:
   cancel-in-progress: false  # Don't cancel publish jobs
 
 jobs:
-  # Wait for all test workflows to complete
+  # Wait for all platform test workflows to complete successfully
   wait-for-tests:
     name: Wait for test workflows
     runs-on: ubuntu-latest
     steps:
       - name: Wait for Linux tests
         uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-linux
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "Test py 3.10"  # Representative test from linux.yml
+          checkName: "Test py 3.10"
           ref: ${{ github.sha }}
           timeoutSeconds: 1800
+
+      - name: Fail if Linux tests failed
+        if: steps.wait-linux.outputs.conclusion != 'success'
+        run: |
+          echo "❌ Linux tests failed or timed out (conclusion: ${{ steps.wait-linux.outputs.conclusion }})"
+          exit 1
 
       - name: Wait for macOS tests
         uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-macos
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "Test py 3.10 macos-latest"  # Representative test from macos.yml
+          checkName: "Test py 3.10 macos-latest"
           ref: ${{ github.sha }}
           timeoutSeconds: 1800
 
+      - name: Fail if macOS tests failed
+        if: steps.wait-macos.outputs.conclusion != 'success'
+        run: |
+          echo "❌ macOS tests failed or timed out (conclusion: ${{ steps.wait-macos.outputs.conclusion }})"
+          exit 1
+
       - name: Wait for Windows tests
         uses: fountainhead/action-wait-for-check@v1.2.0
+        id: wait-windows
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          checkName: "Test py 3.10"  # Representative test from windows.yml (different from Linux)
+          checkName: "Test py 3.10"
           ref: ${{ github.sha }}
           timeoutSeconds: 1800
+
+      - name: Fail if Windows tests failed
+        if: steps.wait-windows.outputs.conclusion != 'success'
+        run: |
+          echo "❌ Windows tests failed or timed out (conclusion: ${{ steps.wait-windows.outputs.conclusion }})"
+          exit 1
 
   download-wheels:
     name: Download tested wheels
@@ -52,6 +73,8 @@ jobs:
           path: dist/
           name_is_regexp: true
           name: wheel-linux-.*
+          search_artifacts: true
+          if_no_artifact_found: fail
 
       - name: Download macOS wheels
         uses: dawidd6/action-download-artifact@v6
@@ -61,6 +84,8 @@ jobs:
           path: dist/
           name_is_regexp: true
           name: wheel-macos-.*
+          search_artifacts: true
+          if_no_artifact_found: fail
 
       - name: Download Windows wheels
         uses: dawidd6/action-download-artifact@v6
@@ -70,6 +95,8 @@ jobs:
           path: dist/
           name_is_regexp: true
           name: wheel-windows-.*
+          search_artifacts: true
+          if_no_artifact_found: fail
 
       - name: List downloaded wheels
         run: |
@@ -82,15 +109,30 @@ jobs:
       - name: Verify wheel count
         run: |
           wheel_count=$(ls dist/*.whl 2>/dev/null | wc -l)
-          echo "Found $wheel_count wheels"
+          linux_count=$(ls dist/toad-*manylinux*.whl 2>/dev/null | wc -l)
+          macos_count=$(ls dist/toad-*macosx*.whl 2>/dev/null | wc -l)
+          windows_count=$(ls dist/toad-*win*.whl 2>/dev/null | wc -l)
 
-          # Expected: Linux(5) + macOS(10) + Windows(5) = 20 wheels
-          # But some may be experimental and fail, so check for minimum
-          if [ "$wheel_count" -lt 15 ]; then
-            echo "❌ Error: Expected at least 15 wheels, found $wheel_count"
+          echo "Total wheels: $wheel_count"
+          echo "  Linux:   $linux_count (expected ≥5)"
+          echo "  macOS:   $macos_count (expected ��5)"
+          echo "  Windows: $windows_count (expected ≥5)"
+
+          # Each platform must have at least 5 wheels (py3.9-3.13)
+          # Experimental (py3.14) may fail, so we don't require them
+          if [ "$linux_count" -lt 5 ]; then
+            echo "❌ Error: Linux wheels incomplete ($linux_count < 5)"
             exit 1
           fi
-          echo "✓ Wheel count OK"
+          if [ "$macos_count" -lt 5 ]; then
+            echo "❌ Error: macOS wheels incomplete ($macos_count < 5)"
+            exit 1
+          fi
+          if [ "$windows_count" -lt 5 ]; then
+            echo "❌ Error: Windows wheels incomplete ($windows_count < 5)"
+            exit 1
+          fi
+          echo "✓ All platforms have sufficient wheels"
 
       - name: Verify wheel integrity
         run: |

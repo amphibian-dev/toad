@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-04-14
+
+### Added
+- Added `card2pmml()` method for exporting scorecards to PMML format
+- Added `constraint_mode` parameter for ChiMerge binning
+- Added `[pmml]` optional dependency group (`sklearn2pmml`, `sklearn-pandas`)
+
+### Changed
+- Migrated ChiMerge to Rust (PyO3/maturin) for performance
+- Fixed pandas 3.x compatibility issues
+- Updated CI: Python 3.14 support, improved publish workflow safety
+
 ## [0.1.5] - 2025-02-18
 
 ### Add
@@ -196,7 +208,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - VIF independent statsmodels.
 
 
-[Unreleased]: https://github.com/amphibian-dev/toad/compare/0.1.0...HEAD
+[Unreleased]: https://github.com/amphibian-dev/toad/compare/0.1.6...HEAD
+[0.1.6]: https://github.com/amphibian-dev/toad/compare/0.1.5...0.1.6
+[0.1.5]: https://github.com/amphibian-dev/toad/compare/0.1.4...0.1.5
+[0.1.4]: https://github.com/amphibian-dev/toad/compare/0.1.3...0.1.4
+[0.1.3]: https://github.com/amphibian-dev/toad/compare/0.1.2...0.1.3
+[0.1.2]: https://github.com/amphibian-dev/toad/compare/0.1.1...0.1.2
+[0.1.1]: https://github.com/amphibian-dev/toad/compare/0.1.0...0.1.1
 [0.1.0]: https://github.com/amphibian-dev/toad/compare/0.0.65...0.1.0
 [0.0.65]: https://github.com/amphibian-dev/toad/compare/0.0.64...0.0.65
 [0.0.64]: https://github.com/amphibian-dev/toad/compare/0.0.62...0.0.64

@@ -1,6 +1,6 @@
 [package]
 name = "toad"
-version = "0.1.5"
+version = "0.1.6"
 edition = "2021"
 authors = ["ESC Team <secbone@gmail.com>"]
 description = "Toad is dedicated to facilitating model development process, especially for a scorecard."
