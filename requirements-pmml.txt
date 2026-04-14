@@ -1,0 +1,2 @@
+sklearn2pmml >= 0.80
+sklearn-pandas >= 2.0
