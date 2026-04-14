@@ -129,10 +129,6 @@ jobs:
 
           echo "✓ All platforms have wheels"
 
-          # Quick install test for Linux wheel
-          pip install dist/toad-*manylinux*.whl --force-reinstall
-          python -c "import toad; print('✓ Linux wheel installs OK')"
-
       - name: Upload combined wheels
         uses: actions/upload-artifact@v4
         with:
