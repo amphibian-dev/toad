@@ -101,6 +101,15 @@ jobs:
           if_no_artifact_found: fail
           workflow_conclusion: ""
 
+      - name: Flatten wheel directories
+        run: |
+          # action-download-artifact extracts into subdirectories; move all .whl to dist/
+          find dist/ -name '*.whl' -exec mv {} dist/ \;
+          # remove empty subdirectories
+          find dist/ -mindepth 1 -type d -delete
+          # deduplicate identical wheels (ABI3 builds are the same across Python versions)
+          cd dist && md5sum *.whl | sort | awk 'seen[$1]++ {print $2}' | xargs -r rm -f && cd ..
+
       - name: List downloaded wheels
         run: |
           echo "Downloaded wheels:"
@@ -117,25 +126,24 @@ jobs:
           windows_count=$(ls dist/toad-*win*.whl 2>/dev/null | wc -l)
 
           echo "Total wheels: $wheel_count"
-          echo "  Linux:   $linux_count (expected ≥5)"
-          echo "  macOS:   $macos_count (expected ��5)"
-          echo "  Windows: $windows_count (expected ≥5)"
+          echo "  Linux:   $linux_count (expected >=1)"
+          echo "  macOS:   $macos_count (expected >=1)"
+          echo "  Windows: $windows_count (expected >=1)"
 
-          # Each platform must have at least 5 wheels (py3.9-3.13)
-          # Experimental (py3.14) may fail, so we don't require them
-          if [ "$linux_count" -lt 5 ]; then
-            echo "❌ Error: Linux wheels incomplete ($linux_count < 5)"
+          # With ABI3, each platform produces one unique wheel after dedup
+          if [ "$linux_count" -lt 1 ]; then
+            echo "Error: No Linux wheels found"
             exit 1
           fi
-          if [ "$macos_count" -lt 5 ]; then
-            echo "❌ Error: macOS wheels incomplete ($macos_count < 5)"
+          if [ "$macos_count" -lt 1 ]; then
+            echo "Error: No macOS wheels found"
             exit 1
           fi
-          if [ "$windows_count" -lt 5 ]; then
-            echo "❌ Error: Windows wheels incomplete ($windows_count < 5)"
+          if [ "$windows_count" -lt 1 ]; then
+            echo "Error: No Windows wheels found"
             exit 1
           fi
-          echo "✓ All platforms have sufficient wheels"
+          echo "All platforms have wheels"
 
       - name: Verify wheel integrity
         run: |
