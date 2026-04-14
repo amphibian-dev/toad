@@ -75,6 +75,7 @@ jobs:
           name: wheel-linux-.*
           search_artifacts: true
           if_no_artifact_found: fail
+          workflow_conclusion: ""
 
       - name: Download macOS wheels
         uses: dawidd6/action-download-artifact@v6
@@ -86,6 +87,7 @@ jobs:
           name: wheel-macos-.*
           search_artifacts: true
           if_no_artifact_found: fail
+          workflow_conclusion: ""
 
       - name: Download Windows wheels
         uses: dawidd6/action-download-artifact@v6
@@ -97,6 +99,7 @@ jobs:
           name: wheel-windows-.*
           search_artifacts: true
           if_no_artifact_found: fail
+          workflow_conclusion: ""
 
       - name: List downloaded wheels
         run: |
