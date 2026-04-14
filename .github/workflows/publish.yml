@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download Linux wheels
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: linux.yml
           commit: ${{ github.sha }}
@@ -54,7 +54,7 @@ jobs:
           name: wheel-linux-.*
 
       - name: Download macOS wheels
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: macos.yml
           commit: ${{ github.sha }}
@@ -63,7 +63,7 @@ jobs:
           name: wheel-macos-.*
 
       - name: Download Windows wheels
-        uses: dawidd6/action-download-artifact@v3
+        uses: dawidd6/action-download-artifact@v6
         with:
           workflow: windows.yml
           commit: ${{ github.sha }}
