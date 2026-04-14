@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
 
-from .scorecard import ScoreCard, WOETransformer, Combiner
+from .scorecard import ScoreCard, WOETransformer, Combiner, _build_numeric_expression
 
 np.random.seed(1)
 
@@ -263,4 +263,95 @@ def test_predict_dict():
     """ a test for scalar inference time cost """
     proba = card.predict(df.iloc[404].to_dict())
     assert proba == TEST_SCORE
+
+
+# --- _build_numeric_expression tests ---
+
+def test_build_numeric_expression_basic():
+    expr = _build_numeric_expression(
+        np.array([3.0, 5.0, 8.0]),
+        np.array([100, 200, 300, 400]),
+    )
+    assert 'X[0] < 3.0' in expr
+    assert 'X[0] < 5.0' in expr
+    assert 'X[0] < 8.0' in expr
+    assert '100.0' in expr
+    assert '400.0' in expr
+    assert 'isnull' not in expr
+
+
+def test_build_numeric_expression_with_nan():
+    expr = _build_numeric_expression(
+        np.array([3.0, 5.0]),
+        np.array([100, 200, 300]),
+        nan_score=500.0,
+    )
+    assert expr.startswith('500.0 if pandas.isnull(X[0])')
+    assert '100.0' in expr
+    assert '300.0' in expr
+
+
+def test_build_numeric_expression_no_splits():
+    expr = _build_numeric_expression(np.array([]), np.array([42]))
+    assert expr == '42.0'
+
+
+def test_build_numeric_expression_no_splits_with_nan():
+    expr = _build_numeric_expression(np.array([]), np.array([42]), nan_score=99.0)
+    assert '99.0' in expr
+    assert '42.0' in expr
+    assert 'isnull' in expr
+
+
+def test_build_numeric_expression_single_split():
+    expr = _build_numeric_expression(np.array([5.0]), np.array([100, 200]))
+    assert 'X[0] < 5.0' in expr
+    assert '100.0' in expr
+    assert '200.0' in expr
+
+
+# --- card2pmml tests ---
+
+def test_card2pmml_missing_rules():
+    sc = ScoreCard()
+    with pytest.raises(RuntimeError, match='No scorecard rules'):
+        sc.card2pmml()
+
+
+def test_card2pmml_import_error(monkeypatch):
+    """Verify helpful ImportError when sklearn2pmml is missing."""
+    import builtins
+    real_import = builtins.__import__
+
+    def mock_import(name, *args, **kwargs):
+        if name == 'sklearn_pandas':
+            raise ImportError('No module')
+        return real_import(name, *args, **kwargs)
+
+    sc = ScoreCard().load(card_config)
+    monkeypatch.setattr(builtins, '__import__', mock_import)
+    with pytest.raises(ImportError, match='pip install toad\\[pmml\\]'):
+        sc.card2pmml()
+
+
+@pytest.fixture
+def pmml_deps():
+    pytest.importorskip('sklearn2pmml')
+    pytest.importorskip('sklearn_pandas')
+    import shutil
+    if shutil.which('java') is None:
+        pytest.skip('Java 11+ required')
+
+
+def test_card2pmml_from_config(pmml_deps, tmp_path):
+    sc = ScoreCard().load(card_config)
+    out = str(tmp_path / 'test_config.pmml')
+    sc.card2pmml(out)
+    assert (tmp_path / 'test_config.pmml').stat().st_size > 0
+
+
+def test_card2pmml_from_fitted(pmml_deps, tmp_path):
+    out = str(tmp_path / 'test_fitted.pmml')
+    card.card2pmml(out)
+    assert (tmp_path / 'test_fitted.pmml').stat().st_size > 0
 

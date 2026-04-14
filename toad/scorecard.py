@@ -15,6 +15,49 @@ FACTOR_EMPTY = 'MISSING'
 FACTOR_UNKNOWN = 'UNKNOWN'
 
 
+def _build_numeric_expression(split_points, scores, nan_score=None):
+    """Build a nested if-else expression for ExpressionTransformer.
+
+    Args:
+        split_points (ndarray): split point values
+        scores (ndarray): scores array, length = len(split_points) + 1
+        nan_score (float|None): score for NaN values
+
+    Returns:
+        str: expression string for ExpressionTransformer
+    """
+    n_splits = len(split_points)
+
+    if n_splits == 0:
+        s = str(float(scores[0]))
+        if nan_score is not None:
+            return f'{nan_score} if pandas.isnull(X[0]) else {s}'
+        return s
+
+    parts = []
+    closing = ''
+
+    if nan_score is not None:
+        parts.append(f'{nan_score} if pandas.isnull(X[0])')
+
+    for i in range(n_splits + 1):
+        score = float(scores[i])
+        if i == 0:
+            if parts:
+                parts.append(f' else ({score} if X[0] < {split_points[i]}')
+                closing += ')'
+            else:
+                parts.append(f'{score} if X[0] < {split_points[i]}')
+        elif i == n_splits:
+            parts.append(f' else {score}')
+        else:
+            parts.append(f' else ({score} if X[0] < {split_points[i]}')
+            closing += ')'
+
+    parts.append(closing)
+    return ''.join(parts)
+
+
 
 class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
     def __init__(self, pdo = 60, rate = 2, base_odds = 35, base_score = 750,
@@ -376,6 +419,88 @@ class ScoreCard(BaseEstimator, RulesMixin, BinsMixin):
 
         return card
 
+
+    def card2pmml(self, pmml_path='scorecard.pmml', debug=False):
+        """Export scorecard to PMML format.
+
+        Args:
+            pmml_path (str): path to write the PMML file
+            debug (bool): if True, print debug info from sklearn2pmml
+
+        Requires:
+            pip install toad[pmml]  (sklearn2pmml >= 0.80, sklearn-pandas >= 2.0)
+            Java 11+ runtime
+        """
+        if not self.rules:
+            raise RuntimeError(
+                "No scorecard rules found. Call fit() or load() before card2pmml()."
+            )
+
+        try:
+            from sklearn_pandas import DataFrameMapper
+            from sklearn.linear_model import LinearRegression
+            from sklearn2pmml import sklearn2pmml, PMMLPipeline
+            from sklearn2pmml.preprocessing import LookupTransformer, ExpressionTransformer
+        except ImportError as e:
+            raise ImportError(
+                "card2pmml requires 'sklearn2pmml' and 'sklearn-pandas'. "
+                "Install them with: pip install toad[pmml]"
+            ) from e
+
+        mapper = []
+        for var, rule in self.rules.items():
+            bins = rule['bins']
+            scores = rule['scores']
+
+            if not np.issubdtype(bins.dtype, np.number):
+                # Categorical feature
+                mapping = {}
+                default_value = 0.0
+                for group, score in zip(bins, scores):
+                    score_f = float(score)
+                    if isinstance(group, str) and group == self.ELSE_GROUP:
+                        default_value = score_f
+                    elif isinstance(group, (list, np.ndarray)):
+                        for val in group:
+                            mapping[val] = score_f
+                    else:
+                        mapping[group] = score_f
+                mapper.append((
+                    [var],
+                    LookupTransformer(mapping=mapping, default_value=default_value),
+                ))
+            else:
+                # Numeric feature
+                has_nan = len(bins) > 0 and np.isnan(bins[-1])
+                if has_nan:
+                    split_points = bins[:-1]
+                    split_scores = scores[:-1]
+                    nan_score = float(scores[-1])
+                else:
+                    split_points = bins
+                    split_scores = scores
+                    nan_score = None
+
+                expression = _build_numeric_expression(
+                    split_points, split_scores, nan_score,
+                )
+                mapper.append(([var], ExpressionTransformer(expression)))
+
+        scorecard_mapper = DataFrameMapper(mapper, df_out=True)
+
+        feature_names = list(self.rules.keys())
+        n_features = len(feature_names)
+        lr = LinearRegression(fit_intercept=False)
+        lr.coef_ = np.ones(n_features)
+        lr.intercept_ = 0.0
+        lr.n_features_in_ = n_features
+        lr.feature_names_in_ = np.array(feature_names)
+
+        pipeline = PMMLPipeline([
+            ('preprocessing', scorecard_mapper),
+            ('scorecard', lr),
+        ])
+        sklearn2pmml(pipeline, pmml_path, with_repr=True, debug=debug)
 
 
     def _generate_testing_frame(self, maps, size = 'max', mishap = True, gap = 1e-2):
