@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] - 2026-05-18
+
+### Fixed
+- Fixed missing `toad/` Python package in wheels — only `toad_core` was installed on all platforms (#162)
+
 ## [0.1.6] - 2026-04-14
 
 ### Added

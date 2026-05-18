@@ -26,6 +26,10 @@ readme = {file = ["README.md"], content-type = "text/markdown"}
 dependencies = {file = ["requirements.txt"]}
 optional-dependencies = {nn = {file = ["requirements-nn.txt"]}, tools = {file = ["requirements-tools.txt"]}, pmml = {file = ["requirements-pmml.txt"]}, all = {file = ["requirements-nn.txt", "requirements-tools.txt", "requirements-pmml.txt"]} }
 
+[tool.maturin]
+python-packages = ["toad"]
+exclude = ["toad/**/*_test.py"]
+
 [build-system]
 requires = [
     "maturin>=1.0,<2.0",
