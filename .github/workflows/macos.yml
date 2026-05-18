@@ -19,7 +19,7 @@ jobs:
             experimental: true
       fail-fast: false
     runs-on: macos-latest
-    continue-on-error: ${{ matrix.experimental }}
+    continue-on-error: ${{ matrix.experimental || false }}
     name: Test py ${{ matrix.python-version }}
     env:
       CI: true
