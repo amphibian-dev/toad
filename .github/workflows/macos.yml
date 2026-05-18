@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        macos-version: ['macos-14', 'macos-latest']  # macos-14: Intel(x86_64), macos-latest: Apple Silicon
+        macos-version: ['macos-13', 'macos-latest']  # macos-13: Intel(x86_64), macos-latest: Apple Silicon (arm64)
         include:
           - experimental: false
           # macos-latest (Apple Silicon) is experimental
@@ -23,7 +23,7 @@ jobs:
             experimental: true
           # Python 3.14 is experimental
           - python-version: '3.14'
-            macos-version: 'macos-14'
+            macos-version: 'macos-13'
             experimental: true
           - python-version: '3.14'
             macos-version: 'macos-latest'

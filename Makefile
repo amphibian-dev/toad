@@ -93,7 +93,7 @@ dist: build dist_deps
 
 dist_wheel: build_deps dist_deps
 	@rm -rf target/wheels/*
-	$(PYTHON) -m maturin build --release
+	$(PYTHON) -m maturin build --release --compression-method stored
 
 upload:
 	$(PYTHON) -m twine check dist/*
