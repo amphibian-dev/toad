@@ -11,27 +11,16 @@ jobs:
   test:
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
-        macos-version: ['macos-13', 'macos-latest']  # macos-13: Intel(x86_64), macos-latest: Apple Silicon (arm64)
+        python-version: ['3.10', '3.11', '3.12', '3.13']
         include:
-          - experimental: false
-          # macos-latest (Apple Silicon) is experimental
-          - macos-version: 'macos-latest'
-            experimental: true
-          # Python 3.9 is experimental
           - python-version: '3.9'
             experimental: true
-          # Python 3.14 is experimental
           - python-version: '3.14'
-            macos-version: 'macos-13'
-            experimental: true
-          - python-version: '3.14'
-            macos-version: 'macos-latest'
             experimental: true
       fail-fast: false
-    runs-on: ${{ matrix.macos-version }}
+    runs-on: macos-latest
     continue-on-error: ${{ matrix.experimental }}
-    name: Test py ${{ matrix.python-version }} ${{ matrix.macos-version }}
+    name: Test py ${{ matrix.python-version }}
     env:
       CI: true
     steps:
@@ -72,12 +61,17 @@ jobs:
       - name: Run tests
         run: make test
 
-      - name: Build distribution wheel
+      - name: Build arm64 wheel
         run: make dist_wheel
 
-      - name: Upload wheel
+      - name: Build x86_64 wheel (cross-compile)
+        run: |
+          rustup target add x86_64-apple-darwin
+          python -m maturin build --release --target x86_64-apple-darwin --compression-method stored
+
+      - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheel-macos-py${{ matrix.python-version }}-${{ matrix.macos-version }}
+          name: wheel-macos-py${{ matrix.python-version }}
           path: target/wheels/*.whl
           if-no-files-found: error
