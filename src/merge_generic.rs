@@ -2,30 +2,58 @@ use pyo3::prelude::*;
 use pyo3::exceptions::PyValueError;
 use numpy::{PyArray1, PyReadonlyArray1, Element};
 use ndarray::{Array1, Array2, Axis, s};
-use std::collections::HashSet;
 use num_traits::{Num, NumCast};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-enum ConstraintMode {
+pub enum ConstraintMode {
     Any,
     All,
 }
 
-impl ConstraintMode {
-    fn parse(mode: &str) -> PyResult<Self> {
-        match mode {
+impl std::str::FromStr for ConstraintMode {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
             "any" => Ok(Self::Any),
             "all" => Ok(Self::All),
-            _ => Err(PyValueError::new_err(
-                "`constraint_mode` must be either 'any' or 'all'",
-            )),
+            _ => Err("`constraint_mode` must be either 'any' or 'all'"),
         }
     }
 }
 
+pub trait NaNFiller {
+    fn fill_nan(self, fill_value: f64) -> Self;
+}
+
+impl NaNFiller for f64 {
+    #[inline]
+    fn fill_nan(self, fill_value: f64) -> Self {
+        if self.is_nan() {
+            fill_value
+        } else {
+            self
+        }
+    }
+}
+
+impl NaNFiller for i32 {
+    #[inline]
+    fn fill_nan(self, _fill_value: f64) -> Self {
+        self
+    }
+}
+
+impl NaNFiller for i64 {
+    #[inline]
+    fn fill_nan(self, _fill_value: f64) -> Self {
+        self
+    }
+}
+
 fn min_row_count(grouped: &Array2<f64>) -> f64 {
-    let row_sums = grouped.sum_axis(Axis(1));
-    row_sums
+    grouped
+        .sum_axis(Axis(1))
         .iter()
         .fold(f64::INFINITY, |current_min, &count| current_min.min(count))
 }
@@ -71,42 +99,19 @@ fn should_break(
     }
 }
 
-/// Helper function to fill NaN values for floating point types
-#[allow(dead_code)]
-fn fill_nan_f64(arr: &Array1<f64>, fill_value: f64) -> Array1<f64> {
-    arr.mapv(|x| if x.is_nan() { fill_value } else { x })
-}
-
-/// Helper function to fill NaN values for integer types (no-op)
-#[allow(dead_code)]
-fn fill_nan_int<T: Num + Copy>(arr: &Array1<T>, _fill_value: T) -> Array1<T> {
-    arr.clone() // Integers don't have NaN, so just return a copy
-}
-
-/// Helper function to get unique sorted values for generic types
-fn unique_sorted<T>(arr: &Array1<T>) -> Vec<T>
-where
-    T: Num + Copy + PartialOrd,
-{
-    let mut values: Vec<T> = arr.iter().copied().collect();
-    values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
-    values.dedup();
-    values
-}
-
-/// Generic ChiMerge implementation
-fn chi_merge_generic<T>(
+/// Generic ChiMerge core logic implementation
+pub fn chi_merge_generic<T>(
     feature: PyReadonlyArray1<T>,
     target: PyReadonlyArray1<i32>,
     n_bins: Option<usize>,
     min_samples: Option<f64>,
     min_threshold: Option<f64>,
-    _nan: f64,
+    nan: f64,
     balance: bool,
     constraint_mode: ConstraintMode,
 ) -> PyResult<Vec<T>>
 where
-    T: Num + NumCast + Copy + PartialOrd + std::fmt::Display + Element + 'static,
+    T: Num + NumCast + Copy + PartialOrd + std::fmt::Display + Element + NaNFiller + 'static,
 {
     const DEFAULT_BINS: usize = 10;
 
@@ -117,67 +122,64 @@ where
         n_bins
     };
 
-    // Convert to Array1
-    let feature_array = feature.as_array().to_owned();
-    let target_array = target.as_array().to_owned();
+    let feature_arr = feature.as_array();
+    let target_arr = target.as_array();
 
-    // Fill NaN values (for floating point types)
-    let feature_filled = if std::any::TypeId::of::<T>() == std::any::TypeId::of::<f64>() {
-        // This is a bit tricky - we need to handle the type conversion properly
-        // For now, let's assume we're working with the correct type
-        feature_array
-    } else {
-        feature_array
-    };
+    // Fill NaN values (using specialized NaNFiller trait)
+    let feature_filled: Array1<T> = feature_arr.mapv(|x| x.fill_nan(nan));
 
-    // Get unique values
-    let mut feature_unique = unique_sorted(&feature_filled);
-    let mut target_unique: Vec<i32> = target_array.iter()
-        .copied()
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect();
-    target_unique.sort();
+    // Get unique sorted values for features
+    let mut feature_unique = feature_filled.to_vec();
+    feature_unique.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    feature_unique.dedup();
+
+    // Get unique sorted values for target
+    let mut target_unique = target_arr.to_vec();
+    target_unique.sort_unstable();
+    target_unique.dedup();
 
     let len_f = feature_unique.len();
     let len_t = target_unique.len();
 
-    // Build grouped counts matrix
+    // Build grouped counts matrix in ONE SINGLE PASS (O(N log U)) with zero allocations
     let mut grouped = Array2::<f64>::zeros((len_f, len_t));
-    for (r, &fval) in feature_unique.iter().enumerate() {
-        let mask: Vec<bool> = feature_filled.iter().map(|&x| x == fval).collect();
-        let tmp: Vec<i32> = target_array.iter()
-            .zip(mask.iter())
-            .filter_map(|(&t, &m)| if m { Some(t) } else { None })
-            .collect();
-
-        for (c, &tval) in target_unique.iter().enumerate() {
-            grouped[[r, c]] = tmp.iter().filter(|&&x| x == tval).count() as f64;
+    for (&fval, &tval) in feature_filled.iter().zip(target_arr.iter()) {
+        if let Ok(r) = feature_unique.binary_search_by(|x| x.partial_cmp(&fval).unwrap_or(std::cmp::Ordering::Equal)) {
+            if let Ok(c) = target_unique.binary_search(&tval) {
+                grouped[[r, c]] += 1.0;
+            }
         }
     }
 
+    let min_samples_val = min_samples.map(|ms| {
+        if ms < 1.0 {
+            (feature_filled.len() as f64) * ms
+        } else {
+            ms
+        }
+    });
+
     // Merge loop
     loop {
-        let min_samples_val = min_samples.map(|ms| {
-            if ms < 1.0 {
-                (feature_filled.len() as f64) * ms
-            } else {
-                ms as f64
-            }
-        });
-
         if should_break(&grouped, n_bins, min_samples_val, constraint_mode) {
             break;
         }
 
-        // Calculate chi-square for each adjacent group pair
         let l = grouped.nrows() - 1;
+        if l == 0 {
+            break;
+        }
+
+        // Calculate chi-square for each adjacent group pair
         let mut chi_min = f64::INFINITY;
         let mut chi_ix = Vec::new();
 
         for i in 0..l {
             let couple = grouped.slice(s![i..=i+1, ..]);
             let total = couple.sum();
+            if total == 0.0 {
+                continue;
+            }
             let cols = couple.sum_axis(Axis(0));
             let rows = couple.sum_axis(Axis(1));
 
@@ -266,7 +268,8 @@ pub fn chi_merge_f64<'py>(
     balance: bool,
     constraint_mode: &str,
 ) -> PyResult<Bound<'py, PyArray1<f64>>> {
-    let constraint_mode = ConstraintMode::parse(constraint_mode)?;
+    let constraint_mode = constraint_mode.parse::<ConstraintMode>()
+        .map_err(|e| PyValueError::new_err(e))?;
 
     if constraint_mode == ConstraintMode::All && n_bins.is_none() && min_samples.is_none() {
         return Err(PyValueError::new_err(
@@ -301,7 +304,8 @@ pub fn chi_merge_i32<'py>(
     balance: bool,
     constraint_mode: &str,
 ) -> PyResult<Bound<'py, PyArray1<i32>>> {
-    let constraint_mode = ConstraintMode::parse(constraint_mode)?;
+    let constraint_mode = constraint_mode.parse::<ConstraintMode>()
+        .map_err(|e| PyValueError::new_err(e))?;
 
     if constraint_mode == ConstraintMode::All && n_bins.is_none() && min_samples.is_none() {
         return Err(PyValueError::new_err(
@@ -336,7 +340,8 @@ pub fn chi_merge_i64<'py>(
     balance: bool,
     constraint_mode: &str,
 ) -> PyResult<Bound<'py, PyArray1<i64>>> {
-    let constraint_mode = ConstraintMode::parse(constraint_mode)?;
+    let constraint_mode = constraint_mode.parse::<ConstraintMode>()
+        .map_err(|e| PyValueError::new_err(e))?;
 
     if constraint_mode == ConstraintMode::All && n_bins.is_none() && min_samples.is_none() {
         return Err(PyValueError::new_err(
