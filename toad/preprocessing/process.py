@@ -129,7 +129,10 @@ class Processing:
                     if col == _ALL_SYMBOL_:
                         col = None
                     
-                    r = g.apply(f, col = col)
+                    try:
+                        r = g.apply(f, col = col, include_groups = False)
+                    except TypeError:
+                        r = g.apply(f, col = col)
                 
                 if isinstance(r, pd.Series):
                     r = pd.DataFrame(r)

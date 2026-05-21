@@ -385,7 +385,7 @@ class GBDTTransformer(Transformer):
         gbdt = GradientBoostingClassifier(**kwargs)
         gbdt.fit(X, y)
 
-        X = gbdt.apply(X)
+        X = gbdt.apply(X.values if hasattr(X, 'values') else X)
         X = X.reshape(-1, X.shape[1])
 
         onehot = OneHotEncoder().fit(X)
@@ -405,7 +405,7 @@ class GBDTTransformer(Transformer):
         Returns:
             array-like
         """
-        X = rules['gbdt'].apply(X)
+        X = rules['gbdt'].apply(X.values if hasattr(X, 'values') else X)
         X = X.reshape(-1, X.shape[1])
         res = rules['onehot'].transform(X).toarray()
         return res

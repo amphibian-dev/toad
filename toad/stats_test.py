@@ -62,8 +62,8 @@ def test_quality():
     assert result.loc['feature', 'unique'] == 500
 
 def test_quality_iv_only():
-    result = quality(df, 'target', iv_only = True)
-    assert np.isnan(result.loc['feature', 'gini'])
+    result = quality(df, 'target', indicators = ['iv'])
+    assert 'gini' not in result.columns
 
 def test_quality_with_merge():
     result = quality(df, 'target', n_bins = 5, method = 'chi')

@@ -72,11 +72,13 @@ fn should_break(
 }
 
 /// Helper function to fill NaN values for floating point types
+#[allow(dead_code)]
 fn fill_nan_f64(arr: &Array1<f64>, fill_value: f64) -> Array1<f64> {
     arr.mapv(|x| if x.is_nan() { fill_value } else { x })
 }
 
 /// Helper function to fill NaN values for integer types (no-op)
+#[allow(dead_code)]
 fn fill_nan_int<T: Num + Copy>(arr: &Array1<T>, _fill_value: T) -> Array1<T> {
     arr.clone() // Integers don't have NaN, so just return a copy
 }

@@ -421,8 +421,8 @@ def feature_bin_stats(df_bin,feature,target):
     table['total'] = table['good'] + table['bad']
     table['badrate'] = table['bad'] / table['total']
     table['prop'] = table['total'] / table['total'].sum()
-    table['y_prop'] = table['good'] / table['good'].sum()
-    table['n_prop'] = table['bad'] / table['bad'].sum()
+    table['y_prop'] = table['bad'] / table['bad'].sum()
+    table['n_prop'] = table['good'] / table['good'].sum()
     table['woe'] = table.apply(lambda x : WOE(x['y_prop'], x['n_prop']),axis=1)
     table['iv'] = table.apply(lambda x : (x['y_prop'] - x['n_prop']) * WOE(x['y_prop'], x['n_prop']), axis=1)
     return table

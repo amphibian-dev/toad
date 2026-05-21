@@ -2,7 +2,7 @@ from time import sleep, time
 from .progress import Progress
 
 
-class TestIterator:
+class MockIterator:
     def __init__(self, size):
         self._size = size
     
@@ -22,7 +22,7 @@ def test_progress_size():
     assert p.size == 9527
 
 def test_iterator():
-    ti = TestIterator(100)
+    ti = MockIterator(100)
     p = Progress(ti)
     for i in p:
         sleep(0.01)
