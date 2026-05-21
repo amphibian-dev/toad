@@ -24,6 +24,7 @@ impl std::str::FromStr for ConstraintMode {
 
 pub trait NaNFiller {
     fn fill_nan(self, fill_value: f64) -> Self;
+    fn total_compare(&self, other: &Self) -> std::cmp::Ordering;
 }
 
 impl NaNFiller for f64 {
@@ -35,6 +36,11 @@ impl NaNFiller for f64 {
             self
         }
     }
+
+    #[inline]
+    fn total_compare(&self, other: &Self) -> std::cmp::Ordering {
+        self.total_cmp(other)
+    }
 }
 
 impl NaNFiller for i32 {
@@ -42,12 +48,22 @@ impl NaNFiller for i32 {
     fn fill_nan(self, _fill_value: f64) -> Self {
         self
     }
+
+    #[inline]
+    fn total_compare(&self, other: &Self) -> std::cmp::Ordering {
+        self.cmp(other)
+    }
 }
 
 impl NaNFiller for i64 {
     #[inline]
     fn fill_nan(self, _fill_value: f64) -> Self {
         self
+    }
+
+    #[inline]
+    fn total_compare(&self, other: &Self) -> std::cmp::Ordering {
+        self.cmp(other)
     }
 }
 
@@ -130,7 +146,7 @@ where
 
     // Get unique sorted values for features
     let mut feature_unique = feature_filled.to_vec();
-    feature_unique.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    feature_unique.sort_by(|a, b| a.total_compare(b));
     feature_unique.dedup();
 
     // Get unique sorted values for target
@@ -144,7 +160,7 @@ where
     // Build grouped counts matrix in ONE SINGLE PASS (O(N log U)) with zero allocations
     let mut grouped = Array2::<f64>::zeros((len_f, len_t));
     for (&fval, &tval) in feature_filled.iter().zip(target_arr.iter()) {
-        if let Ok(r) = feature_unique.binary_search_by(|x| x.partial_cmp(&fval).unwrap_or(std::cmp::Ordering::Equal)) {
+        if let Ok(r) = feature_unique.binary_search_by(|x| x.total_compare(&fval)) {
             if let Ok(c) = target_unique.binary_search(&tval) {
                 grouped[[r, c]] += 1.0;
             }
