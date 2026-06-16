@@ -113,17 +113,20 @@ jobs:
 
       - name: Verify wheels
         run: |
-          linux_count=$(ls dist/toad-*manylinux*.whl 2>/dev/null | wc -l)
+          x86_64_count=$(ls dist/toad-*manylinux*x86_64*.whl 2>/dev/null | wc -l)
+          aarch64_count=$(ls dist/toad-*manylinux*aarch64*.whl 2>/dev/null | wc -l)
           macos_count=$(ls dist/toad-*macosx*.whl 2>/dev/null | wc -l)
           windows_count=$(ls dist/toad-*win*.whl 2>/dev/null | wc -l)
-          total=$((linux_count + macos_count + windows_count))
+          total=$((x86_64_count + aarch64_count + macos_count + windows_count))
 
           echo "Total wheels: $total"
-          echo "  Linux:   $linux_count"
-          echo "  macOS:   $macos_count"
-          echo "  Windows: $windows_count"
+          echo "  Linux x86_64:  $x86_64_count"
+          echo "  Linux aarch64: $aarch64_count"
+          echo "  macOS:         $macos_count"
+          echo "  Windows:       $windows_count"
 
-          [ "$linux_count" -ge 1 ] || { echo "Error: No Linux wheels"; exit 1; }
+          [ "$x86_64_count" -ge 1 ] || { echo "Error: No Linux x86_64 wheels"; exit 1; }
+          [ "$aarch64_count" -ge 1 ] || { echo "Error: No Linux aarch64 wheels"; exit 1; }
           [ "$macos_count" -ge 1 ] || { echo "Error: No macOS wheels"; exit 1; }
           [ "$windows_count" -ge 1 ] || { echo "Error: No Windows wheels"; exit 1; }
 
