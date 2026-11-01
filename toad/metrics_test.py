@@ -102,3 +102,26 @@ def test_PSI_return_frame():
 def test_matrix():
     df = matrix(feature, target, splits = 0.5)
     assert df.iloc[0,1] == 133
+
+
+def test_PSI_bin_empty_in_test():
+    # category C holds 10% of the base sample and vanishes in the test sample;
+    # it must not be dropped from the sum (it used to give PSI = 0.0105)
+    base = pd.Series(['A'] * 45 + ['B'] * 45 + ['C'] * 10)
+    test = pd.Series(['A'] * 50 + ['B'] * 50)
+    assert PSI(test, base) == np.inf
+
+
+def test_PSI_bin_new_in_test():
+    base = pd.Series(['A'] * 50 + ['B'] * 50)
+    test = pd.Series(['A'] * 45 + ['B'] * 45 + ['C'] * 10)
+    assert PSI(test, base) == np.inf
+
+
+def test_PSI_frame_keeps_empty_bin():
+    base = pd.Series(['A'] * 45 + ['B'] * 45 + ['C'] * 10)
+    test = pd.Series(['A'] * 50 + ['B'] * 50)
+    _, frame = PSI(test, base, return_frame = True)
+    row = frame[frame['value'] == 'C'].iloc[0]
+    assert row['test'] == 0
+    assert row['base'] == pytest.approx(0.1)

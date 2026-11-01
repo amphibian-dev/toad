@@ -236,7 +236,13 @@ def _PSI(test, base):
     test_prop = pd.Series(test).value_counts(normalize = True, dropna = False)
     base_prop = pd.Series(base).value_counts(normalize = True, dropna = False)
 
-    psi = np.sum((test_prop - base_prop) * np.log(test_prop / base_prop))
+    # a bin that is empty in one sample must still contribute to PSI;
+    # without aligning on the union of bins pandas yields NaN for it and
+    # the sum silently skips it
+    test_prop, base_prop = test_prop.align(base_prop, join = 'outer', fill_value = 0)
+
+    with np.errstate(divide = 'ignore'):
+        psi = np.sum((test_prop - base_prop) * np.log(test_prop / base_prop))
 
     frame = pd.DataFrame({
         'test': test_prop,

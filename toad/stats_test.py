@@ -82,3 +82,23 @@ def test_quality_object_type_array_with_nan():
 def test_vif():
     vif = VIF(df)
     assert vif['A'] == 2.969336442640111
+
+
+def test_iv_nan_group_uses_real_counts():
+    # numeric discrete feature with missing values: the NaN group has
+    # 3 bads and 1 good and must be scored with those counts
+    x = np.array([0., 0., 1., 1., np.nan, np.nan, np.nan, np.nan])
+    y = np.array([0, 1, 0, 1, 1, 1, 1, 0])
+    total, sub = _IV(x, y)
+
+    bad, good = 5, 3
+    def part(b, g):
+        return (b / bad - g / good) * np.log((b / bad) / (g / good))
+
+    nan_key = [k for k in sub.index if pd.isnull(k)][0]
+    assert sub[nan_key] == pytest.approx(part(3, 1))
+    assert total == pytest.approx(2 * part(1, 1) + part(3, 1))
+
+    # same data as strings (object path) must give the same IV
+    total_obj, _ = _IV(pd.Series(x).astype(object), y)
+    assert total == pytest.approx(total_obj)

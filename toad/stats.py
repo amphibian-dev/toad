@@ -187,8 +187,13 @@ def _IV(feature, target):
 
     iv = {}
 
+    is_nan = pd.isnull(feature)
+
     for v in np.unique(feature):
-        y_prob, n_prob = probability(target, mask = (feature == v))
+        # `feature == nan` is always False, so the missing group must be
+        # selected with isnull, otherwise its real counts are ignored
+        mask = is_nan if pd.isnull(v) else (feature == v)
+        y_prob, n_prob = probability(target, mask = mask)
 
         iv[v] = (y_prob - n_prob) * WOE(y_prob, n_prob)
 
